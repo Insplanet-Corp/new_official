@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, Empty, Note, PageHead, Search, Skeleton, Stats, fmtDate, type BadgeTone } from '@/components/admin/ui';
 import { supabase } from '@/lib/supabase';
+import kit from '@/components/admin/kit.module.css';
+
+const btnPrimary = `${kit.btn} ${kit.btnPrimary}`;
+const btnSm = `${kit.btn} ${kit.btnSm}`;
 
 type AdminUser = {
   id: string;
@@ -73,7 +77,7 @@ export default function UsersPage() {
       <PageHead
         href="/admin/users"
         actions={
-          <button type="button" className="adm-btn adm-btn-primary" disabled>
+          <button type="button" className={btnPrimary} disabled>
             + 관리자 초대
           </button>
         }
@@ -101,11 +105,11 @@ export default function UsersPage() {
         ]}
       />
 
-      <section className="adm-card">
-        <div className="adm-toolbar">
+      <section className={kit.card}>
+        <div className={kit.toolbar}>
           <Search value={q} onChange={setQ} placeholder="이메일 · 이름 검색" />
-          <span className="adm-toolbar-spacer" />
-          <span className="adm-count">
+          <span className={kit.toolbarSpacer} />
+          <span className={kit.count}>
             <b>{visible.length}</b> / {rows.length}개
           </span>
         </div>
@@ -115,8 +119,8 @@ export default function UsersPage() {
         ) : visible.length === 0 ? (
           <Empty title="표시할 계정이 없습니다" desc="Supabase Auth 에 관리자 계정을 추가해 주세요." />
         ) : (
-          <div className="adm-table-wrap">
-            <table className="adm-table">
+          <div className={kit.tableWrap}>
+            <table className={kit.table}>
               <thead>
                 <tr>
                   <th>계정</th>
@@ -131,20 +135,20 @@ export default function UsersPage() {
                   <tr key={r.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span className="adm-avatar">{(r.email ?? '?').charAt(0).toUpperCase()}</span>
+                        <span className={kit.avatar}>{(r.email ?? '?').charAt(0).toUpperCase()}</span>
                         <span>
-                          <span className="adm-td-strong">{r.email || '-'}</span>
-                          {r.name ? <span className="adm-td-sub">{r.name}</span> : null}
+                          <span className={kit.tdStrong}>{r.email || '-'}</span>
+                          {r.name ? <span className={kit.tdSub}>{r.name}</span> : null}
                         </span>
                       </div>
                     </td>
                     <td>
                       <Badge tone={ROLE_TONE[r.role ?? ''] ?? 'plain'}>{r.role || 'admin'}</Badge>
                     </td>
-                    <td className="num">{fmtDate(r.created_at)}</td>
-                    <td className="num">{r.last_sign_in_at ? fmtDate(r.last_sign_in_at) : '-'}</td>
-                    <td className="adm-td-actions">
-                      <button type="button" className="adm-btn adm-btn-sm" disabled>
+                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
+                    <td className={kit.num}>{r.last_sign_in_at ? fmtDate(r.last_sign_in_at) : '-'}</td>
+                    <td className={kit.tdActions}>
+                      <button type="button" className={btnSm} disabled>
                         권한 변경
                       </button>
                     </td>
@@ -155,7 +159,7 @@ export default function UsersPage() {
           </div>
         )}
 
-        <div className="adm-card-foot">
+        <div className={kit.cardFoot}>
           <span>어드민 접근 권한이 있는 계정입니다.</span>
           <span>Supabase · auth / admin_users</span>
         </div>

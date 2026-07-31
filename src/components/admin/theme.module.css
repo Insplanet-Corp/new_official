@@ -1,0 +1,67 @@
+/* ============================================================================
+   ADMIN THEME — 디자인 토큰 + element 리셋.
+   어드민의 모든 루트(AdminShell / boot / login)가 composes 로 가져다 쓴다.
+   토큰은 CSS 커스텀 프로퍼티라 DOM 상속을 타므로, 하위 module 파일들은
+   이 파일을 import 하지 않아도 var(--ink) 를 그대로 참조할 수 있다.
+   ========================================================================== */
+.theme {
+  --ink: #17181c;
+  --ink-2: #3e3f44; /* brand slate — same as the site */
+  --muted: #8a8f98;
+  --faint: #b4b9c1;
+  --line: #e6e8ec;
+  --line-2: #f0f1f4;
+  --bg: #f4f5f7;
+  --surface: #fff;
+  --accent: #3e3f44;
+  --blue: #2563eb;
+  --blue-bg: #eef3ff;
+  --green: #0b8a5b;
+  --green-bg: #e7f6ef;
+  --amber: #b45309;
+  --amber-bg: #fdf3e3;
+  --red: #c42b2b;
+  --red-bg: #fceded;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(23, 24, 28, 0.04), 0 8px 24px rgba(23, 24, 28, 0.05);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* :where() keeps these resets at zero specificity so every component class wins over them
+   (a plain `.theme button` reset would out-rank `.btn` and blank out its background). */
+:where(.theme) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+:where(.theme) input,
+:where(.theme) select,
+:where(.theme) textarea {
+  font: inherit;
+  color: inherit;
+}
+:where(.theme) a {
+  color: inherit;
+  text-decoration: none;
+}
+:where(.theme) table {
+  border-collapse: collapse;
+  width: 100%;
+}
+:where(.theme) code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(23, 24, 28, 0.06);
+}

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ADMIN_TABS } from '@/components/admin/tabs';
 import { supabase } from '@/lib/supabase';
+import s from './AdminShell.module.css';
+import kit from './kit.module.css';
 
 const LOGIN_PATH = '/admin/login';
 
@@ -51,54 +53,54 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   };
 
   if (isLogin) return <>{children}</>;
-  if (!checked) return <div className="adm-boot">세션을 확인하는 중…</div>;
+  if (!checked) return <div className={s.boot}>세션을 확인하는 중…</div>;
 
   return (
-    <div className="adm">
-      <header className="adm-head">
-        <div className="adm-bar">
-          <Link href="/" className="adm-brand" aria-label="Insplanet 홈">
+    <div className={s.root}>
+      <header className={s.head}>
+        <div className={s.bar}>
+          <Link href="/" className={s.brand} aria-label="Insplanet 홈">
             <img src="/assets/ci_logo.svg" alt="Insplanet" />
-            <span className="adm-brand-tag">ADMIN</span>
+            <span className={kit.brandTag}>ADMIN</span>
           </Link>
-          <span className="adm-bar-sep" />
-          <span className="adm-bar-title">콘텐츠 · 문의 관리</span>
+          <span className={s.barSep} />
+          <span className={s.barTitle}>콘텐츠 · 문의 관리</span>
 
-          <span className="adm-bar-spacer" />
+          <span className={s.barSpacer} />
 
-          <div className="adm-head-right">
-            <Link href="/" className="adm-btn adm-btn-ghost">
+          <div className={s.headRight}>
+            <Link href="/" className={s.siteLink}>
               사이트 보기
             </Link>
-            <div className="adm-account" title={email ?? undefined}>
-              <span className="adm-avatar">{(email ?? '?').charAt(0).toUpperCase()}</span>
-              <span className="adm-account-mail">{email ?? '알 수 없는 계정'}</span>
+            <div className={s.account} title={email ?? undefined}>
+              <span className={kit.avatar}>{(email ?? '?').charAt(0).toUpperCase()}</span>
+              <span className={s.accountMail}>{email ?? '알 수 없는 계정'}</span>
             </div>
-            <button type="button" className="adm-btn" onClick={signOut}>
+            <button type="button" className={kit.btn} onClick={signOut}>
               로그아웃
             </button>
           </div>
         </div>
 
-        <nav className="adm-tabs" aria-label="관리 메뉴">
+        <nav className={s.tabs} aria-label="관리 메뉴">
           {ADMIN_TABS.map((tab) => {
             const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`adm-tab${active ? ' is-active' : ''}`}
+                className={`${s.tab}${active ? ` ${s.isActive}` : ''}`}
                 aria-current={active ? 'page' : undefined}
               >
                 {tab.label}
-                {tab.sub ? <span className="adm-tab-sub">{tab.sub}</span> : null}
+                {tab.sub ? <span className={s.tabSub}>{tab.sub}</span> : null}
               </Link>
             );
           })}
         </nav>
       </header>
 
-      <main className="adm-main">{children}</main>
+      <main className={s.main}>{children}</main>
     </div>
   );
 }

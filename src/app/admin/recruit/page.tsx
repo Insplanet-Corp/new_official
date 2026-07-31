@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, Stats, fmtDate, type BadgeTone } from '@/components/admin/ui';
 import { RECRUIT_ROLES } from '@/data/contact';
 import { supabase } from '@/lib/supabase';
+import kit from '@/components/admin/kit.module.css';
+
+const btnSm = `${kit.btn} ${kit.btnSm}`;
 
 type Recruit = {
   id: string;
@@ -96,8 +99,8 @@ export default function RecruitPage() {
         ]}
       />
 
-      <section className="adm-card">
-        <div className="adm-toolbar">
+      <section className={kit.card}>
+        <div className={kit.toolbar}>
           <Search value={q} onChange={setQ} placeholder="이름 · 이메일 · 연락처 검색" />
           <Select
             label="지원 직군"
@@ -105,8 +108,8 @@ export default function RecruitPage() {
             onChange={setRole}
             options={[{ value: 'all', label: '전체 직군' }, ...RECRUIT_ROLES.map((r) => ({ value: r, label: r }))]}
           />
-          <span className="adm-toolbar-spacer" />
-          <span className="adm-count">
+          <span className={kit.toolbarSpacer} />
+          <span className={kit.count}>
             <b>{visible.length}</b> / {rows.length}명
           </span>
         </div>
@@ -119,8 +122,8 @@ export default function RecruitPage() {
             desc="Join us 모달로 지원서가 접수되면 이곳에 표시됩니다."
           />
         ) : (
-          <div className="adm-table-wrap">
-            <table className="adm-table">
+          <div className={kit.tableWrap}>
+            <table className={kit.table}>
               <thead>
                 <tr>
                   <th style={{ width: 150 }}>지원일시</th>
@@ -134,29 +137,29 @@ export default function RecruitPage() {
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.id}>
-                    <td className="num">{fmtDate(r.created_at)}</td>
-                    <td className="adm-td-strong">{r.name || '-'}</td>
+                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
+                    <td className={kit.tdStrong}>{r.name || '-'}</td>
                     <td>
-                      <div className="nowrap">{r.phone || '-'}</div>
-                      <div className="adm-td-sub">{r.email || '-'}</div>
+                      <div className={kit.nowrap}>{r.phone || '-'}</div>
+                      <div className={kit.tdSub}>{r.email || '-'}</div>
                     </td>
                     <td>
-                      <div className="adm-chips">
+                      <div className={kit.chips}>
                         {(r.role ?? []).map((v) => (
-                          <span className="adm-chip" key={v}>
+                          <span className={kit.chip} key={v}>
                             {v}
                           </span>
                         ))}
                       </div>
-                      {r.url ? <div className="adm-td-sub">{r.url}</div> : null}
+                      {r.url ? <div className={kit.tdSub}>{r.url}</div> : null}
                     </td>
                     <td>
                       {r.file_url ? (
-                        <a className="adm-btn adm-btn-sm" href={r.file_url} target="_blank" rel="noreferrer">
+                        <a className={btnSm} href={r.file_url} target="_blank" rel="noreferrer">
                           내려받기
                         </a>
                       ) : (
-                        <span className="num">-</span>
+                        <span className={kit.num}>-</span>
                       )}
                     </td>
                     <td>
@@ -169,7 +172,7 @@ export default function RecruitPage() {
           </div>
         )}
 
-        <div className="adm-card-foot">
+        <div className={kit.cardFoot}>
           <span>최신 지원순으로 정렬됩니다.</span>
           <span>Supabase · recruits</span>
         </div>

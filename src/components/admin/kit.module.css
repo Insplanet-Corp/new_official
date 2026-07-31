@@ -1,0 +1,276 @@
+/* ============================================================================
+   ADMIN KIT — 여러 어드민 페이지가 공유하는 프리미티브.
+   (버튼 / 카드 / 테이블 / 툴바 / 배지 / 칩 / 세그먼트)
+   페이지 고유 스타일은 각 페이지 옆 module.css 에, 셸은 AdminShell.module.css 에 둔다.
+   토큰(var(--ink) 등)은 theme.module.css 의 .theme 루트에서 상속받는다.
+   ========================================================================== */
+
+/* ===== card =============================================================== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card + .card {
+  margin-top: 20px;
+}
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+.cardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ===== toolbar ============================================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.toolbarSpacer {
+  flex: 1 1 auto;
+}
+.count {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.count b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* segmented control — the primary axis of a table (진행 / 종료) reads better as a switch
+   than as one more dropdown next to the others. */
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fafafb;
+  gap: 2px;
+}
+.seg button {
+  height: 28px;
+  padding: 0 13px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.seg button:hover {
+  color: var(--ink-2);
+}
+.seg button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(23, 24, 28, 0.08);
+}
+.segCount {
+  margin-left: 5px;
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.seg button[aria-pressed='true'] .segCount {
+  color: var(--muted);
+}
+
+/* ===== buttons ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.1s ease;
+}
+.btn:hover {
+  border-color: var(--faint);
+  background: #fbfbfc;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btnPrimary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.btnPrimary:hover {
+  background: #000;
+  border-color: #000;
+}
+.btnGhost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.btnGhost:hover {
+  background: var(--line-2);
+  border-color: transparent;
+  color: var(--ink);
+}
+.btnSm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+
+/* ===== table ============================================================== */
+.tableWrap {
+  overflow-x: auto;
+}
+.table {
+  min-width: 760px;
+  font-size: 13.5px;
+}
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: #fafafb;
+  border-bottom: 1px solid var(--line);
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: top;
+}
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr {
+  transition: background 0.14s ease;
+}
+.table tbody tr:hover {
+  background: #fafafb;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.tdStrong {
+  font-weight: 700;
+}
+.tdSub {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.tdActions {
+  text-align: right;
+  white-space: nowrap;
+}
+.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 420px;
+  color: var(--ink-2);
+}
+.thumb {
+  width: 56px;
+  height: 38px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: var(--line-2);
+  display: block;
+  border: 1px solid var(--line);
+}
+
+/* ===== chips ============================================================== */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 340px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+.chipKey {
+  color: var(--faint);
+  margin-right: 4px;
+}
+
+/* ===== identity bits (셸과 페이지가 함께 쓴다) ============================= */
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.brandTag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}

@@ -1,0 +1,205 @@
+/* ============================================================================
+   ADMIN SHELL — /admin 전 라우트의 공통 크롬 (헤더 · 탭바 · 본문 프레임).
+   ========================================================================== */
+
+.root {
+  composes: theme from './theme.module.css';
+}
+
+/* 세션 확인 중 전체 화면 상태 */
+.boot {
+  composes: theme from './theme.module.css';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ===== header ============================================================= */
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.bar {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.brand img {
+  display: block;
+  height: 20px;
+  width: auto;
+}
+
+.barSep {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  flex: 0 0 auto;
+}
+.barTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.barSpacer {
+  flex: 1 1 auto;
+}
+
+.headRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.account {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 12px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.account:hover {
+  border-color: var(--faint);
+  box-shadow: var(--shadow);
+}
+.accountMail {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* "사이트 보기" — 좁은 화면에서 가장 먼저 접히는 항목.
+   kit 의 .btnGhost 와 파일이 달라 자손 선택자를 못 쓰므로 전용 클래스를 하나 준다. */
+.siteLink {
+  composes: btn btnGhost from './kit.module.css';
+}
+
+/* ===== tab bar ============================================================ */
+.tabs {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+.tab::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transform-origin: 50% 100%;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tab:hover {
+  color: var(--ink-2);
+}
+.tab.isActive {
+  color: var(--ink);
+}
+.tab.isActive::after {
+  transform: scaleX(1);
+}
+.tabSub {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--line-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.tab.isActive .tabSub {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* ===== page frame ========================================================= */
+.main {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 32px 32px 96px;
+}
+
+/* ===== responsive ========================================================= */
+@media (max-width: 900px) {
+  .bar {
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .tabs {
+    padding: 0 18px;
+  }
+  .main {
+    padding: 24px 18px 72px;
+  }
+  .barSep,
+  .barTitle {
+    display: none;
+  }
+  .accountMail {
+    display: none;
+  }
+  .account {
+    padding: 0 6px;
+  }
+}
+/* narrow phones: drop "사이트 보기" so the account chip + 로그아웃 always stay on screen */
+@media (max-width: 620px) {
+  .siteLink {
+    display: none;
+  }
+  .brand img {
+    height: 18px;
+  }
+}

@@ -16,20 +16,11 @@ export type AdminTab = {
 
 export const ADMIN_TABS: AdminTab[] = [
   {
-    href: '/admin/portfolio/completed',
-    label: '포트폴리오',
-    sub: '종료',
-    eyebrow: 'Portfolio · Completed',
-    title: '포트폴리오 (종료)',
-    desc: '종료된 프로젝트 카드입니다. 프로젝트 페이지의 카드 그리드에 노출됩니다.',
-  },
-  {
-    href: '/admin/portfolio/ongoing',
-    label: '포트폴리오',
-    sub: '진행',
-    eyebrow: 'Portfolio · Ongoing',
-    title: '포트폴리오 (진행)',
-    desc: '진행 중인 프로젝트입니다. 프로젝트 페이지 하단의 Ongoing 테이블에 노출됩니다.',
+    href: '/admin/portfolio',
+    label: '포트폴리오관리',
+    eyebrow: 'Portfolio',
+    title: '포트폴리오관리',
+    desc: '진행 중 · 종료된 프로젝트를 함께 관리합니다. 표에서 진행 상태로 걸러 볼 수 있습니다.',
   },
   {
     href: '/admin/quotes',

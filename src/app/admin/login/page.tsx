@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ADMIN_TABS } from '@/components/admin/tabs';
 import { supabase } from '@/lib/supabase';
+import kit from '@/components/admin/kit.module.css';
+import s from './login.module.css';
 
 const HOME = ADMIN_TABS[0].href;
 
@@ -42,27 +44,27 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="adm">
-      <div className="adm-login">
-        <div className="adm-login-card">
-          <div className="adm-login-brand">
+    <div className={s.root}>
+      <div className={s.login}>
+        <div className={s.card}>
+          <div className={s.brand}>
             <img src="/assets/ci_logo.svg" alt="Insplanet" />
-            <span className="adm-brand-tag">ADMIN</span>
+            <span className={kit.brandTag}>ADMIN</span>
           </div>
 
-          <h1 className="adm-login-title">관리자 로그인</h1>
-          <p className="adm-login-desc">등록된 관리자 계정으로만 접근할 수 있습니다.</p>
+          <h1 className={s.title}>관리자 로그인</h1>
+          <p className={s.desc}>등록된 관리자 계정으로만 접근할 수 있습니다.</p>
 
-          {error ? <p className="adm-error">{error}</p> : null}
+          {error ? <p className={s.error}>{error}</p> : null}
 
           <form onSubmit={onSubmit} noValidate>
-            <div className="adm-field">
-              <label className="adm-label" htmlFor="adm-email">
+            <div className={s.field}>
+              <label className={s.label} htmlFor="adm-email">
                 이메일
               </label>
               <input
                 id="adm-email"
-                className="adm-input"
+                className={s.input}
                 type="email"
                 autoComplete="username"
                 placeholder="admin@insplanet.co.kr"
@@ -72,13 +74,13 @@ export default function AdminLoginPage() {
               />
             </div>
 
-            <div className="adm-field">
-              <label className="adm-label" htmlFor="adm-pw">
+            <div className={s.field}>
+              <label className={s.label} htmlFor="adm-pw">
                 비밀번호
               </label>
               <input
                 id="adm-pw"
-                className="adm-input"
+                className={s.input}
                 type="password"
                 autoComplete="current-password"
                 placeholder="••••••••"
@@ -88,12 +90,12 @@ export default function AdminLoginPage() {
               />
             </div>
 
-            <button type="submit" className="adm-btn adm-btn-primary adm-login-submit" disabled={busy}>
+            <button type="submit" className={s.submit} disabled={busy}>
               {busy ? '로그인 중…' : '로그인'}
             </button>
           </form>
 
-          <p className="adm-login-foot">
+          <p className={s.foot}>
             <Link href="/">← 인스플래닛 사이트로 돌아가기</Link>
           </p>
         </div>

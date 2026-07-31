@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, Stats, fmtDate, type BadgeTone } from '@/components/admin/ui';
+import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, Stats, fmtDate, selectClass, type BadgeTone } from '@/components/admin/ui';
 import { PROJECT_FIELDS } from '@/data/contact';
 import { supabase } from '@/lib/supabase';
+import kit from '@/components/admin/kit.module.css';
 
 type Quote = {
   id: string;
@@ -98,8 +99,8 @@ export default function QuotesPage() {
 
       {error ? <Note warn>{error}</Note> : null}
 
-      <section className="adm-card">
-        <div className="adm-toolbar">
+      <section className={kit.card}>
+        <div className={kit.toolbar}>
           <Search value={q} onChange={setQ} placeholder="기업명 · 담당자 · 이메일 · 내용 검색" />
           <Select
             label="진행 상태"
@@ -107,8 +108,8 @@ export default function QuotesPage() {
             onChange={setFilter}
             options={[{ value: 'all', label: '전체 상태' }, ...STATUS.map((s) => ({ value: s.value, label: s.label }))]}
           />
-          <span className="adm-toolbar-spacer" />
-          <span className="adm-count">
+          <span className={kit.toolbarSpacer} />
+          <span className={kit.count}>
             <b>{visible.length}</b> / {rows.length}건
           </span>
         </div>
@@ -121,8 +122,8 @@ export default function QuotesPage() {
             desc={rows.length === 0 ? 'Contact 페이지에서 문의가 접수되면 이곳에 표시됩니다.' : '검색어나 상태 필터를 바꿔보세요.'}
           />
         ) : (
-          <div className="adm-table-wrap">
-            <table className="adm-table">
+          <div className={kit.tableWrap}>
+            <table className={kit.table}>
               <thead>
                 <tr>
                   <th style={{ width: 150 }}>접수일시</th>
@@ -135,23 +136,23 @@ export default function QuotesPage() {
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.id}>
-                    <td className="num">{fmtDate(r.created_at)}</td>
+                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
                     <td>
-                      <div className="adm-td-strong">{r.company || '-'}</div>
-                      <div className="adm-td-sub">{r.person || '-'}</div>
+                      <div className={kit.tdStrong}>{r.company || '-'}</div>
+                      <div className={kit.tdSub}>{r.person || '-'}</div>
                     </td>
                     <td>
-                      <div className="nowrap">{r.phone || '-'}</div>
-                      <div className="adm-td-sub">{r.email || '-'}</div>
+                      <div className={kit.nowrap}>{r.phone || '-'}</div>
+                      <div className={kit.tdSub}>{r.email || '-'}</div>
                     </td>
                     <td>
-                      <p className="adm-clamp">{r.content || '내용 없음'}</p>
-                      {r.url ? <div className="adm-td-sub">{r.url}</div> : null}
-                      <div className="adm-chips" style={{ marginTop: 8 }}>
+                      <p className={kit.clamp}>{r.content || '내용 없음'}</p>
+                      {r.url ? <div className={kit.tdSub}>{r.url}</div> : null}
+                      <div className={kit.chips} style={{ marginTop: 8 }}>
                         {Object.entries(r.project_fields ?? {}).flatMap(([key, values]) =>
                           (values ?? []).map((v) => (
-                            <span className="adm-chip" key={`${key}-${v}`}>
-                              <span className="adm-chip-key">{FIELD_LABEL[key] ?? key}</span>
+                            <span className={kit.chip} key={`${key}-${v}`}>
+                              <span className={kit.chipKey}>{FIELD_LABEL[key] ?? key}</span>
                               {v}
                             </span>
                           )),
@@ -161,7 +162,7 @@ export default function QuotesPage() {
                     <td>
                       <Badge tone={statusMeta(r.status).tone}>{statusMeta(r.status).label}</Badge>
                       <select
-                        className="adm-select"
+                        className={selectClass}
                         style={{ marginTop: 8, width: '100%', height: 30, fontSize: 12.5 }}
                         aria-label="진행 상태 변경"
                         value={r.status ?? ''}
@@ -182,7 +183,7 @@ export default function QuotesPage() {
           </div>
         )}
 
-        <div className="adm-card-foot">
+        <div className={kit.cardFoot}>
           <span>최신 접수순으로 정렬됩니다.</span>
           <span>Supabase · quotes</span>
         </div>

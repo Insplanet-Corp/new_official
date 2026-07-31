@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import AdminShell from '@/components/admin/AdminShell';
-import '@/styles/admin.css';
 
 export const metadata: Metadata = {
   title: 'Insplanet Admin',
