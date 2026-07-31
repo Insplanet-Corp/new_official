@@ -1,0 +1,16 @@
+/* ===== ISOLATED MOBILE HERO WORKSPACE =====
+   Only the hero — NO below-fold desktop sections — so nothing overflows horizontally and the layout
+   viewport stays = device width (the below-hero desktop sections were blowing vw out to 496 and
+   pushing the fixed right-side controls off the 375 screen). Merge the mobile rules (already in
+   style.css @media ≤767) back into the main page once the lower sections are built for mobile. */
+
+html,body{overflow-x:clip}   /* safety: no horizontal scroll/expansion.
+     clip, NOT hidden — overflow-x:hidden makes body a scroll container, which
+     KILLS position:sticky (the m-beyond pin). clip blocks the bleed without that. */
+#stage{height:100svh}        /* fit the VISIBLE viewport (real mobile chrome) */
+
+/* bg arcs: main.js normally sizes these; here they scale with the viewport
+   width (vw) instead of fixed px. Figma 375 basis: 603→160.8vw, 132→35.2vw … */
+#bg-line .circ{width:160.8vw;height:160.8vw;border-radius:50%}
+#bg-line .circ-1{left:35.2vw;top:-0.8vw}
+#bg-line .circ-2{left:0.53vw;top:13.87vw}

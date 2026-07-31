@@ -1,0 +1,44 @@
+# dependencies
+node_modules
+.pnp
+.pnp.*
+.yarn/*
+
+# next.js
+.next
+out
+build
+next-env.d.ts
+
+# production / deploy
+.vercel
+
+# env — 절대 커밋하지 말 것 (.env.example 만 커밋)
+.env
+.env.*
+!.env.example
+
+# 인증서 / 키
+*.pem
+*.key
+*.p12
+*.keystore
+
+# typescript
+*.tsbuildinfo
+
+# 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 에디터 / OS
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+*.swp
+
+# claude code (로컬 설정만 제외, 공유 설정은 커밋)
+.claude/settings.local.json
