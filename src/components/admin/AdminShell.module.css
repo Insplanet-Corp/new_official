@@ -16,6 +16,29 @@
   font-size: 13px;
 }
 
+/* 프로필 없음 / 사용여부 N 으로 접근이 막혔을 때 */
+.blocked {
+  max-width: 460px;
+  padding: 28px 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.blockedTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.blockedDesc {
+  margin: 10px 0 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  word-break: keep-all;
+}
+
 /* ===== header ============================================================= */
 .head {
   position: sticky;
