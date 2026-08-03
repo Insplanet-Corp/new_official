@@ -2,6 +2,8 @@
    화면마다 흩어지면 문구가 어긋나므로 여기 한 곳에만 둔다.
    앞의 '전체'는 목록 화면의 조회 조건에서만 쓰고, 등록/수정 화면에서는 뺀다. */
 
+import { PROJECT_FIELDS } from '@/data/contact';
+
 export type Option = { value: string; label: string };
 
 const withAll = (opts: Option[]): Option[] => [{ value: 'all', label: '전체' }, ...opts];
@@ -28,30 +30,29 @@ export const PORTFOLIO_STATUS: Option[] = [
 ];
 export const PORTFOLIO_STATUS_FILTER = withAll(PORTFOLIO_STATUS);
 
-/* ---- 견적문의관리 (기획서 31p) ------------------------------------------- */
-/** 시스템 종류 = 프로젝트 업무범위 */
-export const QUOTE_SYSTEM: Option[] = [
-  { value: 'website', label: '웹사이트' },
-  { value: 'app', label: '앱' },
-  { value: 'ai', label: 'AI' },
-  { value: 'cms', label: 'CMS 시스템' },
-  { value: 'platform', label: '플랫폼개발' },
-  { value: 'ecommerce', label: '이커머스' },
-  { value: 'branding', label: '브랜딩' },
-  { value: 'maintenance', label: '연간 유지보수' },
-  { value: 'etc', label: '기타' },
-];
+/* ---- 견적문의관리 (기획서 31p) -------------------------------------------
+   ⚠️ 값을 여기서 새로 정의하면 안 된다. Contact 폼이 칩에 적힌 한글 문자열을
+   그대로 quotes.project_fields 에 넣기 때문에("웹사이트", "신규" …), 어드민 필터도
+   같은 문자열이어야 매칭된다. 그래서 PROJECT_FIELDS 에서 파생시킨다.
+   (영문 슬러그로 따로 만들었다가 필터가 아무것도 못 거르는 문제가 있었다.) */
+const chipOptions = (key: string): Option[] =>
+  PROJECT_FIELDS.find((f) => f.key === key)?.options.map((o) => ({ value: o, label: o })) ?? [];
+
+/** 시스템 종류 = 프로젝트 업무범위 (project_fields.scope) */
+export const QUOTE_SYSTEM: Option[] = chipOptions('scope');
 export const QUOTE_SYSTEM_FILTER = withAll(QUOTE_SYSTEM);
 
-/** 개발 구분 = 프로젝트 성격 */
-export const QUOTE_KIND: Option[] = [
-  { value: 'new', label: '신규' },
-  { value: 'renewal', label: '리뉴얼' },
-  { value: 'partial', label: '부분개편' },
-  { value: 'consulting', label: '컨설팅' },
-  { value: 'etc', label: '기타' },
-];
+/** 개발 구분 = 프로젝트 성격 (project_fields.nature) */
+export const QUOTE_KIND: Option[] = chipOptions('nature');
 export const QUOTE_KIND_FILTER = withAll(QUOTE_KIND);
+
+/** 견적문의 진행 상태 — 기존 어드민이 쓰던 값 (quotes.status) */
+export const QUOTE_STATUS: Option[] = [
+  { value: 'pending', label: '신규 접수' },
+  { value: 'in_progress', label: '검토 중' },
+  { value: 'completed', label: '완료' },
+];
+export const QUOTE_STATUS_FILTER = withAll(QUOTE_STATUS);
 
 /* ---- 리크루트관리 (기획서 35p) ------------------------------------------- */
 export const RECRUIT_FIELD: Option[] = [
