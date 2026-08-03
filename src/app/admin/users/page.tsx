@@ -1,38 +1,59 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Badge, Empty, Note, PageHead, Search, Select } from '@/components/admin/ui';
+import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, fmtDate } from '@/components/admin/ui';
 import kit from '@/components/admin/kit.module.css';
+import { ADMIN_TABS } from '@/components/admin/tabs';
 import { USE_YN_FILTER } from '@/data/adminOptions';
+import {
+  MISSING_TABLE_NOTICE,
+  isMissingTable,
+  permissionLabels,
+  type AdminUser,
+} from '@/lib/adminUsers';
+import { supabase } from '@/lib/supabase';
 
 /* 사용자관리 - 목록 (기획서 39p)
-   조회 조건: 사용자명 · ID 키워드 + 사용여부.
-   ※ 지금은 화면 틀 — 목록 데이터 연동은 다음 단계. */
-
-type UserRow = {
-  id: string;
-  createdAt: string;
-  name: string;
-  loginId: string;
-  phone: string;
-  use: 'Y' | 'N';
-};
-
-const ROWS: UserRow[] = [];
-
+   조회 조건: 사용자명 · ID 키워드 + 사용여부. */
 export default function UsersListPage() {
+  const [rows, setRows] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
+
   const [q, setQ] = useState('');
   const [use, setUse] = useState('all');
 
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!alive) return;
+      if (error) {
+        if (isMissingTable(error)) setTableMissing(true);
+        else setError(error.message);
+      } else {
+        setRows((data ?? []) as AdminUser[]);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return ROWS.filter((r) => {
-      if (use !== 'all' && r.use !== use) return false;
+    return rows.filter((r) => {
+      if (use !== 'all' && r.use_yn !== use) return false;
       if (!needle) return true;
-      return [r.name, r.loginId].some((x) => x.toLowerCase().includes(needle));
+      return [r.name, r.login_id].some((x) => (x ?? '').toLowerCase().includes(needle));
     });
-  }, [q, use]);
+  }, [rows, q, use]);
 
   return (
     <>
@@ -45,41 +66,41 @@ export default function UsersListPage() {
         }
       />
 
-      <Note>
-        <span>
-          <b>화면 틀</b> — 기획서 6. 사용자관리 구조입니다. 목록 조회와 DB 연동은 아직 붙지
-          않았습니다. 메뉴 권한이 있는 계정만 이 메뉴에 접근할 수 있어야 합니다(기획서 39p).
-        </span>
-      </Note>
+      {tableMissing ? <Note warn>{MISSING_TABLE_NOTICE}</Note> : null}
+      {error ? <Note warn>{error}</Note> : null}
 
       <section className={kit.card}>
         <div className={kit.toolbar}>
           <Search value={q} onChange={setQ} placeholder="사용자명 · ID" />
           <Select label="사용여부" value={use} onChange={setUse} options={USE_YN_FILTER} />
-          <button type="button" className={kit.btn}>
-            조회
-          </button>
           <span className={kit.toolbarSpacer} />
           <span className={kit.count}>
-            조회결과 : <b>{visible.length}</b>건
+            조회결과 : <b>{visible.length}</b> / {rows.length}건
           </span>
         </div>
 
-        {visible.length === 0 ? (
+        {loading ? (
+          <Skeleton />
+        ) : visible.length === 0 ? (
           <Empty
-            title="조회 결과가 없습니다"
-            desc="등록된 사용자가 없거나 조회 조건에 맞는 항목이 없습니다."
+            title={rows.length === 0 ? '등록된 사용자가 없습니다' : '조회 결과가 없습니다'}
+            desc={
+              tableMissing
+                ? '테이블 생성 후 계정 프로필을 등록하면 이곳에 표시됩니다.'
+                : '검색어나 사용여부 조건을 바꿔보세요.'
+            }
           />
         ) : (
           <div className={kit.tableWrap}>
             <table className={kit.table}>
               <thead>
                 <tr>
-                  <th style={{ width: 64 }}>No</th>
+                  <th style={{ width: 56 }}>No</th>
                   <th style={{ width: 130 }}>등록일</th>
                   <th>사용자명</th>
-                  <th style={{ width: 180 }}>사용자 ID</th>
-                  <th style={{ width: 160 }}>전화번호</th>
+                  <th style={{ width: 160 }}>사용자 ID</th>
+                  <th style={{ width: 150 }}>전화번호</th>
+                  <th>메뉴권한</th>
                   <th style={{ width: 90 }}>사용여부</th>
                 </tr>
               </thead>
@@ -87,19 +108,23 @@ export default function UsersListPage() {
                 {visible.map((r, i) => (
                   <tr key={r.id}>
                     <td className={kit.num}>{visible.length - i}</td>
-                    <td className={kit.num}>{r.createdAt}</td>
+                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
                     <td>
-                      {/* 사용자명 · ID 클릭 -> 조회 화면 */}
+                      {/* 사용자명 · ID 클릭 -> 조회 화면 (기획서 39p 8번) */}
                       <Link href={`/admin/users/${r.id}`} className={kit.tdStrong}>
                         {r.name}
                       </Link>
+                      <div className={kit.tdSub}>{r.email}</div>
                     </td>
                     <td>
-                      <Link href={`/admin/users/${r.id}`}>{r.loginId}</Link>
+                      <Link href={`/admin/users/${r.id}`}>{r.login_id}</Link>
                     </td>
-                    <td className={kit.nowrap}>{r.phone}</td>
+                    <td className={kit.nowrap}>{r.phone || '-'}</td>
+                    <td className={kit.clamp}>
+                      {permissionLabels(r.permissions, ADMIN_TABS) || '없음'}
+                    </td>
                     <td>
-                      <Badge tone={r.use === 'Y' ? 'green' : 'plain'}>{r.use}</Badge>
+                      <Badge tone={r.use_yn === 'Y' ? 'green' : 'plain'}>{r.use_yn}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -109,8 +134,8 @@ export default function UsersListPage() {
         )}
 
         <div className={kit.cardFoot}>
-          <span>어드민에 접근할 수 있는 계정입니다.</span>
-          <span>기획서 6 · 사용자관리 목록</span>
+          <span>로그인 자체는 Supabase Auth 가 처리하고, 이 표는 그 계정의 프로필입니다.</span>
+          <span>Supabase · admin_users</span>
         </div>
       </section>
     </>

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Badge,
   Empty,
@@ -13,11 +13,15 @@ import {
   Stats,
   fmtDate,
   type BadgeTone,
-} from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
-import { QUOTE_KIND_FILTER, QUOTE_SYSTEM_FILTER, QUOTE_STATUS } from '@/data/adminOptions';
-import { hasField, fieldText, type Quote } from '@/lib/quotes';
-import { supabase } from '@/lib/supabase';
+} from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
+import {
+  QUOTE_KIND_FILTER,
+  QUOTE_SYSTEM_FILTER,
+  QUOTE_STATUS,
+} from "@/data/adminOptions";
+import { hasField, fieldText, type Quote } from "@/lib/quotes";
+import { supabase } from "@/lib/supabase";
 
 /* 견적문의관리 - 목록 (기획서 31p)
    조회 조건: 기업명 + 신청인 키워드(둘 다 입력 시 AND) + 시스템 종류 + 개발 구분.
@@ -26,12 +30,15 @@ import { supabase } from '@/lib/supabase';
    접수 건수가 많아지면 PostgREST 의 jsonb 연산자로 서버 필터링해야 한다. */
 
 const STATUS_TONE: Record<string, BadgeTone> = {
-  pending: 'blue',
-  in_progress: 'amber',
-  completed: 'green',
+  pending: "blue",
+  in_progress: "amber",
+  completed: "green",
 };
 const statusMeta = (v: string | null) =>
-  QUOTE_STATUS.find((s) => s.value === v) ?? { value: v ?? '', label: v || '미지정' };
+  QUOTE_STATUS.find((s) => s.value === v) ?? {
+    value: v ?? "",
+    label: v || "미지정",
+  };
 
 export default function QuotesListPage() {
   const [rows, setRows] = useState<Quote[]>([]);
@@ -39,18 +46,18 @@ export default function QuotesListPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
 
-  const [company, setCompany] = useState('');
-  const [person, setPerson] = useState('');
-  const [system, setSystem] = useState('all');
-  const [kind, setKind] = useState('all');
+  const [company, setCompany] = useState("");
+  const [person, setPerson] = useState("");
+  const [system, setSystem] = useState("all");
+  const [kind, setKind] = useState("all");
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("quotes")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (!alive) return;
       if (error) setError(error.message);
       else setRows((data ?? []) as Quote[]);
@@ -65,8 +72,13 @@ export default function QuotesListPage() {
   const changeStatus = async (id: string, next: string) => {
     const prev = rows;
     setSaving(id);
-    setRows((r) => r.map((row) => (row.id === id ? { ...row, status: next } : row)));
-    const { error } = await supabase.from('quotes').update({ status: next }).eq('id', id);
+    setRows((r) =>
+      r.map((row) => (row.id === id ? { ...row, status: next } : row)),
+    );
+    const { error } = await supabase
+      .from("quotes")
+      .update({ status: next })
+      .eq("id", id);
     setSaving(null);
     if (error) {
       setRows(prev);
@@ -80,11 +92,11 @@ export default function QuotesListPage() {
     const c = company.trim().toLowerCase();
     const p = person.trim().toLowerCase();
     return rows.filter((r) => {
-      if (!hasField(r, 'scope', system)) return false;
-      if (!hasField(r, 'nature', kind)) return false;
+      if (!hasField(r, "scope", system)) return false;
+      if (!hasField(r, "nature", kind)) return false;
       // 기업명·신청인 둘 다 입력하면 AND 검색 (기획서 31p 3번)
-      if (c && !(r.company ?? '').toLowerCase().includes(c)) return false;
-      if (p && !(r.person ?? '').toLowerCase().includes(p)) return false;
+      if (c && !(r.company ?? "").toLowerCase().includes(c)) return false;
+      if (p && !(r.person ?? "").toLowerCase().includes(p)) return false;
       return true;
     });
   }, [rows, company, person, system, kind]);
@@ -97,10 +109,10 @@ export default function QuotesListPage() {
 
       <Stats
         items={[
-          { label: '전체 문의', value: rows.length, unit: '건' },
-          { label: '신규 접수', value: count('pending'), unit: '건' },
-          { label: '검토 중', value: count('in_progress'), unit: '건' },
-          { label: '완료', value: count('completed'), unit: '건' },
+          { label: "전체 문의", value: rows.length, unit: "건" },
+          { label: "신규 접수", value: count("pending"), unit: "건" },
+          { label: "검토 중", value: count("in_progress"), unit: "건" },
+          { label: "완료", value: count("completed"), unit: "건" },
         ]}
       />
 
@@ -116,7 +128,12 @@ export default function QuotesListPage() {
             onChange={setSystem}
             options={QUOTE_SYSTEM_FILTER}
           />
-          <Select label="개발 구분" value={kind} onChange={setKind} options={QUOTE_KIND_FILTER} />
+          <Select
+            label="개발 구분"
+            value={kind}
+            onChange={setKind}
+            options={QUOTE_KIND_FILTER}
+          />
           <span className={kit.toolbarSpacer} />
           <span className={kit.count}>
             조회결과 : <b>{visible.length}</b> / {rows.length}건
@@ -127,11 +144,15 @@ export default function QuotesListPage() {
           <Skeleton />
         ) : visible.length === 0 ? (
           <Empty
-            title={rows.length === 0 ? '접수된 견적 문의가 없습니다' : '조회 결과가 없습니다'}
+            title={
+              rows.length === 0
+                ? "접수된 견적 문의가 없습니다"
+                : "조회 결과가 없습니다"
+            }
             desc={
               rows.length === 0
-                ? 'Contact 페이지에서 문의가 접수되면 이곳에 표시됩니다.'
-                : '검색어나 조회 조건을 바꿔보세요.'
+                ? "Contact 페이지에서 문의가 접수되면 이곳에 표시됩니다."
+                : "검색어나 조회 조건을 바꿔보세요."
             }
           />
         ) : (
@@ -155,12 +176,15 @@ export default function QuotesListPage() {
                     <td className={kit.num}>{fmtDate(r.created_at)}</td>
                     <td>
                       {/* 기업명 또는 신청인 클릭 -> 조회 화면 (기획서 31p 7번) */}
-                      <Link href={`/admin/quotes/${r.id}`} className={kit.tdStrong}>
-                        {r.company || '-'}
+                      <Link
+                        href={`/admin/quotes/${r.id}`}
+                        className={kit.tdStrong}
+                      >
+                        {r.company || "-"}
                       </Link>
-                      <div className={kit.tdSub}>{r.person || '-'}</div>
+                      <div className={kit.tdSub}>{r.person || "-"}</div>
                     </td>
-                    <td className={kit.nowrap}>{r.phone || '-'}</td>
+                    <td className={kit.nowrap}>{r.phone || "-"}</td>
                     <td>
                       <div className={kit.chips}>
                         {(r.project_fields?.scope ?? []).map((v) => (
@@ -170,15 +194,15 @@ export default function QuotesListPage() {
                         ))}
                       </div>
                     </td>
-                    <td>{fieldText(r, 'nature') || '-'}</td>
+                    <td>{fieldText(r, "nature") || "-"}</td>
                     <td>
-                      <Badge tone={STATUS_TONE[r.status ?? ''] ?? 'plain'}>
+                      {/* <Badge tone={STATUS_TONE[r.status ?? ''] ?? 'plain'}>
                         {statusMeta(r.status).label}
-                      </Badge>
+                      </Badge> */}
                       <select
                         className={kit.statusSelect}
                         aria-label="진행 상태 변경"
-                        value={r.status ?? ''}
+                        value={r.status ?? ""}
                         disabled={saving === r.id}
                         onChange={(e) => changeStatus(r.id, e.target.value)}
                       >

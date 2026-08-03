@@ -1,15 +1,49 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ReadOnly, Row } from '@/components/admin/form';
-import { Note, SubHead } from '@/components/admin/ui';
+import { Empty, Note, Skeleton, SubHead, fmtDate } from '@/components/admin/ui';
 import kit from '@/components/admin/kit.module.css';
 import s from '@/components/admin/form.module.css';
+import { ADMIN_TABS } from '@/components/admin/tabs';
+import {
+  MISSING_TABLE_NOTICE,
+  isMissingTable,
+  permissionLabels,
+  type AdminUser,
+} from '@/lib/adminUsers';
+import { supabase } from '@/lib/supabase';
 
 /* 사용자관리 - 조회 (기획서 42p) */
 export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const [row, setRow] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (!alive) return;
+      if (error) {
+        if (isMissingTable(error)) setTableMissing(true);
+        else setError(error.message);
+      } else {
+        setRow((data as AdminUser) ?? null);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
 
   return (
     <>
@@ -24,29 +58,42 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         }
       />
 
-      <Note>
-        <span>
-          <b>화면 틀</b> — 데이터 조회는 아직 붙지 않았습니다 (요청 ID: <code>{id}</code>).
-        </span>
-      </Note>
+      {tableMissing ? <Note warn>{MISSING_TABLE_NOTICE}</Note> : null}
+      {error ? <Note warn>{error}</Note> : null}
 
-      <section className={kit.card}>
-        <Row label="사용자명">
-          <ReadOnly>{null}</ReadOnly>
-        </Row>
-        <Row label="사용여부">
-          <ReadOnly>{null}</ReadOnly>
-        </Row>
-        <Row label="사용자 ID">
-          <ReadOnly>{null}</ReadOnly>
-        </Row>
-        <Row label="전화번호">
-          <ReadOnly>{null}</ReadOnly>
-        </Row>
-        <Row label="메뉴권한">
-          <ReadOnly>{null}</ReadOnly>
-        </Row>
-      </section>
+      {loading ? (
+        <section className={kit.card}>
+          <Skeleton />
+        </section>
+      ) : !row ? (
+        <section className={kit.card}>
+          <Empty title="계정을 찾을 수 없습니다" desc="이미 삭제되었거나 잘못된 주소입니다." />
+        </section>
+      ) : (
+        <section className={kit.card}>
+          <Row label="사용자명">
+            <ReadOnly>{row.name}</ReadOnly>
+          </Row>
+          <Row label="사용여부">
+            <ReadOnly>{row.use_yn}</ReadOnly>
+          </Row>
+          <Row label="사용자 ID">
+            <ReadOnly>{row.login_id}</ReadOnly>
+          </Row>
+          <Row label="이메일" hint="Supabase Auth 로그인에 쓰는 주소입니다.">
+            <ReadOnly>{row.email}</ReadOnly>
+          </Row>
+          <Row label="전화번호">
+            <ReadOnly>{row.phone}</ReadOnly>
+          </Row>
+          <Row label="메뉴권한">
+            <ReadOnly>{permissionLabels(row.permissions, ADMIN_TABS) || null}</ReadOnly>
+          </Row>
+          <Row label="등록일">
+            <ReadOnly>{fmtDate(row.created_at)}</ReadOnly>
+          </Row>
+        </section>
+      )}
 
       <div className={s.actions}>
         <Link href={`/admin/users/${id}/edit`} className={`${kit.btn} ${kit.btnPrimary}`}>
