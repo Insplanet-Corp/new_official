@@ -1,170 +1,122 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, Stats, fmtDate, type BadgeTone } from '@/components/admin/ui';
-import { RECRUIT_ROLES } from '@/data/contact';
-import { supabase } from '@/lib/supabase';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Badge, Empty, Note, PageHead, Search, Select } from '@/components/admin/ui';
 import kit from '@/components/admin/kit.module.css';
+import {
+  RECRUIT_CAREER_FILTER,
+  RECRUIT_EMPLOYMENT_FILTER,
+  RECRUIT_FIELD_FILTER,
+  RECRUIT_GRADE_FILTER,
+  labelOf,
+} from '@/data/adminOptions';
 
-const btnSm = `${kit.btn} ${kit.btnSm}`;
+/* 리크루트관리 - 목록 (기획서 35p)
+   조회 조건: 지원자명 + 지원분야 + 기술등급 + 경력 + 재직상태.
+   ※ 지금은 화면 틀 — 목록 데이터 연동은 다음 단계. */
 
-type Recruit = {
+type RecruitRow = {
   id: string;
-  created_at: string;
-  name: string | null;
-  phone: string | null;
-  email: string | null;
-  url: string | null;
-  role: string[] | null;
-  file_url: string | null;
-  status: string | null;
+  createdAt: string;
+  name: string;
+  phone: string;
+  field: string;
+  grade: string;
+  career: string;
+  employment: string;
 };
 
-const STATUS: { value: string; label: string; tone: BadgeTone }[] = [
-  { value: 'pending', label: '신규 접수', tone: 'blue' },
-  { value: 'reviewing', label: '서류 검토', tone: 'amber' },
-  { value: 'hired', label: '채용 확정', tone: 'green' },
-  { value: 'rejected', label: '보류', tone: 'red' },
-];
+const ROWS: RecruitRow[] = [];
 
-const statusMeta = (v: string | null) =>
-  STATUS.find((s) => s.value === v) ?? { value: v ?? '', label: v || '미지정', tone: 'plain' as BadgeTone };
-
-export default function RecruitPage() {
-  const [rows, setRows] = useState<Recruit[]>([]);
-  const [loading, setLoading] = useState(true);
-  /** 테이블이 아직 없을 때(Join us 모달이 DB에 저장하지 않는 상태) 안내를 띄운다 */
-  const [tableMissing, setTableMissing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function RecruitListPage() {
   const [q, setQ] = useState('');
-  const [role, setRole] = useState('all');
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from('recruits')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!alive) return;
-      if (error) {
-        // PGRST205 / 42P01 = 테이블 없음. 그 외는 실제 오류로 노출.
-        if (/does not exist|schema cache|42P01|PGRST205/i.test(`${error.code} ${error.message}`)) {
-          setTableMissing(true);
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setRows((data ?? []) as Recruit[]);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const [field, setField] = useState('all');
+  const [grade, setGrade] = useState('all');
+  const [career, setCareer] = useState('all');
+  const [employment, setEmployment] = useState('all');
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (role !== 'all' && !(r.role ?? []).includes(role)) return false;
-      if (!needle) return true;
-      return [r.name, r.email, r.phone].some((v) => (v ?? '').toLowerCase().includes(needle));
+    return ROWS.filter((r) => {
+      if (field !== 'all' && r.field !== field) return false;
+      if (grade !== 'all' && r.grade !== grade) return false;
+      if (career !== 'all' && r.career !== career) return false;
+      if (employment !== 'all' && r.employment !== employment) return false;
+      if (needle && !r.name.toLowerCase().includes(needle)) return false;
+      return true;
     });
-  }, [rows, q, role]);
-
-  const count = (v: string) => rows.filter((r) => r.status === v).length;
+  }, [q, field, grade, career, employment]);
 
   return (
     <>
       <PageHead href="/admin/recruit" />
 
-      {tableMissing ? (
-        <Note warn>
-          <span>
-            <b>recruits 테이블이 아직 없습니다</b> — Contact 페이지의 Join us 모달은 현재 지원서를 DB에
-            저장하지 않습니다. Supabase 에 <code>recruits</code>(name · phone · email · url · role ·
-            file_url · status) 테이블을 만들고 모달의 제출 핸들러를 연결하면 이 목록이 바로 채워집니다.
-          </span>
-        </Note>
-      ) : null}
-      {error ? <Note warn>{error}</Note> : null}
-
-      <Stats
-        items={[
-          { label: '전체 지원', value: rows.length, unit: '명' },
-          { label: '신규 접수', value: count('pending'), unit: '명' },
-          { label: '서류 검토', value: count('reviewing'), unit: '명' },
-          { label: '채용 확정', value: count('hired'), unit: '명' },
-        ]}
-      />
+      <Note>
+        <span>
+          <b>화면 틀</b> — 기획서 5. 리크루트관리 구조입니다. 목록 조회와 DB 연동은 아직 붙지
+          않았습니다.
+        </span>
+      </Note>
 
       <section className={kit.card}>
         <div className={kit.toolbar}>
-          <Search value={q} onChange={setQ} placeholder="이름 · 이메일 · 연락처 검색" />
+          <Search value={q} onChange={setQ} placeholder="지원자" />
+          <Select label="지원분야" value={field} onChange={setField} options={RECRUIT_FIELD_FILTER} />
+          <Select label="기술등급" value={grade} onChange={setGrade} options={RECRUIT_GRADE_FILTER} />
+          <Select label="경력" value={career} onChange={setCareer} options={RECRUIT_CAREER_FILTER} />
           <Select
-            label="지원 직군"
-            value={role}
-            onChange={setRole}
-            options={[{ value: 'all', label: '전체 직군' }, ...RECRUIT_ROLES.map((r) => ({ value: r, label: r }))]}
+            label="재직상태"
+            value={employment}
+            onChange={setEmployment}
+            options={RECRUIT_EMPLOYMENT_FILTER}
           />
+          <button type="button" className={kit.btn}>
+            조회
+          </button>
           <span className={kit.toolbarSpacer} />
           <span className={kit.count}>
-            <b>{visible.length}</b> / {rows.length}명
+            조회결과 : <b>{visible.length}</b>건
           </span>
         </div>
 
-        {loading ? (
-          <Skeleton />
-        ) : visible.length === 0 ? (
+        {visible.length === 0 ? (
           <Empty
-            title="접수된 지원서가 없습니다"
-            desc="Join us 모달로 지원서가 접수되면 이곳에 표시됩니다."
+            title="조회 결과가 없습니다"
+            desc="접수된 지원서가 없거나 조회 조건에 맞는 항목이 없습니다."
           />
         ) : (
           <div className={kit.tableWrap}>
             <table className={kit.table}>
               <thead>
                 <tr>
-                  <th style={{ width: 150 }}>지원일시</th>
-                  <th style={{ width: 140 }}>지원자</th>
-                  <th style={{ width: 200 }}>연락처</th>
-                  <th>지원 직군</th>
-                  <th style={{ width: 130 }}>포트폴리오</th>
-                  <th style={{ width: 120 }}>상태</th>
+                  <th style={{ width: 64 }}>No</th>
+                  <th style={{ width: 140 }}>지원일시</th>
+                  <th style={{ width: 130 }}>지원자</th>
+                  <th style={{ width: 150 }}>연락처</th>
+                  <th style={{ width: 120 }}>지원분야</th>
+                  <th style={{ width: 100 }}>기술등급</th>
+                  <th style={{ width: 90 }}>경력</th>
+                  <th style={{ width: 110 }}>재직상태</th>
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r) => (
+                {visible.map((r, i) => (
                   <tr key={r.id}>
-                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
-                    <td className={kit.tdStrong}>{r.name || '-'}</td>
+                    <td className={kit.num}>{visible.length - i}</td>
+                    <td className={kit.num}>{r.createdAt}</td>
                     <td>
-                      <div className={kit.nowrap}>{r.phone || '-'}</div>
-                      <div className={kit.tdSub}>{r.email || '-'}</div>
+                      <Link href={`/admin/recruit/${r.id}`} className={kit.tdStrong}>
+                        {r.name}
+                      </Link>
                     </td>
+                    <td className={kit.nowrap}>{r.phone}</td>
                     <td>
-                      <div className={kit.chips}>
-                        {(r.role ?? []).map((v) => (
-                          <span className={kit.chip} key={v}>
-                            {v}
-                          </span>
-                        ))}
-                      </div>
-                      {r.url ? <div className={kit.tdSub}>{r.url}</div> : null}
+                      <Badge tone="plain">{labelOf(RECRUIT_FIELD_FILTER, r.field)}</Badge>
                     </td>
-                    <td>
-                      {r.file_url ? (
-                        <a className={btnSm} href={r.file_url} target="_blank" rel="noreferrer">
-                          내려받기
-                        </a>
-                      ) : (
-                        <span className={kit.num}>-</span>
-                      )}
-                    </td>
-                    <td>
-                      <Badge tone={statusMeta(r.status).tone}>{statusMeta(r.status).label}</Badge>
-                    </td>
+                    <td>{labelOf(RECRUIT_GRADE_FILTER, r.grade)}</td>
+                    <td className={kit.num}>{labelOf(RECRUIT_CAREER_FILTER, r.career)}</td>
+                    <td>{labelOf(RECRUIT_EMPLOYMENT_FILTER, r.employment)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -174,7 +126,7 @@ export default function RecruitPage() {
 
         <div className={kit.cardFoot}>
           <span>최신 지원순으로 정렬됩니다.</span>
-          <span>Supabase · recruits</span>
+          <span>기획서 5 · 리크루트관리 목록</span>
         </div>
       </section>
     </>

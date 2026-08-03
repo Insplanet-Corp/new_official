@@ -1,181 +1,114 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Badge, Empty, Note, PageHead, Search, Select, Skeleton, Stats, fmtDate, selectClass, type BadgeTone } from '@/components/admin/ui';
-import { PROJECT_FIELDS } from '@/data/contact';
-import { supabase } from '@/lib/supabase';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Badge, Empty, Note, PageHead, Search, Select } from '@/components/admin/ui';
 import kit from '@/components/admin/kit.module.css';
+import { QUOTE_KIND_FILTER, QUOTE_SYSTEM_FILTER, labelOf } from '@/data/adminOptions';
 
-type Quote = {
+/* 견적문의관리 - 목록 (기획서 31p)
+   조회 조건: 기업명 + 신청인 키워드(둘 다 입력 시 AND) + 시스템 종류 + 개발 구분.
+   ※ 지금은 화면 틀 — 목록 데이터 연동은 다음 단계. */
+
+type QuoteRow = {
   id: string;
-  created_at: string;
-  company: string | null;
-  person: string | null;
-  phone: string | null;
-  email: string | null;
-  url: string | null;
-  content: string | null;
-  status: string | null;
-  project_fields: Record<string, string[]> | null;
+  createdAt: string;
+  company: string;
+  person: string;
+  phone: string;
+  system: string;
+  kind: string;
 };
 
-const STATUS: { value: string; label: string; tone: BadgeTone }[] = [
-  { value: 'pending', label: '신규 접수', tone: 'blue' },
-  { value: 'in_progress', label: '검토 중', tone: 'amber' },
-  { value: 'completed', label: '완료', tone: 'green' },
-];
+const ROWS: QuoteRow[] = [];
 
-const statusMeta = (v: string | null) =>
-  STATUS.find((s) => s.value === v) ?? { value: v ?? '', label: v || '미지정', tone: 'plain' as BadgeTone };
-
-/* chip group key -> the human label used on the contact form */
-const FIELD_LABEL: Record<string, string> = Object.fromEntries(
-  PROJECT_FIELDS.map((f) => [f.key, f.label]),
-);
-
-export default function QuotesPage() {
-  const [rows, setRows] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState<string | null>(null);
-  const [q, setQ] = useState('');
-  const [filter, setFilter] = useState('all');
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!alive) return;
-      if (error) setError(error.message);
-      else setRows((data ?? []) as Quote[]);
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const changeStatus = async (id: string, next: string) => {
-    const prev = rows;
-    setSaving(id);
-    setRows((r) => r.map((row) => (row.id === id ? { ...row, status: next } : row))); // optimistic
-    const { error } = await supabase.from('quotes').update({ status: next }).eq('id', id);
-    setSaving(null);
-    if (error) {
-      setRows(prev); // roll back
-      setError(`상태 변경 실패: ${error.message}`);
-    } else {
-      setError(null);
-    }
-  };
+export default function QuotesListPage() {
+  const [company, setCompany] = useState('');
+  const [person, setPerson] = useState('');
+  const [system, setSystem] = useState('all');
+  const [kind, setKind] = useState('all');
 
   const visible = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (filter !== 'all' && r.status !== filter) return false;
-      if (!needle) return true;
-      return [r.company, r.person, r.email, r.phone, r.content]
-        .some((v) => (v ?? '').toLowerCase().includes(needle));
+    const c = company.trim().toLowerCase();
+    const p = person.trim().toLowerCase();
+    return ROWS.filter((r) => {
+      if (system !== 'all' && r.system !== system) return false;
+      if (kind !== 'all' && r.kind !== kind) return false;
+      if (c && !r.company.toLowerCase().includes(c)) return false; // 둘 다 입력하면 AND
+      if (p && !r.person.toLowerCase().includes(p)) return false;
+      return true;
     });
-  }, [rows, q, filter]);
-
-  const count = (v: string) => rows.filter((r) => r.status === v).length;
+  }, [company, person, system, kind]);
 
   return (
     <>
       <PageHead href="/admin/quotes" />
 
-      <Stats
-        items={[
-          { label: '전체 문의', value: rows.length, unit: '건' },
-          { label: '신규 접수', value: count('pending'), unit: '건' },
-          { label: '검토 중', value: count('in_progress'), unit: '건' },
-          { label: '완료', value: count('completed'), unit: '건' },
-        ]}
-      />
-
-      {error ? <Note warn>{error}</Note> : null}
+      <Note>
+        <span>
+          <b>화면 틀</b> — 기획서 4. 견적문의관리 구조입니다. 목록 조회와 DB 연동은 아직 붙지
+          않았습니다.
+        </span>
+      </Note>
 
       <section className={kit.card}>
         <div className={kit.toolbar}>
-          <Search value={q} onChange={setQ} placeholder="기업명 · 담당자 · 이메일 · 내용 검색" />
+          <Search value={company} onChange={setCompany} placeholder="기업명" />
+          <Search value={person} onChange={setPerson} placeholder="신청인" />
           <Select
-            label="진행 상태"
-            value={filter}
-            onChange={setFilter}
-            options={[{ value: 'all', label: '전체 상태' }, ...STATUS.map((s) => ({ value: s.value, label: s.label }))]}
+            label="시스템 종류"
+            value={system}
+            onChange={setSystem}
+            options={QUOTE_SYSTEM_FILTER}
           />
+          <Select label="개발 구분" value={kind} onChange={setKind} options={QUOTE_KIND_FILTER} />
+          <button type="button" className={kit.btn}>
+            조회
+          </button>
           <span className={kit.toolbarSpacer} />
           <span className={kit.count}>
-            <b>{visible.length}</b> / {rows.length}건
+            조회결과 : <b>{visible.length}</b>건
           </span>
         </div>
 
-        {loading ? (
-          <Skeleton />
-        ) : visible.length === 0 ? (
+        {visible.length === 0 ? (
           <Empty
-            title={rows.length === 0 ? '접수된 견적 문의가 없습니다' : '조건에 맞는 문의가 없습니다'}
-            desc={rows.length === 0 ? 'Contact 페이지에서 문의가 접수되면 이곳에 표시됩니다.' : '검색어나 상태 필터를 바꿔보세요.'}
+            title="조회 결과가 없습니다"
+            desc="접수된 견적 문의가 없거나 조회 조건에 맞는 항목이 없습니다."
           />
         ) : (
           <div className={kit.tableWrap}>
             <table className={kit.table}>
               <thead>
                 <tr>
-                  <th style={{ width: 150 }}>접수일시</th>
-                  <th style={{ width: 190 }}>기업 / 담당자</th>
-                  <th style={{ width: 200 }}>연락처</th>
-                  <th>의뢰 내용</th>
-                  <th style={{ width: 150 }}>진행 상태</th>
+                  <th style={{ width: 64 }}>No</th>
+                  <th style={{ width: 140 }}>접수일시</th>
+                  <th>기업명</th>
+                  <th style={{ width: 120 }}>신청인</th>
+                  <th style={{ width: 150 }}>연락처</th>
+                  <th style={{ width: 140 }}>시스템 종류</th>
+                  <th style={{ width: 110 }}>개발 구분</th>
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r) => (
+                {visible.map((r, i) => (
                   <tr key={r.id}>
-                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
+                    <td className={kit.num}>{visible.length - i}</td>
+                    <td className={kit.num}>{r.createdAt}</td>
                     <td>
-                      <div className={kit.tdStrong}>{r.company || '-'}</div>
-                      <div className={kit.tdSub}>{r.person || '-'}</div>
+                      {/* 기업명 또는 신청인 클릭 -> 조회 화면 */}
+                      <Link href={`/admin/quotes/${r.id}`} className={kit.tdStrong}>
+                        {r.company}
+                      </Link>
                     </td>
                     <td>
-                      <div className={kit.nowrap}>{r.phone || '-'}</div>
-                      <div className={kit.tdSub}>{r.email || '-'}</div>
+                      <Link href={`/admin/quotes/${r.id}`}>{r.person}</Link>
                     </td>
+                    <td className={kit.nowrap}>{r.phone}</td>
                     <td>
-                      <p className={kit.clamp}>{r.content || '내용 없음'}</p>
-                      {r.url ? <div className={kit.tdSub}>{r.url}</div> : null}
-                      <div className={kit.chips} style={{ marginTop: 8 }}>
-                        {Object.entries(r.project_fields ?? {}).flatMap(([key, values]) =>
-                          (values ?? []).map((v) => (
-                            <span className={kit.chip} key={`${key}-${v}`}>
-                              <span className={kit.chipKey}>{FIELD_LABEL[key] ?? key}</span>
-                              {v}
-                            </span>
-                          )),
-                        )}
-                      </div>
+                      <Badge tone="plain">{labelOf(QUOTE_SYSTEM_FILTER, r.system)}</Badge>
                     </td>
-                    <td>
-                      <Badge tone={statusMeta(r.status).tone}>{statusMeta(r.status).label}</Badge>
-                      <select
-                        className={selectClass}
-                        style={{ marginTop: 8, width: '100%', height: 30, fontSize: 12.5 }}
-                        aria-label="진행 상태 변경"
-                        value={r.status ?? ''}
-                        disabled={saving === r.id}
-                        onChange={(e) => changeStatus(r.id, e.target.value)}
-                      >
-                        {STATUS.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                    <td>{labelOf(QUOTE_KIND_FILTER, r.kind)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -185,7 +118,7 @@ export default function QuotesPage() {
 
         <div className={kit.cardFoot}>
           <span>최신 접수순으로 정렬됩니다.</span>
-          <span>Supabase · quotes</span>
+          <span>기획서 4 · 견적문의관리 목록</span>
         </div>
       </section>
     </>

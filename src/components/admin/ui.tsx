@@ -21,6 +21,30 @@ export function PageHead({ href, actions }: { href: string; actions?: ReactNode 
   );
 }
 
+/* 목록 하위 화면(등록/조회/수정)의 페이지 헤드 — 탭 목록에 없는 화면이라 직접 받는다 */
+export function SubHead({
+  eyebrow,
+  title,
+  desc,
+  actions,
+}: {
+  eyebrow: string;
+  title: string;
+  desc?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className={s.pageHead}>
+      <div>
+        <p className={s.eyebrow}>{eyebrow}</p>
+        <h1 className={s.title}>{title}</h1>
+        {desc ? <p className={s.desc}>{desc}</p> : null}
+      </div>
+      {actions ? <div className={s.pageActions}>{actions}</div> : null}
+    </div>
+  );
+}
+
 /* ---- stat tiles --------------------------------------------------------- */
 export function Stats({ items }: { items: { label: string; value: ReactNode; unit?: string }[] }) {
   return (

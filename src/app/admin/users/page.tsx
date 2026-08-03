@@ -1,156 +1,105 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Badge, Empty, Note, PageHead, Search, Skeleton, Stats, fmtDate, type BadgeTone } from '@/components/admin/ui';
-import { supabase } from '@/lib/supabase';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Badge, Empty, Note, PageHead, Search, Select } from '@/components/admin/ui';
 import kit from '@/components/admin/kit.module.css';
+import { USE_YN_FILTER } from '@/data/adminOptions';
 
-const btnPrimary = `${kit.btn} ${kit.btnPrimary}`;
-const btnSm = `${kit.btn} ${kit.btnSm}`;
+/* 사용자관리 - 목록 (기획서 39p)
+   조회 조건: 사용자명 · ID 키워드 + 사용여부.
+   ※ 지금은 화면 틀 — 목록 데이터 연동은 다음 단계. */
 
-type AdminUser = {
+type UserRow = {
   id: string;
-  created_at: string;
-  email: string | null;
-  name: string | null;
-  role: string | null;
-  last_sign_in_at: string | null;
+  createdAt: string;
+  name: string;
+  loginId: string;
+  phone: string;
+  use: 'Y' | 'N';
 };
 
-const ROLE_TONE: Record<string, BadgeTone> = { owner: 'green', admin: 'blue', viewer: 'plain' };
+const ROWS: UserRow[] = [];
 
-export default function UsersPage() {
-  const [rows, setRows] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  /** admin_users 프로필 테이블이 아직 없을 때 */
-  const [tableMissing, setTableMissing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function UsersListPage() {
   const [q, setQ] = useState('');
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!alive) return;
-
-      if (error) {
-        if (/does not exist|schema cache|42P01|PGRST205/i.test(`${error.code} ${error.message}`)) {
-          setTableMissing(true);
-          // 테이블이 없어도 화면이 비지 않도록 현재 로그인한 계정만 보여준다
-          if (session?.user) {
-            setRows([
-              {
-                id: session.user.id,
-                created_at: session.user.created_at,
-                email: session.user.email ?? null,
-                name: null,
-                role: 'admin',
-                last_sign_in_at: session.user.last_sign_in_at ?? null,
-              },
-            ]);
-          }
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setRows((data ?? []) as AdminUser[]);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const [use, setUse] = useState('all');
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return rows;
-    return rows.filter((r) => [r.email, r.name].some((v) => (v ?? '').toLowerCase().includes(needle)));
-  }, [rows, q]);
+    return ROWS.filter((r) => {
+      if (use !== 'all' && r.use !== use) return false;
+      if (!needle) return true;
+      return [r.name, r.loginId].some((x) => x.toLowerCase().includes(needle));
+    });
+  }, [q, use]);
 
   return (
     <>
       <PageHead
         href="/admin/users"
         actions={
-          <button type="button" className={btnPrimary} disabled>
-            + 관리자 초대
-          </button>
+          <Link href="/admin/users/new" className={`${kit.btn} ${kit.btnPrimary}`}>
+            + 등록
+          </Link>
         }
       />
 
-      {tableMissing ? (
-        <Note warn>
-          <span>
-            <b>admin_users 테이블이 아직 없습니다</b> — 브라우저의 anon 키로는 Supabase Auth 사용자
-            목록을 조회할 수 없습니다(service-role 키가 필요). <code>admin_users</code>(email · name ·
-            role) 프로필 테이블을 만들어 auth 사용자와 매핑하거나, 서버 라우트에서 service-role 키로
-            조회하도록 붙이면 전체 목록이 표시됩니다. 지금은 로그인한 계정만 보여 줍니다.
-          </span>
-        </Note>
-      ) : null}
-      {error ? <Note warn>{error}</Note> : null}
-
-      <Stats
-        items={[
-          { label: '관리자 계정', value: rows.length, unit: '개' },
-          { label: '최근 30일 로그인', value: rows.filter((r) => {
-              if (!r.last_sign_in_at) return false;
-              return Date.now() - new Date(r.last_sign_in_at).getTime() < 30 * 86400000;
-            }).length, unit: '개' },
-        ]}
-      />
+      <Note>
+        <span>
+          <b>화면 틀</b> — 기획서 6. 사용자관리 구조입니다. 목록 조회와 DB 연동은 아직 붙지
+          않았습니다. 메뉴 권한이 있는 계정만 이 메뉴에 접근할 수 있어야 합니다(기획서 39p).
+        </span>
+      </Note>
 
       <section className={kit.card}>
         <div className={kit.toolbar}>
-          <Search value={q} onChange={setQ} placeholder="이메일 · 이름 검색" />
+          <Search value={q} onChange={setQ} placeholder="사용자명 · ID" />
+          <Select label="사용여부" value={use} onChange={setUse} options={USE_YN_FILTER} />
+          <button type="button" className={kit.btn}>
+            조회
+          </button>
           <span className={kit.toolbarSpacer} />
           <span className={kit.count}>
-            <b>{visible.length}</b> / {rows.length}개
+            조회결과 : <b>{visible.length}</b>건
           </span>
         </div>
 
-        {loading ? (
-          <Skeleton />
-        ) : visible.length === 0 ? (
-          <Empty title="표시할 계정이 없습니다" desc="Supabase Auth 에 관리자 계정을 추가해 주세요." />
+        {visible.length === 0 ? (
+          <Empty
+            title="조회 결과가 없습니다"
+            desc="등록된 사용자가 없거나 조회 조건에 맞는 항목이 없습니다."
+          />
         ) : (
           <div className={kit.tableWrap}>
             <table className={kit.table}>
               <thead>
                 <tr>
-                  <th>계정</th>
-                  <th style={{ width: 130 }}>권한</th>
-                  <th style={{ width: 170 }}>생성일</th>
-                  <th style={{ width: 170 }}>최근 로그인</th>
-                  <th style={{ width: 120 }} />
+                  <th style={{ width: 64 }}>No</th>
+                  <th style={{ width: 130 }}>등록일</th>
+                  <th>사용자명</th>
+                  <th style={{ width: 180 }}>사용자 ID</th>
+                  <th style={{ width: 160 }}>전화번호</th>
+                  <th style={{ width: 90 }}>사용여부</th>
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r) => (
+                {visible.map((r, i) => (
                   <tr key={r.id}>
+                    <td className={kit.num}>{visible.length - i}</td>
+                    <td className={kit.num}>{r.createdAt}</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span className={kit.avatar}>{(r.email ?? '?').charAt(0).toUpperCase()}</span>
-                        <span>
-                          <span className={kit.tdStrong}>{r.email || '-'}</span>
-                          {r.name ? <span className={kit.tdSub}>{r.name}</span> : null}
-                        </span>
-                      </div>
+                      {/* 사용자명 · ID 클릭 -> 조회 화면 */}
+                      <Link href={`/admin/users/${r.id}`} className={kit.tdStrong}>
+                        {r.name}
+                      </Link>
                     </td>
                     <td>
-                      <Badge tone={ROLE_TONE[r.role ?? ''] ?? 'plain'}>{r.role || 'admin'}</Badge>
+                      <Link href={`/admin/users/${r.id}`}>{r.loginId}</Link>
                     </td>
-                    <td className={kit.num}>{fmtDate(r.created_at)}</td>
-                    <td className={kit.num}>{r.last_sign_in_at ? fmtDate(r.last_sign_in_at) : '-'}</td>
-                    <td className={kit.tdActions}>
-                      <button type="button" className={btnSm} disabled>
-                        권한 변경
-                      </button>
+                    <td className={kit.nowrap}>{r.phone}</td>
+                    <td>
+                      <Badge tone={r.use === 'Y' ? 'green' : 'plain'}>{r.use}</Badge>
                     </td>
                   </tr>
                 ))}
@@ -160,8 +109,8 @@ export default function UsersPage() {
         )}
 
         <div className={kit.cardFoot}>
-          <span>어드민 접근 권한이 있는 계정입니다.</span>
-          <span>Supabase · auth / admin_users</span>
+          <span>어드민에 접근할 수 있는 계정입니다.</span>
+          <span>기획서 6 · 사용자관리 목록</span>
         </div>
       </section>
     </>
