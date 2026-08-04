@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import Link from 'next/link';
-import { ReadOnly, Row, ThumbView } from '@/components/admin/form';
-import { Note, SubHead } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
-import s from '@/components/admin/form.module.css';
+import { use } from "react";
+import { Actions, ReadOnly, Row, ThumbView } from "@/components/admin/form";
+import { Note, SubHead } from "@/components/admin/ui";
+import Button from "@/components/button/Button";
+import kit from "@/components/admin/kit.module.css";
 
 /* 메인관리 - 조회 (기획서 13p)
    기존 등록된 데이터를 읽기 전용으로 출력하고, 수정 / 목록 / 삭제로 이동한다. */
-export default function MainDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function MainDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
 
   return (
@@ -19,15 +22,21 @@ export default function MainDetailPage({ params }: { params: Promise<{ id: strin
         title="메인관리 – 조회"
         desc="등록된 메인 노출 항목입니다."
         actions={
-          <Link href="/admin/main" className={kit.btn}>
-            목록
-          </Link>
+          <Button
+            href="/admin/main"
+            label="목록"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
         }
       />
 
       <Note>
         <span>
-          <b>화면 틀</b> — 데이터 조회는 아직 붙지 않았습니다 (요청 ID: <code>{id}</code>).
+          <b>화면 틀</b> — 데이터 조회는 아직 붙지 않았습니다 (요청 ID:{" "}
+          <code>{id}</code>).
         </span>
       </Note>
 
@@ -58,17 +67,31 @@ export default function MainDetailPage({ params }: { params: Promise<{ id: strin
         </Row>
       </section>
 
-      <div className={s.actions}>
-        <Link href={`/admin/main/${id}/edit`} className={`${kit.btn} ${kit.btnPrimary}`}>
-          수정
-        </Link>
-        <Link href="/admin/main" className={kit.btn}>
-          취소
-        </Link>
-        <button type="button" className={kit.btn}>
-          삭제
-        </button>
-      </div>
+      <Actions>
+        <Button
+          href={`/admin/main/${id}/edit`}
+          label="수정"
+          color="BLUE"
+          variant="solid"
+          size="2"
+          radius="medium"
+        />
+        <Button
+          href="/admin/main"
+          label="취소"
+          variant="outline"
+          color="GRAY"
+          size="2"
+          radius="medium"
+        />
+        <Button
+          label="삭제"
+          variant="outline"
+          color="RED"
+          size="2"
+          radius="medium"
+        />
+      </Actions>
     </>
   );
 }

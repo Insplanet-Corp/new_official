@@ -1,6 +1,7 @@
 /* ============================================================================
    ADMIN KIT — 여러 어드민 페이지가 공유하는 프리미티브.
-   (버튼 / 카드 / 테이블 / 툴바 / 배지 / 칩 / 세그먼트)
+   (카드 / 테이블 / 툴바 / 칩 / 세그먼트)
+   버튼·배지·아바타는 components/{button,badge,avatar} 공용 컴포넌트가 담당한다.
    페이지 고유 스타일은 각 페이지 옆 module.css 에, 셸은 AdminShell.module.css 에 둔다.
    토큰(var(--ink) 등)은 theme.module.css 의 .theme 루트에서 상속받는다.
    ========================================================================== */
@@ -35,7 +36,6 @@
   gap: 16px;
   padding: 13px 18px;
   border-top: 1px solid var(--line);
-  font-size: 12.5px;
   color: var(--muted);
 }
 
@@ -52,7 +52,6 @@
   flex: 1 1 auto;
 }
 .count {
-  font-size: 12.5px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -97,59 +96,6 @@
 }
 .seg button[aria-pressed='true'] .segCount {
   color: var(--muted);
-}
-
-/* ===== buttons ============================================================ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.1s ease;
-}
-.btn:hover {
-  border-color: var(--faint);
-  background: #fbfbfc;
-}
-.btn:active {
-  transform: translateY(1px);
-}
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.btnPrimary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-.btnPrimary:hover {
-  background: #000;
-  border-color: #000;
-}
-.btnGhost {
-  border-color: transparent;
-  background: transparent;
-  color: var(--muted);
-}
-.btnGhost:hover {
-  background: var(--line-2);
-  border-color: transparent;
-  color: var(--ink);
-}
-.btnSm {
-  height: 30px;
-  padding: 0 10px;
-  font-size: 12.5px;
-  border-radius: 8px;
 }
 
 /* ===== table ============================================================== */
@@ -270,37 +216,9 @@
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--surface);
-  font-size: 11.5px;
   color: var(--ink-2);
 }
 .chipKey {
   color: var(--faint);
   margin-right: 4px;
-}
-
-/* ===== identity bits (셸과 페이지가 함께 쓴다) ============================= */
-.avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--ink-2);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  flex: 0 0 auto;
-}
-.brandTag {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 7px;
-  border-radius: 5px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
 }

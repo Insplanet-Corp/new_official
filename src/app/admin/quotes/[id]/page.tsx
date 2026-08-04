@@ -1,18 +1,21 @@
-'use client';
+"use client";
 
-import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ReadOnly, Row, Section } from '@/components/admin/form';
-import { Empty, Note, Skeleton, SubHead, fmtDate } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
-import s from '@/components/admin/form.module.css';
-import { fieldText, type Quote } from '@/lib/quotes';
-import { QUOTE_STATUS } from '@/data/adminOptions';
-import { supabase } from '@/lib/supabase';
+import { use, useEffect, useState } from "react";
+import { Actions, ReadOnly, Row, Section } from "@/components/admin/form";
+import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
+import { fieldText, type Quote } from "@/lib/quotes";
+import { QUOTE_STATUS } from "@/data/adminOptions";
+import { supabase } from "@/lib/supabase";
+import Button from "@/components/button/Button";
 
 /* 견적문의관리 - 조회 (기획서 32p)
    세 덩어리로 나눠 출력: 의뢰인 정보 / 프로젝트 기본 정보 / 프로젝트 상세 정보. */
-export default function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function QuoteDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const [row, setRow] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,11 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data, error } = await supabase.from('quotes').select('*').eq('id', id).maybeSingle();
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (!alive) return;
       if (error) setError(error.message);
       else setRow((data as Quote) ?? null);
@@ -33,7 +40,9 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
   }, [id]);
 
   const statusLabel =
-    QUOTE_STATUS.find((x) => x.value === row?.status)?.label ?? row?.status ?? null;
+    QUOTE_STATUS.find((x) => x.value === row?.status)?.label ??
+    row?.status ??
+    null;
 
   return (
     <>
@@ -42,9 +51,14 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
         title="견적문의관리 – 조회"
         desc="접수된 견적 문의 상세 내용입니다."
         actions={
-          <Link href="/admin/quotes" className={kit.btn}>
-            목록
-          </Link>
+          <Button
+            href="/admin/quotes"
+            label="목록"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
         }
       />
 
@@ -56,7 +70,10 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
         </section>
       ) : !row ? (
         <section className={kit.card}>
-          <Empty title="문의를 찾을 수 없습니다" desc="이미 삭제되었거나 잘못된 주소입니다." />
+          <Empty
+            title="문의를 찾을 수 없습니다"
+            desc="이미 삭제되었거나 잘못된 주소입니다."
+          />
         </section>
       ) : (
         <>
@@ -83,16 +100,16 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
 
           <Section title="프로젝트 기본 정보">
             <Row label="프로젝트 업무범위">
-              <ReadOnly>{fieldText(row, 'scope')}</ReadOnly>
+              <ReadOnly>{fieldText(row, "scope")}</ReadOnly>
             </Row>
             <Row label="프로젝트 성격">
-              <ReadOnly>{fieldText(row, 'nature')}</ReadOnly>
+              <ReadOnly>{fieldText(row, "nature")}</ReadOnly>
             </Row>
             <Row label="프로젝트 예산">
-              <ReadOnly>{fieldText(row, 'budget')}</ReadOnly>
+              <ReadOnly>{fieldText(row, "budget")}</ReadOnly>
             </Row>
             <Row label="프로젝트 기간">
-              <ReadOnly>{fieldText(row, 'period')}</ReadOnly>
+              <ReadOnly>{fieldText(row, "period")}</ReadOnly>
             </Row>
           </Section>
 
@@ -113,11 +130,16 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
         </>
       )}
 
-      <div className={s.actions}>
-        <Link href="/admin/quotes" className={kit.btn}>
-          목록
-        </Link>
-      </div>
+      <Actions>
+        <Button
+          href="/admin/quotes"
+          label="목록"
+          variant="outline"
+          color="GRAY"
+          size="2"
+          radius="medium"
+        />
+      </Actions>
     </>
   );
 }

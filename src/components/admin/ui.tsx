@@ -1,23 +1,84 @@
-import type { ChangeEvent, ReactNode } from 'react';
-import { ADMIN_TABS } from '@/components/admin/tabs';
-import s from './ui.module.css';
+import type { ChangeEvent, ReactNode } from "react";
+import { ADMIN_TABS } from "@/components/admin/tabs";
+import Flex from "@/components/layouts/Flex";
+import Heading from "@/components/text/Heading";
+import Text from "@/components/text/Text";
+import { Icon } from "@/components/icon/Icon";
+import s from "./ui.module.css";
 
 /* Small shared presentational pieces so every tab page looks like the same product.
-   No 'use client' here on purpose: these are imported by client pages and inherit that. */
+   No 'use client' here on purpose: these are imported by client pages and inherit that.
+
+   타이포·간격·아이콘은 공용 컴포넌트(Text / Heading / Flex / Icon)가 담당하고,
+   ui.module.css 에는 컴포넌트로 표현할 수 없는 것(입력 컨트롤 외형, 스켈레톤
+   애니메이션, 안내문 배경색 등)만 남긴다. 색은 admin theme 토큰을 그대로 쓴다 —
+   토큰이 CSS 커스텀 프로퍼티라 var(--muted) 를 문자열로 넘기면 그대로 상속된다. */
 
 /* ---- page head ---------------------------------------------------------- */
-export function PageHead({ href, actions }: { href: string; actions?: ReactNode }) {
+function Head({
+  eyebrow,
+  title,
+  desc,
+  actions,
+}: {
+  eyebrow: string;
+  title: string;
+  desc?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <Flex row wrap="wrap" align="center" justify="between" gap={24} mb={24}>
+      <Flex gap={7}>
+        <Text
+          as="p"
+          size="1"
+          fontSize="11px"
+          weight="700"
+          color="var(--faint)"
+          className={s.eyebrow}
+        >
+          {eyebrow}
+        </Text>
+        <Heading as="h1" size="6" fontSize="26px" weight="700">
+          {title}
+        </Heading>
+        {desc ? (
+          <Text
+            as="p"
+            size="2"
+            fontSize="13.5px"
+            color="var(--muted)"
+            className={s.desc}
+          >
+            {desc}
+          </Text>
+        ) : null}
+      </Flex>
+      {actions ? (
+        <Flex row align="center" gap={8}>
+          {actions}
+        </Flex>
+      ) : null}
+    </Flex>
+  );
+}
+
+export function PageHead({
+  href,
+  actions,
+}: {
+  href: string;
+  actions?: ReactNode;
+}) {
   const tab = ADMIN_TABS.find((t) => t.href === href);
   if (!tab) return null;
   return (
-    <div className={s.pageHead}>
-      <div>
-        <p className={s.eyebrow}>{tab.eyebrow}</p>
-        <h1 className={s.title}>{tab.title}</h1>
-        <p className={s.desc}>{tab.desc}</p>
-      </div>
-      {actions ? <div className={s.pageActions}>{actions}</div> : null}
-    </div>
+    <Head
+      eyebrow={tab.eyebrow}
+      title={tab.title}
+      desc={tab.desc}
+      actions={actions}
+    />
   );
 }
 
@@ -33,30 +94,33 @@ export function SubHead({
   desc?: string;
   actions?: ReactNode;
 }) {
-  return (
-    <div className={s.pageHead}>
-      <div>
-        <p className={s.eyebrow}>{eyebrow}</p>
-        <h1 className={s.title}>{title}</h1>
-        {desc ? <p className={s.desc}>{desc}</p> : null}
-      </div>
-      {actions ? <div className={s.pageActions}>{actions}</div> : null}
-    </div>
-  );
+  return <Head eyebrow={eyebrow} title={title} desc={desc} actions={actions} />;
 }
 
 /* ---- stat tiles --------------------------------------------------------- */
-export function Stats({ items }: { items: { label: string; value: ReactNode; unit?: string }[] }) {
+export function Stats({
+  items,
+}: {
+  items: { label: string; value: ReactNode; unit?: string }[];
+}) {
   return (
     <div className={s.stats}>
       {items.map((stat) => (
-        <div className={s.stat} key={stat.label}>
-          <p className={s.statLabel}>{stat.label}</p>
-          <p className={s.statValue}>
-            {stat.value}
-            {stat.unit ? <small>{stat.unit}</small> : null}
-          </p>
-        </div>
+        <Flex key={stat.label} gap={6} px={18} py={16} className={s.stat}>
+          <Text as="p" size="1" weight="700" color="var(--muted)">
+            {stat.label}
+          </Text>
+          <Flex row align="baseline" gap={3}>
+            <Text size="6" fontSize="26px" weight="700" className={s.statValue}>
+              {stat.value}
+            </Text>
+            {stat.unit ? (
+              <Text size="2" fontSize="13px" weight="700" color="var(--faint)">
+                {stat.unit}
+              </Text>
+            ) : null}
+          </Flex>
+        </Flex>
       ))}
     </div>
   );
@@ -66,7 +130,7 @@ export function Stats({ items }: { items: { label: string; value: ReactNode; uni
 export function Search({
   value,
   onChange,
-  placeholder = '검색',
+  placeholder = "검색",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -74,15 +138,14 @@ export function Search({
 }) {
   return (
     <div className={s.search}>
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <circle cx="6.2" cy="6.2" r="4.4" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9.6 9.6L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
+      <Icon name="search" size={14} />
       <input
         type="search"
         value={value}
         placeholder={placeholder}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          onChange(e.target.value)
+        }
       />
     </div>
   );
@@ -121,16 +184,34 @@ export const selectClass = s.select;
 /* ---- states ------------------------------------------------------------- */
 export function Empty({ title, desc }: { title: string; desc?: string }) {
   return (
-    <div className={s.empty}>
-      <div className={s.emptyIcon}>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <rect x="2.8" y="4.2" width="14.4" height="11.6" rx="2" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M2.8 8.2h14.4" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      </div>
-      <p className={s.emptyTitle}>{title}</p>
-      {desc ? <p className={s.emptyDesc}>{desc}</p> : null}
-    </div>
+    <Flex align="center" gap={6} px={24} py={64}>
+      <Flex
+        row
+        align="center"
+        justify="center"
+        width={44}
+        height={44}
+        radius={12}
+        mb={8}
+        className={s.emptyIcon}
+      >
+        <Icon name="information" size={20} />
+      </Flex>
+      <Text as="p" size="2" weight="700">
+        {title}
+      </Text>
+      {desc ? (
+        <Text
+          as="p"
+          size="2"
+          fontSize="13px"
+          color="var(--muted)"
+          align="center"
+        >
+          {desc}
+        </Text>
+      ) : null}
+    </Flex>
   );
 }
 
@@ -145,28 +226,34 @@ export function Skeleton() {
   );
 }
 
-export function Note({ children, warn }: { children: ReactNode; warn?: boolean }) {
-  return <div className={`${s.note}${warn ? ` ${s.noteWarn}` : ''}`}>{children}</div>;
-}
-
-/* ---- badge -------------------------------------------------------------- */
-export type BadgeTone = 'plain' | 'blue' | 'green' | 'amber' | 'red';
-
-const BADGE_TONE: Record<Exclude<BadgeTone, 'plain'>, string> = {
-  blue: s.badgeBlue,
-  green: s.badgeGreen,
-  amber: s.badgeAmber,
-  red: s.badgeRed,
-};
-
-export function Badge({ tone = 'plain', children }: { tone?: BadgeTone; children: ReactNode }) {
-  return <span className={`${s.badge}${tone === 'plain' ? '' : ` ${BADGE_TONE[tone]}`}`}>{children}</span>;
+export function Note({
+  children,
+  warn,
+}: {
+  children: ReactNode;
+  warn?: boolean;
+}) {
+  return (
+    <Flex
+      row
+      gap={10}
+      px={16}
+      py={14}
+      mb={20}
+      className={`${s.note}${warn ? ` ${s.noteWarn}` : ""}`}
+    >
+      <Icon name={warn ? "warning" : "information"} size={16} />
+      <Text as="div" size="2" fontSize="13px">
+        {children}
+      </Text>
+    </Flex>
+  );
 }
 
 /* ---- misc --------------------------------------------------------------- */
 export function fmtDate(iso: string) {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '-';
-  const p = (n: number) => String(n).padStart(2, '0');
+  if (Number.isNaN(d.getTime())) return "-";
+  const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }

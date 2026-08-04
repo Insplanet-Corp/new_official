@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Badge,
   Empty,
   Note,
   PageHead,
@@ -12,7 +11,6 @@ import {
   Skeleton,
   Stats,
   fmtDate,
-  type BadgeTone,
 } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import {
@@ -22,6 +20,9 @@ import {
 } from "@/data/adminOptions";
 import { hasField, fieldText, type Quote } from "@/lib/quotes";
 import { supabase } from "@/lib/supabase";
+import Badge from "@/components/badge/Badge";
+import { type ColorType } from "@/styles/theme";
+import Text from "@/components/text/Text";
 
 /* 견적문의관리 - 목록 (기획서 31p)
    조회 조건: 기업명 + 신청인 키워드(둘 다 입력 시 AND) + 시스템 종류 + 개발 구분.
@@ -29,10 +30,10 @@ import { supabase } from "@/lib/supabase";
    시스템 종류·개발 구분은 project_fields(jsonb) 안에 있어 클라이언트에서 거른다.
    접수 건수가 많아지면 PostgREST 의 jsonb 연산자로 서버 필터링해야 한다. */
 
-const STATUS_TONE: Record<string, BadgeTone> = {
-  pending: "blue",
-  in_progress: "amber",
-  completed: "green",
+const STATUS_COLOR: Record<string, ColorType> = {
+  pending: "BLUE",
+  in_progress: "ORANGE",
+  completed: "GREEN",
 };
 const statusMeta = (v: string | null) =>
   QUOTE_STATUS.find((s) => s.value === v) ?? {
@@ -135,9 +136,9 @@ export default function QuotesListPage() {
             options={QUOTE_KIND_FILTER}
           />
           <span className={kit.toolbarSpacer} />
-          <span className={kit.count}>
+          <Text size="1" fontSize="12.5px" className={kit.count}>
             조회결과 : <b>{visible.length}</b> / {rows.length}건
-          </span>
+          </Text>
         </div>
 
         {loading ? (
@@ -188,17 +189,26 @@ export default function QuotesListPage() {
                     <td>
                       <div className={kit.chips}>
                         {(r.project_fields?.scope ?? []).map((v) => (
-                          <span className={kit.chip} key={v}>
+                          <Text
+                            size="1"
+                            fontSize="11.5px"
+                            className={kit.chip}
+                            key={v}
+                          >
                             {v}
-                          </span>
+                          </Text>
                         ))}
                       </div>
                     </td>
                     <td>{fieldText(r, "nature") || "-"}</td>
                     <td>
-                      {/* <Badge tone={STATUS_TONE[r.status ?? ''] ?? 'plain'}>
-                        {statusMeta(r.status).label}
-                      </Badge> */}
+                      <Badge
+                        label={statusMeta(r.status).label}
+                        color={STATUS_COLOR[r.status ?? ""] ?? "GRAY"}
+                        variant="surface"
+                        size="1"
+                        radius="medium"
+                      />
                       <select
                         className={kit.statusSelect}
                         aria-label="진행 상태 변경"
@@ -221,8 +231,12 @@ export default function QuotesListPage() {
         )}
 
         <div className={kit.cardFoot}>
-          <span>최신 접수순으로 정렬됩니다.</span>
-          <span>Supabase · quotes</span>
+          <Text size="1" fontSize="12.5px">
+            최신 접수순으로 정렬됩니다.
+          </Text>
+          <Text size="1" fontSize="12.5px">
+            Supabase · quotes
+          </Text>
         </div>
       </section>
     </>

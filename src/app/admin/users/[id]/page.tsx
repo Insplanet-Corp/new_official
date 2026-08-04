@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ReadOnly, Row } from '@/components/admin/form';
-import { Empty, Note, Skeleton, SubHead, fmtDate } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
-import s from '@/components/admin/form.module.css';
-import { ADMIN_TABS } from '@/components/admin/tabs';
+import { use, useEffect, useState } from "react";
+import { Actions, ReadOnly, Row } from "@/components/admin/form";
+import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
+import { ADMIN_TABS } from "@/components/admin/tabs";
 import {
   MISSING_TABLE_NOTICE,
+  describeError,
   isMissingTable,
   permissionLabels,
   type AdminUser,
-} from '@/lib/adminUsers';
-import { supabase } from '@/lib/supabase';
+} from "@/lib/adminUsers";
+import { supabase } from "@/lib/supabase";
+import Button from "@/components/button/Button";
 
 /* 사용자관리 - 조회 (기획서 42p) */
-export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function UserDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const [row, setRow] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,14 +31,14 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
     let alive = true;
     (async () => {
       const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('id', id)
+        .from("admin_users")
+        .select("*")
+        .eq("id", id)
         .maybeSingle();
       if (!alive) return;
       if (error) {
         if (isMissingTable(error)) setTableMissing(true);
-        else setError(error.message);
+        else setError(describeError(error));
       } else {
         setRow((data as AdminUser) ?? null);
       }
@@ -52,9 +56,14 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         title="사용자관리 – 조회"
         desc="등록된 계정 정보입니다."
         actions={
-          <Link href="/admin/users" className={kit.btn}>
-            목록
-          </Link>
+          <Button
+            href="/admin/users"
+            label="목록"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
         }
       />
 
@@ -67,7 +76,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         </section>
       ) : !row ? (
         <section className={kit.card}>
-          <Empty title="계정을 찾을 수 없습니다" desc="이미 삭제되었거나 잘못된 주소입니다." />
+          <Empty
+            title="계정을 찾을 수 없습니다"
+            desc="이미 삭제되었거나 잘못된 주소입니다."
+          />
         </section>
       ) : (
         <section className={kit.card}>
@@ -87,7 +99,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <ReadOnly>{row.phone}</ReadOnly>
           </Row>
           <Row label="메뉴권한">
-            <ReadOnly>{permissionLabels(row.permissions, ADMIN_TABS) || null}</ReadOnly>
+            <ReadOnly>
+              {permissionLabels(row.permissions, ADMIN_TABS) || null}
+            </ReadOnly>
           </Row>
           <Row label="등록일">
             <ReadOnly>{fmtDate(row.created_at)}</ReadOnly>
@@ -95,14 +109,24 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         </section>
       )}
 
-      <div className={s.actions}>
-        <Link href={`/admin/users/${id}/edit`} className={`${kit.btn} ${kit.btnPrimary}`}>
-          수정
-        </Link>
-        <Link href="/admin/users" className={kit.btn}>
-          취소
-        </Link>
-      </div>
+      <Actions>
+        <Button
+          href={`/admin/users/${id}/edit`}
+          label="수정"
+          variant="solid"
+          color="BLUE"
+          size="2"
+          radius="medium"
+        />
+        <Button
+          href="/admin/users"
+          label="취소"
+          variant="outline"
+          color="GRAY"
+          size="2"
+          radius="medium"
+        />
+      </Actions>
     </>
   );
 }

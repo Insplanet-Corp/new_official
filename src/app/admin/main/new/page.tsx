@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import MainForm from '@/components/admin/MainForm';
-import { Note, SubHead } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
+import MainForm from "@/components/admin/MainForm";
+import { Note, SubHead } from "@/components/admin/ui";
+import Button from "@/components/button/Button";
 
 /* 메인관리 - 등록 (기획서 11p) */
 export default function MainNewPage() {
@@ -14,9 +13,14 @@ export default function MainNewPage() {
         title="메인관리 – 등록"
         desc="홈페이지 메인에 출력할 항목을 등록합니다."
         actions={
-          <Link href="/admin/main" className={kit.btn}>
-            목록
-          </Link>
+          <Button
+            href="/admin/main"
+            label="목록"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
         }
       />
 

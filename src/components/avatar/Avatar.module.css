@@ -1,0 +1,76 @@
+/* Avatar.module.css */
+
+/* =========================================================
+   1. 기본 아바타 컨테이너
+   ========================================================= */
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+
+  /* 동적 props는 CSS 변수로 수신 */
+  width: var(--avatar-size, 40px);
+  height: var(--avatar-size, 40px);
+  background-color: var(--avatar-color, #b3b7bd);
+  border-radius: var(--avatar-radius, 6px);
+}
+
+/* =========================================================
+   2. 클릭 가능한 아바타 (interactiveStyled 이식)
+   ========================================================= */
+.interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interactive::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: transparent;
+  pointer-events: none;
+  transition: background-color 0.2s ease-in-out;
+  z-index: 1;
+}
+
+.interactive:hover::after,
+.interactive[data-state="hover"]::after {
+  background-color: rgba(24, 26, 27, 0.08);
+}
+
+.interactive:active::after,
+.interactive[data-state="pressed"]::after {
+  background-color: rgba(24, 26, 27, 0.16);
+}
+
+.interactive:focus-visible,
+.interactive[data-state="focus"] {
+  outline: 2px solid #23c7cd; /* TEAL_500 */
+}
+
+/* =========================================================
+   3. 내부 요소 (Image, Fallback)
+   ========================================================= */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1;
+  /* 부모 컨테이너의 --avatar-size를 이용해 40% 크기 자동 계산 */
+  font-size: calc(var(--avatar-size) * 0.4);
+}

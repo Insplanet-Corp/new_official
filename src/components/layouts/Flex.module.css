@@ -1,0 +1,75 @@
+/* Flex.module.css */
+
+/* =========================================================
+   1. 기본 Flex Box & 레이아웃 CSS 변수 바인딩
+   ========================================================= */
+.flex {
+  /* ⚠️ 커스텀 프로퍼티는 상속된다 — 아래 변수를 모든 .flex 에서 매번 초기화하지 않으면
+     바깥 Flex 가 건 값이 안쪽 Flex 로 새어 들어간다. (예: <Flex align="center"> 안의
+     <Flex> 가 align 을 안 줬는데도 가운데 정렬돼 페이지 헤드 제목이 밀렸다.)
+     inline style(props) → [data-*] 규칙 → 이 초기화 순으로 이긴다. */
+  --flex-align: stretch;
+  --flex-justify: flex-start;
+  --flex-wrap: nowrap;
+  --flex-gap: 0px;
+  --flex-gap-x: initial;
+  --flex-gap-y: initial;
+
+  box-sizing: border-box;
+  display: var(--flex-display, flex);
+  flex-direction: var(--flex-direction, column);
+  flex-wrap: var(--flex-wrap);
+
+  /* Alignment & Justify (data 속성에 따라 덮어씀) */
+  align-items: var(--flex-align);
+  justify-content: var(--flex-justify);
+
+  /* Gaps */
+  gap: var(--flex-gap);
+  column-gap: var(--flex-gap-x, var(--flex-gap));
+  row-gap: var(--flex-gap-y, var(--flex-gap));
+
+  /* 여백·크기(p px py m mx my width height bg radius)는 여기서 선언하지 않는다.
+     `padding-left: var(--layout-pl)` 처럼 미정의 변수를 참조하는 선언은 무효가 되면서
+     속성을 0 으로 리셋해, 앞줄의 padding / padding-inline 을 매번 지워버렸다.
+     Flex.tsx 가 넘겨받은 prop 만 인라인 스타일로 직접 넣는다. */
+}
+
+.fullWidth {
+  width: 100% !important;
+}
+
+/* =========================================================
+   2. Data 속성에 따른 Align-items 매핑
+   ========================================================= */
+.flex[data-align="start"] {
+  --flex-align: flex-start;
+}
+.flex[data-align="center"] {
+  --flex-align: center;
+}
+.flex[data-align="end"] {
+  --flex-align: flex-end;
+}
+.flex[data-align="baseline"] {
+  --flex-align: baseline;
+}
+.flex[data-align="stretch"] {
+  --flex-align: stretch;
+}
+
+/* =========================================================
+   3. Data 속성에 따른 Justify-content 매핑
+   ========================================================= */
+.flex[data-justify="start"] {
+  --flex-justify: flex-start;
+}
+.flex[data-justify="center"] {
+  --flex-justify: center;
+}
+.flex[data-justify="end"] {
+  --flex-justify: flex-end;
+}
+.flex[data-justify="between"] {
+  --flex-justify: space-between;
+}

@@ -1,0 +1,17 @@
+/* Divider.module.css */
+
+.base {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  background-color: var(--divider-color, #dde0e3); /* 기본값: GRAY_200 */
+}
+
+.vertical {
+  width: 1px;
+  height: var(--divider-size, stretch);
+}
+
+.horizontal {
+  height: 1px;
+  width: var(--divider-size, 100%);
+}

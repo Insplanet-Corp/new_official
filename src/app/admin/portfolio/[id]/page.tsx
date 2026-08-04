@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import Link from 'next/link';
-import { ReadOnly, Row, ThumbView } from '@/components/admin/form';
-import { Note, SubHead } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
-import s from '@/components/admin/form.module.css';
+import { use } from "react";
+import { Actions, ReadOnly, Row, ThumbView } from "@/components/admin/form";
+import { Note, SubHead } from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
+import Button from "@/components/button/Button";
 
 /* 포트폴리오관리 - 조회 (기획서 27p) */
-export default function PortfolioDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PortfolioDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
 
   return (
@@ -18,15 +21,21 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
         title="포트폴리오관리 – 조회"
         desc="등록된 프로젝트 정보입니다."
         actions={
-          <Link href="/admin/portfolio" className={kit.btn}>
-            목록
-          </Link>
+          <Button
+            href="/admin/portfolio"
+            label="목록"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
         }
       />
 
       <Note>
         <span>
-          <b>화면 틀</b> — 데이터 조회는 아직 붙지 않았습니다 (요청 ID: <code>{id}</code>).
+          <b>화면 틀</b> — 데이터 조회는 아직 붙지 않았습니다 (요청 ID:{" "}
+          <code>{id}</code>).
         </span>
       </Note>
 
@@ -60,17 +69,31 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
         </Row>
       </section>
 
-      <div className={s.actions}>
-        <Link href={`/admin/portfolio/${id}/edit`} className={`${kit.btn} ${kit.btnPrimary}`}>
-          수정
-        </Link>
-        <Link href="/admin/portfolio" className={kit.btn}>
-          취소
-        </Link>
-        <button type="button" className={kit.btn}>
-          삭제
-        </button>
-      </div>
+      <Actions>
+        <Button
+          href={`/admin/portfolio/${id}/edit`}
+          label="수정"
+          variant="solid"
+          color="BLUE"
+          size="2"
+          radius="medium"
+        />
+        <Button
+          href="/admin/portfolio"
+          label="취소"
+          variant="outline"
+          color="GRAY"
+          size="2"
+          radius="medium"
+        />
+        <Button
+          label="삭제"
+          variant="outline"
+          color="RED"
+          size="2"
+          radius="medium"
+        />
+      </Actions>
     </>
   );
 }

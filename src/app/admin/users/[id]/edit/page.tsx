@@ -1,20 +1,25 @@
-'use client';
+"use client";
 
-import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
-import UserForm from '@/components/admin/UserForm';
-import { Empty, Note, Skeleton, SubHead } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
+import { use, useEffect, useState } from "react";
+import UserForm from "@/components/admin/UserForm";
+import { Empty, Note, Skeleton, SubHead } from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
 import {
   MISSING_TABLE_NOTICE,
+  describeError,
   isMissingTable,
   type AdminUser,
   type AdminUserProfile,
-} from '@/lib/adminUsers';
-import { supabase } from '@/lib/supabase';
+} from "@/lib/adminUsers";
+import { supabase } from "@/lib/supabase";
+import Button from "@/components/button/Button";
 
 /* 사용자관리 - 수정 (기획서 43p) — ID는 수정 불가 */
-export default function UserEditPage({ params }: { params: Promise<{ id: string }> }) {
+export default function UserEditPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const [initial, setInitial] = useState<AdminUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,14 +30,14 @@ export default function UserEditPage({ params }: { params: Promise<{ id: string 
     let alive = true;
     (async () => {
       const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('id', id)
+        .from("admin_users")
+        .select("*")
+        .eq("id", id)
         .maybeSingle();
       if (!alive) return;
       if (error) {
         if (isMissingTable(error)) setTableMissing(true);
-        else setError(error.message);
+        else setError(describeError(error));
       } else if (data) {
         const u = data as AdminUser;
         setInitial({
@@ -59,12 +64,22 @@ export default function UserEditPage({ params }: { params: Promise<{ id: string 
         desc="등록된 계정 정보를 수정합니다. ID와 이메일은 변경할 수 없습니다."
         actions={
           <>
-            <Link href={`/admin/users/${id}`} className={kit.btn}>
-              조회
-            </Link>
-            <Link href="/admin/users" className={kit.btn}>
-              목록
-            </Link>
+            <Button
+              href={`/admin/users/${id}`}
+              label="조회"
+              variant="outline"
+              color="GRAY"
+              size="2"
+              radius="medium"
+            />
+            <Button
+              href="/admin/users"
+              label="목록"
+              variant="outline"
+              color="GRAY"
+              size="2"
+              radius="medium"
+            />
           </>
         }
       />
@@ -78,7 +93,10 @@ export default function UserEditPage({ params }: { params: Promise<{ id: string 
         </section>
       ) : !initial ? (
         <section className={kit.card}>
-          <Empty title="계정을 찾을 수 없습니다" desc="이미 삭제되었거나 잘못된 주소입니다." />
+          <Empty
+            title="계정을 찾을 수 없습니다"
+            desc="이미 삭제되었거나 잘못된 주소입니다."
+          />
         </section>
       ) : (
         <UserForm mode="edit" userId={id} initial={initial} />

@@ -55,3 +55,11 @@ export const ADMIN_TABS: AdminTab[] = [
 
 /* 메뉴권한 체크박스에 쓰는 목록 (사용자관리 등록/수정) */
 export const MENU_PERMISSIONS = ADMIN_TABS.map((t) => ({ value: t.href, label: t.label }));
+
+/* 경로가 속한 탭을 찾는다. 하위 경로도 그 탭의 것으로 친다 —
+   /admin/users/new · /admin/users/:id/edit 는 모두 '/admin/users' 권한으로 판정한다.
+   어느 탭에도 속하지 않으면 undefined (권한 판정 대상이 아니다). */
+export const tabForPath = (pathname: string): AdminTab | undefined =>
+  ADMIN_TABS.find(
+    (t) => pathname === t.href || pathname.startsWith(`${t.href}/`),
+  );

@@ -1,41 +1,17 @@
 /* ============================================================================
-   ui.tsx 가 렌더하는 공통 조각들 — 페이지 헤드 · 스탯 타일 · 검색/셀렉트 ·
-   빈 상태 · 스켈레톤 · 안내문 · 배지.
+   ui.tsx 가 렌더하는 공통 조각들 중 "공용 컴포넌트로 표현할 수 없는 것"만 남긴다.
+   레이아웃(정렬·간격·패딩)은 <Flex>, 타이포는 <Text>/<Heading>, 아이콘은 <Icon>,
+   배지는 components/badge 가 담당한다.
    ========================================================================== */
 
 /* ===== page head ========================================================== */
-.pageHead {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
+/* Text 가 못 하는 것만: 트래킹 + 대문자 변환 */
 .eyebrow {
-  font-size: 11px;
-  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--faint);
-  margin-bottom: 8px;
-}
-.title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
 }
 .desc {
-  margin-top: 7px;
-  font-size: 13.5px;
-  color: var(--muted);
   max-width: 70ch;
-}
-.pageActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* ===== stat row =========================================================== */
@@ -49,27 +25,10 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 16px 18px;
-}
-.statLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
 }
 .statValue {
-  margin-top: 6px;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-.statValue small {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--faint);
-  margin-left: 3px;
-  letter-spacing: 0;
+  letter-spacing: -0.03em;
 }
 
 /* ===== search / select ==================================================== */
@@ -94,7 +53,9 @@
   background: var(--surface);
   outline: 0;
   font-size: 13px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .search input::placeholder {
   color: var(--faint);
@@ -128,44 +89,24 @@
 }
 
 /* ===== states ============================================================= */
-.empty {
-  padding: 64px 24px;
-  text-align: center;
-}
 .emptyIcon {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 14px;
-  border-radius: 12px;
   background: var(--line-2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--faint);
-}
-.emptyTitle {
-  font-size: 14px;
-  font-weight: 700;
-}
-.emptyDesc {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--muted);
+  flex: 0 0 auto;
 }
 
 .note {
-  display: flex;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 11px;
   background: var(--blue-bg);
   color: #1e40af;
-  font-size: 13px;
+  border-radius: 11px;
   line-height: 1.55;
-  margin-bottom: 20px;
 }
 .note b {
   font-weight: 700;
+}
+.note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
 }
 .noteWarn {
   background: var(--amber-bg);
@@ -209,61 +150,8 @@
   }
 }
 
-/* ===== badges ============================================================= */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 23px;
-  padding: 0 8px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0;
-  white-space: nowrap;
-  background: var(--line-2);
-  color: var(--ink-2);
-}
-.badge::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.75;
-}
-.badgeBlue {
-  background: var(--blue-bg);
-  color: var(--blue);
-}
-.badgeGreen {
-  background: var(--green-bg);
-  color: var(--green);
-}
-.badgeAmber {
-  background: var(--amber-bg);
-  color: var(--amber);
-}
-.badgeRed {
-  background: var(--red-bg);
-  color: var(--red);
-}
-.badgePlain::before {
-  display: none;
-}
-
 /* ===== responsive ========================================================= */
-@media (max-width: 900px) {
-  .title {
-    font-size: 22px;
-  }
-}
 @media (max-width: 620px) {
-  .pageHead {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 14px;
-  }
   .stats {
     grid-template-columns: repeat(2, 1fr);
   }

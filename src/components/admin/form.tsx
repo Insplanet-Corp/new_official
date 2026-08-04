@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import type { ChangeEvent, ReactNode } from 'react';
-import kit from './kit.module.css';
-import s from './form.module.css';
+import type { ChangeEvent, ReactNode } from "react";
+import s from "./form.module.css";
+import kit from "./kit.module.css";
+import Button from "../button/Button";
+import Flex from "../layouts/Flex";
+import Heading from "../text/Heading";
+import Text from "../text/Text";
 
 /* 기획서(관리자시스템_화면설계서)의 등록 / 조회 / 수정 화면 공용 조각.
    지금 단계는 "틀"이므로 저장·삭제 같은 실제 동작은 붙이지 않았다 —
@@ -22,35 +26,60 @@ export function Row({
 }) {
   return (
     <div className={s.row}>
-      <div className={`${s.label}${required ? ` ${s.req}` : ''}`}>{label}</div>
+      <Text
+        as="div"
+        size="2"
+        fontSize="13px"
+        weight="700"
+        color="var(--ink-2)"
+        className={`${s.label}${required ? ` ${s.req}` : ""}`}
+      >
+        {label}
+      </Text>
       <div className={s.control}>
         {children}
-        {hint ? <p className={s.hint}>{hint}</p> : null}
+        {hint ? (
+          <Text as="p" size="1" color="var(--muted)" className={s.hint}>
+            {hint}
+          </Text>
+        ) : null}
       </div>
     </div>
   );
 }
 
 /* 조회 화면의 읽기 전용 값 */
-export function ReadOnly({ children, muted }: { children: ReactNode; muted?: boolean }) {
-  const empty = children === null || children === undefined || children === '';
+export function ReadOnly({
+  children,
+  muted,
+}: {
+  children: ReactNode;
+  muted?: boolean;
+}) {
+  const empty = children === null || children === undefined || children === "";
   return (
-    <div className={`${s.readonly}${muted || empty ? ` ${s.readonlyMuted}` : ''}`}>
-      {empty ? '-' : children}
-    </div>
+    <Flex
+      row
+      align="center"
+      className={`${s.readonly}${muted || empty ? ` ${s.readonlyMuted}` : ""}`}
+    >
+      <Text as="div" size="2" fontSize="13.5px">
+        {empty ? "-" : children}
+      </Text>
+    </Flex>
   );
 }
 
 /* ---- 입력 ---------------------------------------------------------------- */
-type Size = 'short' | 'medium' | 'full';
+type Size = "short" | "medium" | "full";
 const sizeClass = (size?: Size) =>
-  size === 'short' ? ` ${s.short}` : size === 'medium' ? ` ${s.medium}` : '';
+  size === "short" ? ` ${s.short}` : size === "medium" ? ` ${s.medium}` : "";
 
 export function Input({
   value,
   onChange,
   placeholder,
-  type = 'text',
+  type = "text",
   size,
   disabled,
   maxLength,
@@ -71,7 +100,9 @@ export function Input({
       placeholder={placeholder}
       disabled={disabled}
       maxLength={maxLength}
-      onChange={(e: ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value)}
+      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+        onChange?.(e.target.value)
+      }
     />
   );
 }
@@ -90,7 +121,9 @@ export function Textarea({
       className={s.textarea}
       value={value}
       placeholder={placeholder}
-      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange?.(e.target.value)}
+      onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+        onChange?.(e.target.value)
+      }
     />
   );
 }
@@ -99,7 +132,7 @@ export function SelectBox({
   value,
   onChange,
   options,
-  size = 'medium',
+  size = "medium",
   ariaLabel,
 }: {
   value: string;
@@ -113,7 +146,9 @@ export function SelectBox({
       className={`${s.input}${sizeClass(size)}`}
       aria-label={ariaLabel}
       value={value}
-      onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange?.(e.target.value)}
+      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+        onChange?.(e.target.value)
+      }
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -139,7 +174,13 @@ export function Radios({
   return (
     <div className={s.choices}>
       {options.map((o) => (
-        <label className={s.choice} key={o.value}>
+        <Text
+          as="label"
+          size="2"
+          fontSize="13.5px"
+          className={s.choice}
+          key={o.value}
+        >
           <input
             type="radio"
             name={name}
@@ -148,7 +189,7 @@ export function Radios({
             onChange={() => onChange?.(o.value)}
           />
           {o.label}
-        </label>
+        </Text>
       ))}
     </div>
   );
@@ -160,7 +201,7 @@ export function CheckGrid({
   selected,
   onToggle,
   onToggleAll,
-  allLabel = '전체메뉴',
+  allLabel = "전체메뉴",
 }: {
   options: { value: string; label: string }[];
   selected: string[];
@@ -168,22 +209,39 @@ export function CheckGrid({
   onToggleAll?: (next: boolean) => void;
   allLabel?: string;
 }) {
-  const all = options.length > 0 && options.every((o) => selected.includes(o.value));
+  const all =
+    options.length > 0 && options.every((o) => selected.includes(o.value));
   return (
     <div className={s.checkGrid}>
-      <label className={`${s.choice} ${s.checkAll}`}>
-        <input type="checkbox" checked={all} onChange={() => onToggleAll?.(!all)} />
+      <Text
+        as="label"
+        size="2"
+        fontSize="13.5px"
+        weight="700"
+        className={`${s.choice} ${s.checkAll}`}
+      >
+        <input
+          type="checkbox"
+          checked={all}
+          onChange={() => onToggleAll?.(!all)}
+        />
         {allLabel}
-      </label>
+      </Text>
       {options.map((o) => (
-        <label className={s.choice} key={o.value}>
+        <Text
+          as="label"
+          size="2"
+          fontSize="13.5px"
+          className={s.choice}
+          key={o.value}
+        >
           <input
             type="checkbox"
             checked={selected.includes(o.value)}
             onChange={() => onToggle?.(o.value)}
           />
           {o.label}
-        </label>
+        </Text>
       ))}
     </div>
   );
@@ -194,7 +252,7 @@ export function FilePick({
   fileName,
   onPick,
   preview,
-  size = '000*000',
+  size = "000*000",
   disabled,
 }: {
   fileName?: string;
@@ -208,34 +266,59 @@ export function FilePick({
   return (
     <>
       <div className={s.file}>
-        <span className={`${s.fileName}${fileName ? '' : ` ${s.fileEmpty}`}`}>
-          {fileName || (disabled ? '해당 없음' : '선택된 파일 없음')}
-        </span>
-        <button
-          type="button"
-          className={`${kit.btn} ${kit.btnSm}`}
+        <Text
+          as="span"
+          size="2"
+          fontSize="13.5px"
+          truncate
+          className={`${s.fileName}${fileName ? "" : ` ${s.fileEmpty}`}`}
+        >
+          {fileName || (disabled ? "해당 없음" : "선택된 파일 없음")}
+        </Text>
+        <Button
+          label="파일찾기"
+          variant="outline"
+          color="GRAY"
+          size="1"
+          radius="medium"
           onClick={onPick}
           disabled={disabled}
-        >
-          파일찾기
-        </button>
+        />
       </div>
-      <div className={s.thumbBox}>{preview ? <img src={preview} alt="" /> : `(${size})`}</div>
+      <div className={s.thumbBox}>
+        {preview ? <img src={preview} alt="" /> : `(${size})`}
+      </div>
     </>
   );
 }
 
 /* 조회 화면의 읽기 전용 이미지 자리 — 파일찾기 버튼 없이 미리보기만 */
-export function ThumbView({ src, size = '000*000' }: { src?: string; size?: string }) {
-  return <div className={s.thumbBox}>{src ? <img src={src} alt="" /> : `(${size})`}</div>;
+export function ThumbView({
+  src,
+  size = "000*000",
+}: {
+  src?: string;
+  size?: string;
+}) {
+  return (
+    <div className={s.thumbBox}>
+      {src ? <img src={src} alt="" /> : `(${size})`}
+    </div>
+  );
 }
 
 /* 첨부파일 다운로드 (견적문의 / 리크루트 조회) */
-export function FileLink({ name, href }: { name?: string | null; href?: string | null }) {
+export function FileLink({
+  name,
+  href,
+}: {
+  name?: string | null;
+  href?: string | null;
+}) {
   if (!name) return <ReadOnly muted>{null}</ReadOnly>;
   return (
     <div className={s.readonly}>
-      <a className={s.fileLink} href={href ?? '#'} download>
+      <a className={s.fileLink} href={href ?? "#"} download>
         {name}
       </a>
     </div>
@@ -243,10 +326,24 @@ export function FileLink({ name, href }: { name?: string | null; href?: string |
 }
 
 /* ---- 섹션 (조회 화면의 의뢰인 정보 / 프로젝트 정보 …) --------------------- */
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <section className={`${kit.card} ${s.section}`}>
-      <h2 className={s.sectionHead}>{title}</h2>
+      <Heading
+        as="h2"
+        size="2"
+        fontSize="13px"
+        weight="700"
+        className={s.sectionHead}
+      >
+        {title}
+      </Heading>
       {children}
     </section>
   );
@@ -254,16 +351,28 @@ export function Section({ title, children }: { title: string; children: ReactNod
 
 /* ---- 하단 액션 바 -------------------------------------------------------- */
 export function Actions({ children }: { children: ReactNode }) {
-  return <div className={s.actions}>{children}</div>;
+  return (
+    <Flex row align="center" justify="center" gap={8} mt={20}>
+      {children}
+    </Flex>
+  );
 }
 
 /* 한 줄에 여러 컨트롤 (기간 시작~종료, ID+중복확인) */
 export function Inline({ children }: { children: ReactNode }) {
-  return <div className={s.inline}>{children}</div>;
+  return (
+    <Flex row align="center" wrap="wrap" gap={8}>
+      {children}
+    </Flex>
+  );
 }
 
-export function Sep({ children = '~' }: { children?: ReactNode }) {
-  return <span className={s.sep}>{children}</span>;
+export function Sep({ children = "~" }: { children?: ReactNode }) {
+  return (
+    <Text size="2" fontSize="13px" color="var(--faint)">
+      {children}
+    </Text>
+  );
 }
 
 export const formStyles = s;

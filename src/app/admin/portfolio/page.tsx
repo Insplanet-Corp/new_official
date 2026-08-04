@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Badge, Empty, Note, PageHead, Search, Select } from '@/components/admin/ui';
-import kit from '@/components/admin/kit.module.css';
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
+import kit from "@/components/admin/kit.module.css";
 import {
   PORTFOLIO_CATEGORY_FILTER,
   PORTFOLIO_STATUS_FILTER,
   USE_YN_FILTER,
   labelOf,
-} from '@/data/adminOptions';
+} from "@/data/adminOptions";
+import Badge from "@/components/badge/Badge";
+import Button from "@/components/button/Button";
+import Text from "@/components/text/Text";
 
 /* 포트폴리오관리 - 목록 (기획서 23p)
    조회 조건: 포트폴리오명 키워드 + 분류 + 진행 상태 + 사용여부.
@@ -22,23 +25,23 @@ type PortfolioRow = {
   category: string;
   status: string;
   htmlFile: string;
-  use: 'Y' | 'N';
+  use: "Y" | "N";
 };
 
 const ROWS: PortfolioRow[] = [];
 
 export default function PortfolioListPage() {
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState('all');
-  const [status, setStatus] = useState('all');
-  const [use, setUse] = useState('all');
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [use, setUse] = useState("all");
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return ROWS.filter((r) => {
-      if (category !== 'all' && r.category !== category) return false;
-      if (status !== 'all' && r.status !== status) return false;
-      if (use !== 'all' && r.use !== use) return false;
+      if (category !== "all" && r.category !== category) return false;
+      if (status !== "all" && r.status !== status) return false;
+      if (use !== "all" && r.use !== use) return false;
       if (needle && !r.name.toLowerCase().includes(needle)) return false;
       return true;
     });
@@ -49,16 +52,24 @@ export default function PortfolioListPage() {
       <PageHead
         href="/admin/portfolio"
         actions={
-          <Link href="/admin/portfolio/new" className={`${kit.btn} ${kit.btnPrimary}`}>
-            + 등록
+          <Link href="/admin/portfolio/new">
+            <Button
+              label="등록"
+              color="BLUE"
+              startIcon="plus"
+              variant="solid"
+              size="2"
+              radius="medium"
+              onClick={() => {}}
+            />
           </Link>
         }
       />
 
       <Note>
         <span>
-          <b>화면 틀</b> — 기획서 3. 포트폴리오관리 구조입니다. 조회·등록·수정·삭제 동작과 DB 연동은
-          아직 붙지 않았습니다.
+          <b>화면 틀</b> — 기획서 3. 포트폴리오관리 구조입니다.
+          조회·등록·수정·삭제 동작과 DB 연동은 아직 붙지 않았습니다.
         </span>
       </Note>
 
@@ -77,14 +88,23 @@ export default function PortfolioListPage() {
             onChange={setStatus}
             options={PORTFOLIO_STATUS_FILTER}
           />
-          <Select label="사용여부" value={use} onChange={setUse} options={USE_YN_FILTER} />
-          <button type="button" className={kit.btn}>
-            조회
-          </button>
+          <Select
+            label="사용여부"
+            value={use}
+            onChange={setUse}
+            options={USE_YN_FILTER}
+          />
+          <Button
+            label="조회"
+            variant="outline"
+            color="GRAY"
+            size="2"
+            radius="medium"
+          />
           <span className={kit.toolbarSpacer} />
-          <span className={kit.count}>
+          <Text size="1" fontSize="12.5px" className={kit.count}>
             조회결과 : <b>{visible.length}</b>건
-          </span>
+          </Text>
         </div>
 
         {visible.length === 0 ? (
@@ -112,21 +132,40 @@ export default function PortfolioListPage() {
                     <td className={kit.num}>{visible.length - i}</td>
                     <td className={kit.num}>{r.updatedAt}</td>
                     <td>
-                      <Link href={`/admin/portfolio/${r.id}`} className={kit.tdStrong}>
+                      <Link
+                        href={`/admin/portfolio/${r.id}`}
+                        className={kit.tdStrong}
+                      >
                         {r.name}
                       </Link>
                     </td>
                     <td>
-                      <Badge tone="plain">{r.category}</Badge>
+                      <Badge
+                        label={r.category}
+                        color="GRAY"
+                        variant="surface"
+                        size="1"
+                        radius="medium"
+                      />
                     </td>
                     <td>
-                      <Badge tone={r.status === 'ongoing' ? 'blue' : 'green'}>
-                        {labelOf(PORTFOLIO_STATUS_FILTER, r.status)}
-                      </Badge>
+                      <Badge
+                        label={labelOf(PORTFOLIO_STATUS_FILTER, r.status)}
+                        color={r.status === "ongoing" ? "BLUE" : "GREEN"}
+                        variant="surface"
+                        size="1"
+                        radius="medium"
+                      />
                     </td>
                     <td className={kit.clamp}>{r.htmlFile}</td>
                     <td>
-                      <Badge tone={r.use === 'Y' ? 'green' : 'plain'}>{r.use}</Badge>
+                      <Badge
+                        label={r.use}
+                        color={r.use === "Y" ? "GREEN" : "GRAY"}
+                        variant="surface"
+                        size="1"
+                        radius="medium"
+                      />
                     </td>
                   </tr>
                 ))}
@@ -136,8 +175,13 @@ export default function PortfolioListPage() {
         )}
 
         <div className={kit.cardFoot}>
-          <span>진행 프로젝트는 진행중 목록에, 종료 프로젝트는 종료 목록에 노출됩니다.</span>
-          <span>기획서 3 · 포트폴리오관리 목록</span>
+          <Text size="1" fontSize="12.5px">
+            진행 프로젝트는 진행중 목록에, 종료 프로젝트는 종료 목록에
+            노출됩니다.
+          </Text>
+          <Text size="1" fontSize="12.5px">
+            기획서 3 · 포트폴리오관리 목록
+          </Text>
         </div>
       </section>
     </>

@@ -1,0 +1,124 @@
+/* Heading.module.css */
+
+/* 1. 공통 기본 스타일 */
+.heading {
+  font-family: inherit;
+  margin: 0;
+  color: var(--heading-color);
+  text-align: var(--heading-align);
+  text-wrap: var(--heading-wrap);
+}
+
+/* =========================================================
+   2. SIZE STYLES (1 ~ 9)
+   ========================================================= */
+.size_1 {
+  font-size: 12px;
+  letter-spacing: 0.0025em;
+  line-height: 16px;
+}
+.size_2 {
+  font-size: 14px;
+  letter-spacing: 0em;
+  line-height: 20px;
+}
+.size_3 {
+  font-size: 16px;
+  letter-spacing: 0em;
+  line-height: 24px;
+}
+.size_4 {
+  font-size: 18px;
+  letter-spacing: -0.0025em;
+  line-height: 26px;
+}
+.size_5 {
+  font-size: 20px;
+  letter-spacing: -0.005em;
+  line-height: 28px;
+}
+.size_6 {
+  font-size: 24px;
+  letter-spacing: -0.00625em;
+  line-height: 30px;
+}
+.size_7 {
+  font-size: 28px;
+  letter-spacing: -0.0075em;
+  line-height: 36px;
+}
+.size_8 {
+  font-size: 35px;
+  letter-spacing: -0.01em;
+  line-height: 40px;
+}
+.size_9 {
+  font-size: 60px;
+  letter-spacing: -0.025em;
+  line-height: 60px;
+}
+
+/* =========================================================
+   3. WEIGHT STYLES (300, 400, 500, 700)
+   ========================================================= */
+.weight_300 {
+  font-weight: 300;
+}
+.weight_400 {
+  font-weight: 400;
+}
+.weight_500 {
+  font-weight: 500;
+}
+.weight_700 {
+  font-weight: 700;
+}
+
+/* =========================================================
+   4. CONDITIONAL & UTILITY STYLES
+   ========================================================= */
+/* Truncate (1줄 말줄임) */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
+}
+
+/* Line Clamp (N줄 말줄임) */
+.lineClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: var(--line-clamp);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+}
+
+/* Trim (상/하 여백 제거) */
+.trim_start::before,
+.trim_end::after,
+.trim_both::before,
+.trim_both::after {
+  content: "";
+  display: table;
+}
+
+.trim_start::before,
+.trim_both::before {
+  margin-bottom: -0.25em;
+}
+
+.trim_end::after,
+.trim_both::after {
+  margin-top: -0.25em;
+}
+
+/* =========================================================
+   5. fontSize prop (size 단계로 표현 못 하는 값)
+   size_N 보다 뒤에 와야 이긴다 — .heading 안에 두면 size_N 이 항상 덮어써서
+   fontSize prop 이 통째로 죽는다. 값을 넘겼을 때만 이 클래스가 붙는다.
+   ========================================================= */
+.customSize {
+  font-size: var(--custom-font-size);
+}

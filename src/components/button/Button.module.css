@@ -1,0 +1,165 @@
+/* Button.module.css */
+
+/* =========================================================
+   1. 기본 버튼 & Interactive Overlay (interactiveStyled 이식)
+   ========================================================= */
+.button {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  width: var(--btn-width, fit-content);
+  border-radius: var(--btn-radius, 0px);
+}
+
+/* ::after를 이용한 반투명 호버/액티브 오버레이 */
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: transparent;
+  pointer-events: none;
+  transition: background-color 0.2s ease-in-out;
+  z-index: 0;
+}
+
+.button:hover::after,
+.button[data-state="hover"]::after {
+  background-color: rgba(24, 26, 27, 0.08); /* GRAY_990 기반 8% */
+}
+
+.button:active::after,
+.button[data-state="pressed"]::after {
+  background-color: rgba(24, 26, 27, 0.16); /* GRAY_990 기반 16% */
+}
+
+.button:focus-visible,
+.button[data-state="focus"] {
+  outline: 2px solid #23c7cd; /* TEAL_500 */
+}
+
+.button:disabled,
+.button[data-state="disabled"],
+.button[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none; /* 비활성화 시 hover/active 오버레이 차단 */
+}
+
+/* =========================================================
+   2. SIZE STYLES
+   ========================================================= */
+.size_1 {
+  height: 24px;
+  padding: 0 4px;
+  gap: 0px;
+  font-size: 12px;
+}
+.size_1 svg {
+  width: 14px;
+  height: 14px;
+}
+
+.size_2 {
+  height: 36px;
+  padding: 0 8px;
+  gap: 0px;
+  font-size: 14px;
+}
+.size_2 svg {
+  width: 16px;
+  height: 16px;
+}
+
+.size_3 {
+  height: 40px;
+  padding: 0 8px;
+  gap: 2px;
+  font-size: 16px;
+}
+.size_3 svg {
+  width: 20px;
+  height: 20px;
+}
+
+.size_4 {
+  height: 48px;
+  padding: 0 12px;
+  gap: 4px;
+  font-size: 16px;
+}
+.size_4 svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* =========================================================
+   3. COLOR TOKENS (호버 색상 선언 불필요 - ::after가 처리)
+   ========================================================= */
+.button[data-color="RED"] {
+  --main: #ec4141; /* RED_500 */
+  --surface: #ff9999; /* RED_300 */
+  --text: #691111; /* RED_900 */
+}
+
+.button[data-color="BLUE"] {
+  --main: #1872e2; /* BLUE_500 */
+  --surface: #83c5fc; /* BLUE_300 */
+  --text: #08286d; /* BLUE_900 */
+}
+
+.button[data-color="GRAY"] {
+  --main: #9b9fa6; /* GRAY_500 */
+  --surface: #cbcfd2; /* GRAY_300 */
+  --text: #3c3e44; /* GRAY_900 */
+}
+
+.button[data-color="TEAL"] {
+  --main: #23c7cd; /* TEAL_500 */
+  --surface: #93eaeb; /* TEAL_300 */
+  --text: #013d42; /* TEAL_900 */
+}
+
+.button[data-color="ORANGE"] {
+  --main: #f56900; /* ORANGE_500 */
+  --surface: #ffb75c; /* ORANGE_300 */
+  --text: #703000; /* ORANGE_900 */
+}
+
+.button[data-color="GREEN"] {
+  --main: #279b33; /* GREEN_500 */
+  --surface: #92de8c; /* GREEN_300 */
+  --text: #043e0d; /* GREEN_900 */
+}
+
+/* =========================================================
+   4. VARIANT STYLES (단 4블록으로 모든 색상 x 호버 x 액티브 처리)
+   ========================================================= */
+.button[data-variant="solid"] {
+  background-color: var(--main);
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.button[data-variant="surface"] {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid transparent;
+}
+
+.button[data-variant="outline"] {
+  background-color: #ffffff;
+  color: var(--main);
+  border: 1px solid var(--main);
+}
+
+.button[data-variant="ghost"] {
+  background-color: transparent;
+  color: var(--main);
+  border: 1px solid transparent;
+}

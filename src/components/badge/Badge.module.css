@@ -1,0 +1,99 @@
+/* Badge.module.css */
+
+/* =========================================================
+   1. 공통 기본 스타일
+   ========================================================= */
+.badge {
+  display: inline-flex;
+  vertical-align: middle;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  border-radius: var(--badge-radius, 6px);
+}
+
+/* =========================================================
+   2. SIZE STYLES (1, 2, 3)
+   ========================================================= */
+.size_1 {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.size_2 {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 14px;
+  gap: 6px;
+}
+
+.size_3 {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 16px;
+  gap: 8px;
+}
+
+/* =========================================================
+   3. COLOR TOKENS: 색상별로 사용할 속성 변수 정의
+   ========================================================= */
+.badge[data-color="RED"] {
+  --main: #ec4141; /* RED_500 */
+  --surface: #ff9999; /* RED_300 */
+  --text: #691111; /* RED_900 */
+}
+
+.badge[data-color="BLUE"] {
+  --main: #1872e2; /* BLUE_500 */
+  --surface: #83c5fc; /* BLUE_300 */
+  --text: #08286d; /* BLUE_900 (기존 RED_900 오타 수정) */
+}
+
+.badge[data-color="GRAY"] {
+  --main: #9b9fa6; /* GRAY_500 */
+  --surface: #cbcfd2; /* GRAY_300 */
+  --text: #3c3e44; /* GRAY_900 */
+}
+
+.badge[data-color="TEAL"] {
+  --main: #23c7cd; /* TEAL_500 */
+  --surface: #93eaeb; /* TEAL_300 */
+  --text: #013d42; /* TEAL_900 */
+}
+
+.badge[data-color="ORANGE"] {
+  --main: #f56900; /* ORANGE_500 */
+  --surface: #ffb75c; /* ORANGE_300 */
+  --text: #703000; /* ORANGE_900 */
+}
+
+.badge[data-color="GREEN"] {
+  --main: #279b33; /* GREEN_500 */
+  --surface: #92de8c; /* GREEN_300 */
+  --text: #043e0d; /* GREEN_900 */
+}
+
+/* =========================================================
+   4. VARIANT STYLES: 색상 변수를 가져다 단 '한 번씩'만 구현
+   ========================================================= */
+.badge[data-variant="solid"] {
+  background-color: var(--main);
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.badge[data-variant="surface"] {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid transparent;
+}
+
+.badge[data-variant="outline"] {
+  background-color: transparent;
+  color: var(--main);
+  border: 1px solid var(--main);
+}

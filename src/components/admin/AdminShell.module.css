@@ -3,12 +3,12 @@
    ========================================================================== */
 
 .root {
-  composes: theme from './theme.module.css';
+  composes: theme from "./theme.module.css";
 }
 
 /* 세션 확인 중 전체 화면 상태 */
 .boot {
-  composes: theme from './theme.module.css';
+  composes: theme from "./theme.module.css";
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,17 +25,6 @@
   background: var(--surface);
   box-shadow: var(--shadow);
   text-align: center;
-}
-.blockedTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.blockedDesc {
-  margin: 10px 0 18px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
   word-break: keep-all;
 }
 
@@ -48,15 +37,6 @@
   -webkit-backdrop-filter: saturate(180%) blur(12px);
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--line);
-}
-.bar {
-  max-width: 1520px;
-  margin: 0 auto;
-  padding: 0 32px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
 }
 
 .brand {
@@ -78,47 +58,38 @@
   flex: 0 0 auto;
 }
 .barTitle {
-  font-size: 13px;
-  font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.01em;
+  flex: 0 0 auto;
 }
 .barSpacer {
   flex: 1 1 auto;
 }
 
 .headRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex: 0 0 auto;
 }
 .account {
-  display: flex;
-  align-items: center;
-  gap: 9px;
   height: 36px;
   padding: 0 12px 0 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .account:hover {
   border-color: var(--faint);
   box-shadow: var(--shadow);
 }
 .accountMail {
-  font-size: 12.5px;
   color: var(--ink-2);
   max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-/* "사이트 보기" — 좁은 화면에서 가장 먼저 접히는 항목.
-   kit 의 .btnGhost 와 파일이 달라 자손 선택자를 못 쓰므로 전용 클래스를 하나 준다. */
+/* "사이트 보기" — 좁은 화면에서 가장 먼저 접히는 항목 */
 .siteLink {
-  composes: btn btnGhost from './kit.module.css';
+  flex: 0 0 auto;
 }
 
 /* ===== tab bar ============================================================ */
@@ -149,7 +120,7 @@
   transition: color 0.18s ease;
 }
 .tab::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 10px;
   right: 10px;
@@ -178,8 +149,6 @@
   border-radius: 5px;
   background: var(--line-2);
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
   letter-spacing: 0;
 }
 .tab.isActive .tabSub {
@@ -219,7 +188,9 @@
 }
 /* narrow phones: drop "사이트 보기" so the account chip + 로그아웃 always stay on screen */
 @media (max-width: 620px) {
-  .siteLink {
+  /* Button 의 .button 이 display:inline-flex 를 걸고 있어 클래스 하나로는
+     번들 순서에 따라 질 수 있다 — 같은 클래스를 두 번 써서 특이도를 올린다. */
+  .siteLink.siteLink {
     display: none;
   }
   .brand img {
