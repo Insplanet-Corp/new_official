@@ -19,6 +19,7 @@ type Status = 'done' | 'ongoing';
 export default function ProjectsExplorer() {
   const [status, setStatus] = useState<Status>('done');
   const [filter, setFilter] = useState<Category>('all');
+  const [barIn, setBarIn] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -26,25 +27,45 @@ export default function ProjectsExplorer() {
 
   // Reveal: the FIRST ROW plays its sequential rise on load (no scroll needed); the filter bar and
   // every card from row 2 on reveals on scroll-in. Per-column transition-delay staggers L→R.
+  //
+  // ⚠️ The bar's reveal is React state (`barIn`), NOT a hand-added `.in` class like the cards'.
+  // Its chips and toggle re-render on every click, and React rewrites their whole className from
+  // the JSX — an imperatively added class is wiped the instant you press 완료/진행중, leaving the
+  // bar stuck at its pre-reveal opacity:0 forever (the IO has already unobserved).
+  // The cards can stay imperative only because their className is a constant string.
   useEffect(() => {
     const grid = gridRef.current;
     if (!grid) return;
     const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 4;
     const allCards = [...grid.querySelectorAll<HTMLElement>('.pj-card')];
     const firstRow = allCards.slice(0, cols); // the visible first row, whatever the column count
-    const onScroll: Element[] = [
-      ...(filterRef.current?.querySelectorAll('.pj-cat, .pj-toggle') ?? []),
-      ...allCards.slice(cols),
-    ];
+    const onScroll: Element[] = allCards.slice(cols);
 
     if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
       [...firstRow, ...onScroll].forEach((el) => el.classList.add('in'));
+      setBarIn(true);
       return;
     }
     // commit the from-below start state (force reflow) then add .in, so the rise plays on load
     void document.body.offsetHeight;
     firstRow.forEach((el) => el.classList.add('in'));
-    return revealOnScroll(onScroll, 0.18);
+    const stopCards = revealOnScroll(onScroll, 0.18);
+
+    const bar = filterRef.current;
+    if (!bar) return stopCards;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        setBarIn(true);
+        io.disconnect();
+      },
+      { threshold: 0.18 },
+    );
+    io.observe(bar);
+    return () => {
+      stopCards();
+      io.disconnect();
+    };
   }, []);
 
   const pickStatus = (next: Status) => {
@@ -71,7 +92,7 @@ export default function ProjectsExplorer() {
               <button
                 key={c.filter}
                 type="button"
-                className={filter === c.filter ? 'pj-cat is-active' : 'pj-cat'}
+                className={`pj-cat${barIn ? ' in' : ''}${filter === c.filter ? ' is-active' : ''}`}
                 data-filter={c.filter}
                 onClick={() => pickFilter(c.filter)}
               >
@@ -80,7 +101,7 @@ export default function ProjectsExplorer() {
             ))}
           </div>
           <div
-            className={status === 'ongoing' ? 'pj-toggle is-ongoing' : 'pj-toggle'}
+            className={`pj-toggle${barIn ? ' in' : ''}${status === 'ongoing' ? ' is-ongoing' : ''}`}
             role="group"
             aria-label="상태"
           >
