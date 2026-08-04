@@ -179,7 +179,6 @@ export function Select({
 }
 
 /* the status <select> inside a table cell reuses the toolbar control's look */
-export const selectClass = s.select;
 
 /* ---- states ------------------------------------------------------------- */
 export function Empty({ title, desc }: { title: string; desc?: string }) {

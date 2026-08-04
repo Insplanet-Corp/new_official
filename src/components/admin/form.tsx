@@ -466,4 +466,3 @@ export function Sep({ children = "~" }: { children?: ReactNode }) {
   );
 }
 
-export const formStyles = s;
