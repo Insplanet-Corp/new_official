@@ -1,0 +1,52 @@
+-- ============================================================================
+-- portfolios 의 옛 정책 제거 — 사용여부 N 이 홈페이지에 새는 문제
+--
+-- 증상: 어드민에서 사용여부를 N 으로 바꿔도 /projects 에 계속 나온다.
+--       anon 키로 조회하면 N 인 행이 그대로 넘어온다(실측 확인함).
+--
+-- 원인: 004 이전에 대시보드에서 만들어 둔 정책 두 개가 남아 있었다.
+--         · "Anyone can view published portfolios"  SELECT / public
+--         · "Admins can manage portfolios"          ALL    / authenticated
+--
+--       ⚠️ RLS 의 permissive 정책은 OR 로 합쳐진다. 즉 정책을 아무리 좁게
+--       새로 걸어도, 느슨한 정책이 하나라도 남아 있으면 그쪽이 이긴다.
+--       004 의 portfolios_public_read (use_yn='Y') 가 무력화된 이유다.
+--
+--       "Admins can manage portfolios" 도 FOR ALL 이라 SELECT 를 포함한다.
+--       001 에서 겪은 것과 같은 패턴이다(그때는 자기 참조까지 겹쳐 42P17 재귀).
+--
+-- 004 가 이미 동등한 정책을 동작별로 걸어 뒀으므로 그냥 지우면 된다:
+--   select  portfolios_public_read(anon: use_yn='Y') / portfolios_admin_read
+--   write   portfolios_admin_insert / update / delete
+--
+-- 실행: Supabase 대시보드 > SQL Editor. 선행 004.
+-- ============================================================================
+
+drop policy if exists "Anyone can view published portfolios" on public.portfolios;
+drop policy if exists "Admins can manage portfolios"        on public.portfolios;
+
+-- ---------------------------------------------------------------------------
+-- 확인 1 — 정책이 004 가 만든 5개만 남아야 한다
+-- ---------------------------------------------------------------------------
+-- select policyname, cmd, roles::text, qual::text
+--   from pg_policies
+--  where schemaname = 'public' and tablename = 'portfolios'
+--  order by cmd, policyname;
+--
+-- 기대:
+--   portfolios_admin_delete  DELETE  {authenticated}
+--   portfolios_admin_insert  INSERT  {authenticated}
+--   portfolios_admin_read    SELECT  {authenticated}
+--   portfolios_public_read   SELECT  {anon,authenticated}   qual: (use_yn = 'Y')
+--   portfolios_admin_update  UPDATE  {authenticated}
+
+-- ---------------------------------------------------------------------------
+-- 확인 2 — anon 이 정말 Y 만 보는가 (이게 진짜 검증이다)
+--          use_yn='N' 인 행을 하나 만들어 두고 돌릴 것
+-- ---------------------------------------------------------------------------
+-- begin;
+--   set local role anon;
+--   select count(*) filter (where use_yn = 'Y') as anon이_보는_Y,
+--          count(*) filter (where use_yn = 'N') as anon이_보는_N   -- 0 이어야 한다
+--     from public.portfolios;
+-- rollback;

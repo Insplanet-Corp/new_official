@@ -105,12 +105,21 @@ export default function MainForm({
         />
       </Row>
 
+      {/* 메인관리는 아직 테이블이 없어 저장되지 않는다 — 업로드만 동작한다 */}
       <Row label="썸네일 – PC" required>
-        <FilePick preview={v.thumbPc} />
+        <FilePick
+          value={v.thumbPc}
+          onChange={(url) => set("thumbPc", url)}
+          folder="main-pc"
+        />
       </Row>
 
       <Row label="썸네일 – 모바일" required>
-        <FilePick preview={v.thumbMobile} />
+        <FilePick
+          value={v.thumbMobile}
+          onChange={(url) => set("thumbMobile", url)}
+          folder="main-mobile"
+        />
       </Row>
 
       <Actions>

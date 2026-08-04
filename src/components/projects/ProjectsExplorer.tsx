@@ -1,22 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import useMagneticCards from '@/lib/hooks/useMagneticCards';
 import {
   CATEGORIES,
-  ONGOING_ROWS,
-  PROJECT_CARDS,
   type Category,
+  type OngoingRow,
+  type ProjectCard,
 } from '@/data/projectsPage';
 
 type Status = 'done' | 'ongoing';
 
 /* Filter bar + the two status panels (완료 grid / 진행중 table).
    The chips do a visual active-switch and filter by category; only the 완료/진행중 toggle swaps
-   panels. The card data itself — which projects exist, newest-first — is rendered by the publisher
-   from the DB; PROJECT_CARDS is the seeded dummy set. */
-export default function ProjectsExplorer() {
+   panels.
+
+   ⚠️ Cards arrive as PROPS, fetched on the server (app/projects/page.tsx). They must exist in the
+   DOM at mount: the reveal effect below counts `.pj-card` once, on mount, to work out the first
+   row. Fetch them client-side instead and the effect sees an empty grid — no card ever gets `.in`
+   and the whole thing stays at opacity:0. */
+export default function ProjectsExplorer({
+  cards,
+  ongoingRows,
+}: {
+  cards: ProjectCard[];
+  ongoingRows: OngoingRow[];
+}) {
   const [status, setStatus] = useState<Status>('done');
   const [filter, setFilter] = useState<Category>('all');
   const [barIn, setBarIn] = useState(false);
@@ -123,20 +133,23 @@ export default function ProjectsExplorer() {
       {/* 완료 — card grid */}
       <section className="pj-list" data-status-panel="done" hidden={status !== 'done'}>
         <div className="pj-inner pj-grid" ref={gridRef}>
-          {PROJECT_CARDS.map((card) => (
+          {cards.map((card) => (
             <article
               className="pj-card"
               data-category={card.category}
               key={card.id}
               hidden={filter !== 'all' && card.category !== filter}
             >
-              <img
-                className="pj-card-img"
-                src={card.image}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
+              {/* 썸네일이 비어 있으면 <img src=""> 가 현재 페이지를 다시 받아온다 */}
+              {card.image ? (
+                <img
+                  className="pj-card-img"
+                  src={card.image}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
               <div className="pj-card-over">
                 {card.award ? (
                   <img
@@ -149,9 +162,13 @@ export default function ProjectsExplorer() {
                 <div className="pj-card-info">
                   <span className="pj-card-cat">{card.cat}</span>
                   <h3 className="pj-card-name">
-                    {card.name[0]}
-                    <br />
-                    {card.name[1]}
+                    {/* 프로젝트명의 \n 이 여기서 <br> 이 된다 */}
+                    {card.lines.map((line, i) => (
+                      <Fragment key={i}>
+                        {i > 0 ? <br /> : null}
+                        {line}
+                      </Fragment>
+                    ))}
                   </h3>
                 </div>
               </div>
@@ -170,11 +187,14 @@ export default function ProjectsExplorer() {
               <div className="pj-th">분류</div>
               <div className="pj-th">수행기간</div>
             </div>
-            {ONGOING_ROWS.map((row, i) => (
-              <div className="pj-tr" key={`${row.project}-${i}`}>
+            {ongoingRows.map((row) => (
+              <div className="pj-tr" key={row.id}>
                 <div className="pj-td">
                   <span className="pj-logo">
-                    <img src={row.logo} alt={row.client} loading="lazy" />
+                    {/* 고객사명 텍스트 필드는 기획서에 없다 — alt 는 프로젝트명으로 채운다 */}
+                    {row.logo ? (
+                      <img src={row.logo} alt={row.project} loading="lazy" />
+                    ) : null}
                   </span>
                 </div>
                 <div className="pj-td">{row.project}</div>

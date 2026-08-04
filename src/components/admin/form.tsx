@@ -1,6 +1,7 @@
 "use client";
 
-import type { ChangeEvent, ReactNode } from "react";
+import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
 import s from "./form.module.css";
 import kit from "./kit.module.css";
 import Button from "../button/Button";
@@ -247,22 +248,84 @@ export function CheckGrid({
   );
 }
 
-/* ---- 파일 업로드 (파일명 + 파일찾기 + 미리보기 자리) ---------------------- */
+/* 단일 체크박스 (수상 여부 등). CheckGrid 와 같은 .choice 스타일을 쓴다. */
+export function Check({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange?: (next: boolean) => void;
+}) {
+  return (
+    <Text as="label" size="2" fontSize="13.5px" className={s.choice}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      {label}
+    </Text>
+  );
+}
+
+/* ---- 이미지 업로드 (파일찾기 + 미리보기) ----------------------------------
+   Supabase Storage 의 portfolio 버킷(006 마이그레이션)에 올리고, 공개 URL 을
+   value 로 돌려준다. DB 에는 <img src> 에 그대로 넣을 URL 문자열만 저장한다.
+
+   ⚠️ 파일 입력은 보이지 않게 두고 버튼이 대신 연다. <input type="file"> 을
+   그대로 노출하면 브라우저마다 생김새가 달라 기획서 화면과 어긋난다. */
 export function FilePick({
-  fileName,
-  onPick,
-  preview,
+  value,
+  onChange,
   size = "000*000",
   disabled,
+  bucket = "portfolio",
+  folder = "",
 }: {
-  fileName?: string;
-  onPick?: () => void;
-  /** 등록된 이미지 URL — 없으면 (000*000) 자리 표시 */
-  preview?: string;
+  /** 업로드된 이미지의 공개 URL (또는 기존 경로) */
+  value?: string;
+  onChange?: (url: string) => void;
   size?: string;
-  /** 진행 상태에 따라 쓰지 않는 항목 (기획서 포트폴리오 등록 화면) */
   disabled?: boolean;
+  bucket?: string;
+  folder?: string;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const fileName = value ? decodeURIComponent(value.split("/").pop() ?? "") : "";
+
+  const upload = async (file: File) => {
+    setBusy(true);
+    setErr(null);
+    // 같은 이름을 덮어쓰지 않도록 타임스탬프를 붙인다. 한글·공백 파일명은
+    // Storage 키로 쓰기 곤란해서 안전한 문자만 남긴다.
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${folder ? `${folder}/` : ""}${Date.now()}_${safe}`;
+
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+    if (error) {
+      setBusy(false);
+      setErr(
+        /bucket/i.test(error.message)
+          ? `Storage 버킷 '${bucket}' 이 없습니다. 006_portfolio_storage.sql 을 실행해 주세요.`
+          : error.message,
+      );
+      return;
+    }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(path);
+    setBusy(false);
+    onChange?.(publicUrl);
+  };
+
   return (
     <>
       <div className={s.file}>
@@ -273,20 +336,48 @@ export function FilePick({
           truncate
           className={`${s.fileName}${fileName ? "" : ` ${s.fileEmpty}`}`}
         >
-          {fileName || (disabled ? "해당 없음" : "선택된 파일 없음")}
+          {busy ? "업로드 중…" : fileName || "선택된 파일 없음"}
         </Text>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            // 같은 파일을 다시 골라도 change 가 나도록 값을 비운다
+            e.target.value = "";
+            if (f) void upload(f);
+          }}
+        />
         <Button
-          label="파일찾기"
+          label={busy ? "업로드 중…" : "파일찾기"}
           variant="outline"
           color="GRAY"
           size="1"
           radius="medium"
-          onClick={onPick}
-          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled || busy}
         />
+        {value ? (
+          <Button
+            label="지우기"
+            variant="ghost"
+            color="GRAY"
+            size="1"
+            radius="medium"
+            onClick={() => onChange?.("")}
+            disabled={disabled || busy}
+          />
+        ) : null}
       </div>
+      {err ? (
+        <Text as="p" size="1" fontSize="12px" color="var(--danger, #d33)">
+          {err}
+        </Text>
+      ) : null}
       <div className={s.thumbBox}>
-        {preview ? <img src={preview} alt="" /> : `(${size})`}
+        {value ? <img src={value} alt="" /> : `(${size})`}
       </div>
     </>
   );

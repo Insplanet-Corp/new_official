@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
@@ -10,68 +10,88 @@ import {
   USE_YN_FILTER,
   labelOf,
 } from "@/data/adminOptions";
+import { describeError, isMissingTable } from "@/lib/pgError";
+import {
+  type Portfolio,
+  formatDay,
+  titleOneLine,
+} from "@/lib/portfolios";
+import { supabase } from "@/lib/supabase";
 import Badge from "@/components/badge/Badge";
 import Button from "@/components/button/Button";
 import Text from "@/components/text/Text";
 
 /* 포트폴리오관리 - 목록 (기획서 23p)
    조회 조건: 포트폴리오명 키워드 + 분류 + 진행 상태 + 사용여부.
-   ※ 지금은 화면 틀 — 목록 데이터 연동은 다음 단계. */
 
-type PortfolioRow = {
-  id: string;
-  updatedAt: string;
-  name: string;
-  category: string;
-  status: string;
-  htmlFile: string;
-  use: "Y" | "N";
-};
+   필터는 클라이언트에서 건다 — 건수가 수백 단위를 넘어가면 PostgREST 쿼리로
+   옮겨야 한다(견적문의와 같은 판단). */
 
-const ROWS: PortfolioRow[] = [];
+const MISSING = "portfolios 스키마가 아직 없습니다. supabase/migrations/004_portfolios.sql 을 Supabase SQL Editor 에서 실행해 주세요.";
 
 export default function PortfolioListPage() {
+  const [rows, setRows] = useState<Portfolio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
+
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
   const [use, setUse] = useState("all");
 
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data, error: err } = await supabase
+        .from("portfolios")
+        .select("*")
+        .order("seq", { ascending: false });
+      if (!alive) return;
+      if (err) {
+        if (isMissingTable(err)) setTableMissing(true);
+        else setError(describeError(err));
+      } else {
+        setRows((data ?? []) as Portfolio[]);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return ROWS.filter((r) => {
+    return rows.filter((r) => {
       if (category !== "all" && r.category !== category) return false;
       if (status !== "all" && r.status !== status) return false;
-      if (use !== "all" && r.use !== use) return false;
-      if (needle && !r.name.toLowerCase().includes(needle)) return false;
+      if (use !== "all" && r.use_yn !== use) return false;
+      if (needle && !titleOneLine(r.title).toLowerCase().includes(needle))
+        return false;
       return true;
     });
-  }, [q, category, status, use]);
+  }, [rows, q, category, status, use]);
 
   return (
     <>
       <PageHead
         href="/admin/portfolio"
         actions={
-          <Link href="/admin/portfolio/new">
-            <Button
-              label="등록"
-              color="BLUE"
-              startIcon="plus"
-              variant="solid"
-              size="2"
-              radius="medium"
-              onClick={() => {}}
-            />
-          </Link>
+          <Button
+            href="/admin/portfolio/new"
+            label="등록"
+            color="BLUE"
+            startIcon="plus"
+            variant="solid"
+            size="2"
+            radius="medium"
+          />
         }
       />
 
-      <Note>
-        <span>
-          <b>화면 틀</b> — 기획서 3. 포트폴리오관리 구조입니다.
-          조회·등록·수정·삭제 동작과 DB 연동은 아직 붙지 않았습니다.
-        </span>
-      </Note>
+      {tableMissing ? <Note warn>{MISSING}</Note> : null}
+      {error ? <Note warn>{error}</Note> : null}
 
       <section className={kit.card}>
         <div className={kit.toolbar}>
@@ -94,20 +114,15 @@ export default function PortfolioListPage() {
             onChange={setUse}
             options={USE_YN_FILTER}
           />
-          <Button
-            label="조회"
-            variant="outline"
-            color="GRAY"
-            size="2"
-            radius="medium"
-          />
           <span className={kit.toolbarSpacer} />
           <Text size="1" fontSize="12.5px" className={kit.count}>
             조회결과 : <b>{visible.length}</b>건
           </Text>
         </div>
 
-        {visible.length === 0 ? (
+        {loading ? (
+          <Empty title="불러오는 중…" desc="포트폴리오를 조회하고 있습니다." />
+        ) : visible.length === 0 ? (
           <Empty
             title="조회 결과가 없습니다"
             desc="등록된 데이터가 없거나 조회 조건에 맞는 항목이 없습니다."
@@ -127,21 +142,21 @@ export default function PortfolioListPage() {
                 </tr>
               </thead>
               <tbody>
-                {visible.map((r, i) => (
+                {visible.map((r) => (
                   <tr key={r.id}>
-                    <td className={kit.num}>{visible.length - i}</td>
-                    <td className={kit.num}>{r.updatedAt}</td>
+                    <td className={kit.num}>{r.seq}</td>
+                    <td className={kit.num}>{formatDay(r.updated_at)}</td>
                     <td>
                       <Link
                         href={`/admin/portfolio/${r.id}`}
                         className={kit.tdStrong}
                       >
-                        {r.name}
+                        {titleOneLine(r.title)}
                       </Link>
                     </td>
                     <td>
                       <Badge
-                        label={r.category}
+                        label={r.category ?? "-"}
                         color="GRAY"
                         variant="surface"
                         size="1"
@@ -150,18 +165,18 @@ export default function PortfolioListPage() {
                     </td>
                     <td>
                       <Badge
-                        label={labelOf(PORTFOLIO_STATUS_FILTER, r.status)}
+                        label={labelOf(PORTFOLIO_STATUS_FILTER, r.status ?? "")}
                         color={r.status === "ongoing" ? "BLUE" : "GREEN"}
                         variant="surface"
                         size="1"
                         radius="medium"
                       />
                     </td>
-                    <td className={kit.clamp}>{r.htmlFile}</td>
+                    <td className={kit.clamp}>{r.html_file ?? "-"}</td>
                     <td>
                       <Badge
-                        label={r.use}
-                        color={r.use === "Y" ? "GREEN" : "GRAY"}
+                        label={r.use_yn}
+                        color={r.use_yn === "Y" ? "GREEN" : "GRAY"}
                         variant="surface"
                         size="1"
                         radius="medium"
@@ -177,7 +192,7 @@ export default function PortfolioListPage() {
         <div className={kit.cardFoot}>
           <Text size="1" fontSize="12.5px">
             진행 프로젝트는 진행중 목록에, 종료 프로젝트는 종료 목록에
-            노출됩니다.
+            노출됩니다. 사용여부 N 은 홈페이지에 나오지 않습니다.
           </Text>
           <Text size="1" fontSize="12.5px">
             기획서 3 · 포트폴리오관리 목록
