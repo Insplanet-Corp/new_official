@@ -9,6 +9,16 @@
 export type PortfolioCategory = "Web" | "Mobile" | "Consulting";
 export type PortfolioStatus = "ongoing" | "done";
 
+/* 004 의 체크 제약과 같은 값이어야 한다.
+   validate 가 "비었나" 만 보면, 드롭다운 플레이스홀더 값처럼 비어 있지 않은
+   엉뚱한 문자열이 통과해 저장 순간 23514 로 터진다. 화이트리스트로 막는다. */
+export const CATEGORY_VALUES: PortfolioCategory[] = [
+  "Web",
+  "Mobile",
+  "Consulting",
+];
+export const STATUS_VALUES: PortfolioStatus[] = ["ongoing", "done"];
+
 export type Portfolio = {
   id: string;
   /** 기획서 목록의 "No". id 가 uuid 라 따로 둔 순번 */
@@ -60,8 +70,9 @@ export const EMPTY_DRAFT: PortfolioDraft = {
   html_file: "",
 };
 
-/** 상세화면 업로드 경로 — 실제 경로 확정되면 교체 (기획서 25p 9번) */
-export const DETAIL_PATH = "/com/resource/content/portfolio/detail/";
+/* 기획서(25p)의 DETAIL_PATH(/com/resource/content/portfolio/detail/)는 없앴다.
+   상세 HTML 은 이제 Storage 에 올리고 html_file 에 공개 URL 을 담는다 — 008 참고.
+   웹서버 정적 디렉터리에 파일을 두는 방식은 Vercel 배포에서 성립하지 않는다. */
 
 /* ---- 날짜 변환 -------------------------------------------------------------
    기획서 폼은 YYYYMMDD 로 받고 DB 는 date 다. 양방향 변환이 필요하다. */
@@ -155,8 +166,10 @@ export const toRow = (d: PortfolioDraft) => {
 export const validate = (d: PortfolioDraft): string | null => {
   if (!d.title.trim()) return "프로젝트명을 입력해 주세요.";
   if (!d.use_yn) return "사용여부를 선택해 주세요.";
-  if (!d.category) return "분류를 선택해 주세요.";
-  if (!d.status) return "진행 상태를 선택해 주세요.";
+  if (!CATEGORY_VALUES.includes(d.category as PortfolioCategory))
+    return "분류를 선택해 주세요.";
+  if (!STATUS_VALUES.includes(d.status as PortfolioStatus))
+    return "진행 상태를 선택해 주세요.";
 
   if (d.status === "done") {
     if (!d.thumb_pc.trim()) return "종료 프로젝트는 썸네일 – PC 가 필요합니다.";

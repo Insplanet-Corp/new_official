@@ -34,6 +34,8 @@ export type ProjectCard = {
   /** 필터 비교용 소문자 — CATEGORIES 의 filter 값과 같아야 한다 */
   category: string;
   award: boolean;
+  /** 상세 HTML 이 등록된 카드만 링크가 된다. 없으면 클릭해도 아무 일 없음 */
+  href: string | null;
 };
 
 export type OngoingRow = {
@@ -56,6 +58,7 @@ export const toCards = (rows: Portfolio[]): ProjectCard[] =>
       cat: r.category ?? '',
       category: (r.category ?? '').toLowerCase(),
       award: r.award,
+      href: r.html_file ? `/projects/${r.id}` : null,
     }));
 
 /** 진행 프로젝트 -> 표 */

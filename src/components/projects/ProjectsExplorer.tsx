@@ -172,6 +172,16 @@ export default function ProjectsExplorer({
                   </h3>
                 </div>
               </div>
+              {/* 카드 전체를 덮는 링크. <article> 을 <a> 로 바꾸지 않는 이유는
+                  .pj-card 를 레거시 Cursor.tsx 가 잡고 있고, projects.css 가
+                  블록 요소를 전제로 크기를 주기 때문이다. */}
+              {card.href ? (
+                <a
+                  href={card.href}
+                  aria-label={`${card.lines.join(' ')} 상세 보기`}
+                  style={{ position: 'absolute', inset: 0, zIndex: 3 }}
+                />
+              ) : null}
             </article>
           ))}
         </div>

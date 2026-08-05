@@ -22,7 +22,7 @@
 }
 /* 필수 항목 표시 */
 .req::after {
-  content: '*';
+  content: "*";
   margin-left: 3px;
   color: var(--red);
 }
@@ -48,8 +48,10 @@
   border-radius: 9px;
   background: var(--surface);
   outline: 0;
-  font-size: 13.5px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  font-size: 13px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .textarea {
   height: auto;

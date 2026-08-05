@@ -9,7 +9,6 @@ import { labelOf } from "@/data/adminOptions";
 import { PORTFOLIO_STATUS_FILTER } from "@/data/adminOptions";
 import { describeError, isMissingTable } from "@/lib/pgError";
 import {
-  DETAIL_PATH,
   type Portfolio,
   formatPeriod,
   titleOneLine,
@@ -136,9 +135,20 @@ export default function PortfolioDetailPage({
             {row ? formatPeriod(row.started_on, row.ended_on) : null}
           </ReadOnly>
         </Row>
-        <Row label="상세화면 HTML 파일명">
+        <Row
+          label="상세화면 HTML"
+          hint={
+            row?.html_file
+              ? "홈페이지에서 이 프로젝트 카드를 누르면 이 화면으로 이동합니다."
+              : undefined
+          }
+        >
           <ReadOnly>
-            {row?.html_file ? `${DETAIL_PATH}${row.html_file}` : null}
+            {row?.html_file ? (
+              <a href={`/projects/${id}`} target="_blank" rel="noreferrer">
+                상세 화면 열기
+              </a>
+            ) : null}
           </ReadOnly>
         </Row>
       </section>

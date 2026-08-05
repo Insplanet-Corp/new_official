@@ -1,0 +1,19 @@
+/* DropdownTrigger.module.css */
+
+.trigger {
+  cursor: pointer;
+}
+
+.trigger :global(div) {
+  cursor: pointer;
+}
+
+/* 화살표 아이콘 기본 애니메이션 설정 */
+.trigger :global(.right-icon svg) {
+  transition: transform 0.2s ease-in-out;
+}
+
+/* isOpen이 true일 때 (opened 클래스 추가 시) 180도 회전 */
+.opened :global(.right-icon svg) {
+  transform: rotate(180deg);
+}

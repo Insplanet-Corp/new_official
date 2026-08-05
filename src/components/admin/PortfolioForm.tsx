@@ -10,7 +10,6 @@ import {
   Input,
   Radios,
   Row,
-  SelectBox,
   Sep,
 } from "@/components/admin/form";
 import { Note } from "@/components/admin/ui";
@@ -22,7 +21,6 @@ import {
 } from "@/data/adminOptions";
 import { describeError } from "@/lib/pgError";
 import {
-  DETAIL_PATH,
   EMPTY_DRAFT,
   type PortfolioDraft,
   toRow,
@@ -30,18 +28,10 @@ import {
 } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
 import Button from "../button/Button";
-
-/* 포트폴리오 등록 / 수정 폼 (기획서 24~25p, 28p).
-
-   기획서의 핵심 규칙 — 진행 상태에 따라 필수/비활성이 갈린다:
-     진행 선택 → 고객사 CI 이미지 + 프로젝트 기간이 필수, 썸네일·HTML 은 미사용
-     종료 선택 → 썸네일 PC/모바일 + HTML 파일명이 필수, CI·기간은 미사용
-   비활성인 쪽은 저장 시 NULL 로 눕힌다 (toRow) — 상태를 바꿨을 때 반대쪽 값이
-   유령처럼 남지 않게 하기 위함이다.
-
-   ⚠️ 이미지는 아직 업로드가 아니라 "경로 입력" 이다. Supabase Storage 를 붙이기
-   전까지는 public/assets/... 경로를 그대로 적는다. DB 에는 <img src> 에 들어갈
-   문자열만 저장하므로, Storage 로 옮겨도 이 값만 URL 로 바뀌고 화면은 그대로다. */
+import Dropdown from "../dropdown/Dropdown";
+import DropdownTrigger from "../dropdown/DropdownTrigger";
+import DropdownContent from "../dropdown/DropdownContent";
+import DropdownMenuItem from "../dropdown/DropdownMenuItem";
 
 export default function PortfolioForm({
   mode,
@@ -97,7 +87,11 @@ export default function PortfolioForm({
       {error ? <Note warn>{error}</Note> : null}
 
       <form className={kit.card} onSubmit={onSubmit}>
-        <Row label="프로젝트명" required hint="줄을 나누려면 \n 을 넣으세요. 없으면 자동으로 줄바꿈됩니다.">
+        <Row
+          label="프로젝트명"
+          required
+          hint="줄을 나누려면 \n 을 넣으세요. 없으면 자동으로 줄바꿈됩니다."
+        >
           <Input
             value={v.title}
             onChange={(x) => set("title", x)}
@@ -119,12 +113,39 @@ export default function PortfolioForm({
         </Row>
 
         <Row label="분류" required>
-          <SelectBox
-            ariaLabel="분류"
-            value={v.category}
-            onChange={(x) => set("category", x)}
-            options={[{ value: "", label: "선택" }, ...PORTFOLIO_CATEGORY]}
-          />
+          <Dropdown
+            trigger={
+              <DropdownTrigger
+                width="320px"
+                value={v.category || "선택"}
+                readOnly
+              />
+            }
+          >
+            {(close) => {
+              const options = [
+                { value: "", label: "선택" },
+                ...PORTFOLIO_CATEGORY,
+              ];
+              return (
+                <DropdownContent width="320px">
+                  {options.map((o) => (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        set("category", o.value);
+                        close();
+                      }}
+                      key={o.value || "__placeholder"}
+                      value={o.value}
+                      selected={v.category === o.value}
+                    >
+                      {o.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownContent>
+              );
+            }}
+          </Dropdown>
         </Row>
 
         <Row
@@ -149,7 +170,7 @@ export default function PortfolioForm({
         </Row>
 
         <Row
-          label="썸네일 – PC"
+          label="썸네일 - PC"
           required={isDone}
           hint="종료 프로젝트의 카드에 노출됩니다. 지금 올려 두고 나중에 종료로 바꿔도 됩니다."
         >
@@ -161,7 +182,7 @@ export default function PortfolioForm({
         </Row>
 
         <Row
-          label="썸네일 – 모바일"
+          label="썸네일 - 모바일"
           required={isDone}
           hint="종료 프로젝트의 모바일 화면에 노출됩니다."
         >
@@ -209,23 +230,20 @@ export default function PortfolioForm({
         </Row>
 
         <Row
-          label="상세화면 HTML 파일명"
+          label="상세화면 HTML"
           required={isDone}
           hint={
             <>
-              업로드 경로: <code>{DETAIL_PATH}</code>
+              퍼블리셔 산출물 폴더를 <code>public/portfolio/</code> 에 넣고 그
+              경로를 적습니다. 카드를 누르면 이 화면으로 이동합니다.
             </>
           }
         >
-          <Inline>
-            <Sep>{DETAIL_PATH}</Sep>
-            <Input
-              value={v.html_file}
-              onChange={(x) => set("html_file", x)}
-              placeholder="shinhansol_2026.html"
-              size="medium"
-            />
-          </Inline>
+          <Input
+            value={v.html_file}
+            onChange={(x) => set("html_file", x)}
+            placeholder="/heyyoung-1024/index.html"
+          />
         </Row>
 
         <Actions>

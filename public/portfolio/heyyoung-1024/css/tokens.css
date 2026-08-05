@@ -1,0 +1,86 @@
+/* ---------------------------------------------------------------------------
+   tokens.css — design tokens lifted from Figma
+   file : 인스플래닛 (복사)  ·  page : official
+   frame: official_05_projects_03_detail_01_1024  (1024 × 6070)
+
+   The 1024 layout is a 0.535739 down-scale of the 1920 master, which is where
+   the non-round type sizes (21.43 / 10.71 / 8.57 …) come from. They are kept
+   verbatim so this file stays diff-able against Figma.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* ---- canvas ---------------------------------------------------------- */
+  --page-width: 1024px;
+  --hero-height: 768px;
+  --footer-height: 768px;
+
+  /* ---- brand ----------------------------------------------------------- */
+  --c-primary: #787fef;
+  --c-secondary: #74a4fd;
+  --c-point-pink: #ff5fbf;
+  --c-point-yellow: #ffd145;
+
+  /* ---- neutrals -------------------------------------------------------- */
+  --c-page: #0c0c0c;
+  --c-white: #ffffff;
+  --c-ink: #3e3f44;
+  --c-ink-strong: #191919;
+  --c-ink-muted: #707070;
+
+  /* ---- card surfaces --------------------------------------------------- */
+  --c-surface-charcoal: #1d1f23;
+  --c-surface-navy: #161f2f;
+  --c-surface-black: #191919;
+
+  /* ---- app theme swatches (dark-mode card) ----------------------------- */
+  --c-theme-violet: #787fef;
+  --c-theme-dark: #2b2d31;
+  --c-theme-blue: #4b72d7;
+  --c-theme-green: #19a874;
+  --c-theme-red: #ff8888;
+
+  /* ---- radii ----------------------------------------------------------- */
+  --r-card: 8.57px;
+  --r-summary: 16px;
+  --r-phone: 17.14px;
+  --r-pill: 25.6px;
+  --r-chip: 6.15px;
+
+  /* ---- type families --------------------------------------------------- */
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-display: "Montserrat", var(--font-sans);
+  --font-serif: "Cormorant Garamond", "Times New Roman", serif;
+  --font-noto: "Noto Sans KR", var(--font-sans);
+
+  /* ---- type scale (size / line-height) --------------------------------- */
+  --t-hero-name: 700 64px/96px var(--font-display);
+  --t-hero-kicker: 700 24px/36px var(--font-sans);
+  --t-hero-meta-label: 700 13px/19.5px var(--font-sans);
+  --t-hero-meta-value: 700 16px/24px var(--font-sans);
+  --t-hero-scroll: 700 11px/16.5px var(--font-sans);
+
+  --t-overview: 700 24px/36px var(--font-serif);
+  --t-summary-title: 700 20px/30px var(--font-sans);
+  --t-summary-body: 400 14px/21px var(--font-sans);
+  --t-button: 700 11.2px/16px var(--font-sans);
+
+  --t-display: 600 68.57px/81.8px var(--font-sans);
+  --t-card-title: 700 21.43px/34.3px var(--font-sans);
+  --t-card-body: 600 10.71px/17.1px var(--font-sans);
+  --t-card-lead: 500 12.86px/21.4px var(--font-sans);
+  --t-label-strong: 700 10.71px/17.1px var(--font-sans);
+  --t-swatch: 500 10.71px/12.8px var(--font-sans);
+  --t-specimen: 600 51.43px/61.4px var(--font-sans);
+  --t-fineprint: 600 8.57px/12.9px var(--font-sans);
+
+  --t-footer: 600 12px/18px var(--font-sans);
+  --t-footer-link: 600 14px/21px var(--font-sans);
+
+  /* ---- layout rhythm --------------------------------------------------- */
+  --container-pad-x: 32px;
+  --container-pad-top: 24px;
+  --container-pad-bottom: 64px;
+  --container-gap: 24px;
+  --card-pad-x: 154px; /* text inset inside a 960px-wide card */
+}

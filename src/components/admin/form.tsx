@@ -283,20 +283,28 @@ export function FilePick({
   disabled,
   bucket = "portfolio",
   folder = "",
+  accept = "image/*",
+  preview = true,
 }: {
-  /** 업로드된 이미지의 공개 URL (또는 기존 경로) */
+  /** 업로드된 파일의 공개 URL (또는 기존 경로) */
   value?: string;
   onChange?: (url: string) => void;
   size?: string;
   disabled?: boolean;
   bucket?: string;
   folder?: string;
+  /** 이미지 외(상세 HTML 등)를 받을 때 바꾼다 */
+  accept?: string;
+  /** HTML 처럼 썸네일이 의미 없는 파일은 미리보기 칸을 숨긴다 */
+  preview?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const fileName = value ? decodeURIComponent(value.split("/").pop() ?? "") : "";
+  const fileName = value
+    ? decodeURIComponent(value.split("/").pop() ?? "")
+    : "";
 
   const upload = async (file: File) => {
     setBusy(true);
@@ -341,7 +349,7 @@ export function FilePick({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={accept}
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -376,9 +384,11 @@ export function FilePick({
           {err}
         </Text>
       ) : null}
-      <div className={s.thumbBox}>
-        {value ? <img src={value} alt="" /> : `(${size})`}
-      </div>
+      {preview ? (
+        <div className={s.thumbBox}>
+          {value ? <img src={value} alt="" /> : `(${size})`}
+        </div>
+      ) : null}
     </>
   );
 }
@@ -443,7 +453,7 @@ export function Section({
 /* ---- 하단 액션 바 -------------------------------------------------------- */
 export function Actions({ children }: { children: ReactNode }) {
   return (
-    <Flex row align="center" justify="center" gap={8} mt={20}>
+    <Flex row align="center" justify="center" gap={8} mt={20} mb={20}>
       {children}
     </Flex>
   );
@@ -465,4 +475,3 @@ export function Sep({ children = "~" }: { children?: ReactNode }) {
     </Text>
   );
 }
-

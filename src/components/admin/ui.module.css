@@ -66,8 +66,9 @@
 }
 
 .select {
+  box-sizing: border-box;
   height: 36px;
-  padding: 0 30px 0 12px;
+  padding: 0 30px 0 8px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface)
@@ -80,6 +81,7 @@
   cursor: pointer;
   transition: border-color 0.18s ease;
 }
+
 .select:hover {
   border-color: var(--faint);
 }

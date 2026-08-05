@@ -1,0 +1,111 @@
+/* TextInput.module.css */
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: 2px;
+  position: relative;
+  width: var(--input-width, 100%);
+}
+
+.fullWidth {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+/* =========================================================
+   Icon Containers (외부 참조 호환성을 위해 :global 사용)
+   ========================================================= */
+.wrapper :global(.left-icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 8px;
+}
+
+.wrapper :global(.right-icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 8px;
+}
+
+.wrapper :global(.right-icon) button {
+  height: 100%;
+}
+
+.noIconEvent :global(.right-icon) {
+  pointer-events: none;
+}
+
+/* =========================================================
+   Input Element Styles
+   ========================================================= */
+.input {
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #dde0e3; /* Color.GRAY_200 */
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  color: #3c3e44; /* Color.GRAY_900 */
+  outline: 0;
+  width: var(--input-width, 100%);
+  text-align: var(--text-align, start);
+}
+
+.input::placeholder {
+  color: #cbcfd2 !important; /* Color.GRAY_300 */
+}
+
+.input:focus {
+  border-color: #6d7178; /* Color.GRAY_700 */
+  background: #fff;
+}
+
+.input:disabled {
+  border-color: #dde0e3; /* Color.GRAY_200 */
+  background: #f1f2f4; /* Color.GRAY_50 */
+  color: #cbcfd2; /* Color.GRAY_300 */
+}
+
+.input:read-only {
+  border: 1px solid #dde0e3; /* Color.GRAY_200 */
+  background-color: #f1f2f4; /* Color.GRAY_50 */
+}
+
+.hasLeftIcon {
+  padding-left: 30px !important;
+}
+
+.hasPointCursor {
+  cursor: pointer;
+}
+
+/* =========================================================
+   Sizes (small, small-medium)
+   ========================================================= */
+.size_small {
+  height: 32px;
+}
+.size_small .input {
+  height: 32px;
+  padding: 0 8px;
+}
+
+.size_small_medium {
+  height: 36px;
+}
+.size_small_medium .input {
+  height: 36px;
+  padding: 0 8px 0 32px;
+}

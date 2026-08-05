@@ -1,0 +1,81 @@
+/* DropdownMenuItem.module.css */
+
+.container {
+  position: relative;
+  width: 100%;
+}
+
+/* 연속으로 나열될 때 아이템 사이에 간격 2px 추가 */
+.container + .container {
+  margin-top: 2px;
+}
+
+.container input[type="file"] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: var(--item-gap, 0px);
+  min-height: 40px;
+  height: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.button:hover {
+  background: #f1f2f4; /* Color.GRAY_50 */
+}
+
+/* 텍스트 줄높이 보정 */
+.button span {
+  line-height: 24px;
+}
+
+.menuLabel {
+  display: block;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.startIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.endIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+/* =========================================================
+   selectedSetting이 true일 때 적용되는 설정 스타일
+   ========================================================= */
+.selectedSetting .button {
+  background: #f1f2f4; /* Color.GRAY_50 */
+  border-radius: 8px;
+}
+
+.selectedSetting .button span {
+  font-weight: 600;
+  color: #00838a; /* Color.TEAL_700 */
+}

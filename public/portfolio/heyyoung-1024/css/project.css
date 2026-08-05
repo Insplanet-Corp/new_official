@@ -1,0 +1,662 @@
+/* ---------------------------------------------------------------------------
+   project.css — HeyYoung Campus project detail, 1024 breakpoint
+
+   Geometry mirrors `official_05_projects_03_detail_01_1024`. Cards carry no
+   auto-layout in Figma, so decorative / overlapping elements are absolutely
+   positioned against their card; everything that genuinely stacks uses flow.
+   --------------------------------------------------------------------------- */
+
+/* ===========================================================================
+   Page shell
+   =========================================================================== */
+
+body {
+  background: var(--c-page);
+  color: var(--c-white);
+  font-family: var(--font-sans);
+}
+
+.project {
+  width: var(--page-width);
+  margin-inline: auto;
+  background: var(--c-page);
+}
+
+.a11y {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===========================================================================
+   Hero
+   =========================================================================== */
+
+.hero {
+  position: relative;
+  height: var(--hero-height);
+  overflow: hidden;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero > *:not(.hero__bg) {
+  position: absolute;
+}
+
+.hero__logo {
+  top: 48px;
+  left: 48px;
+}
+
+.hero__close {
+  top: 36px;
+  left: 936px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0.77px solid var(--c-ink);
+  border-radius: var(--r-chip);
+  background: var(--c-white);
+}
+
+.hero__title {
+  top: 318px;
+  left: 64px;
+  width: 896px;
+  text-align: center;
+}
+
+.hero__kicker {
+  font: var(--t-hero-kicker);
+  color: var(--c-white);
+}
+
+.hero__name {
+  font: var(--t-hero-name);
+  color: var(--c-white);
+}
+
+.hero__meta {
+  top: 672px;
+  left: 48px;
+  display: flex;
+  gap: 48px;
+}
+
+.hero__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.hero__meta dt {
+  font: var(--t-hero-meta-label);
+  color: var(--c-white);
+}
+
+.hero__meta dd {
+  font: var(--t-hero-meta-value);
+  color: var(--c-white);
+}
+
+.hero__scroll {
+  top: 597px;
+  left: 955px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 21px;
+}
+
+.hero__scroll-line {
+  width: 1px;
+  height: 64px;
+  background: var(--c-white);
+}
+
+/* `vertical-rl` rotates the Latin glyphs 90° clockwise and — unlike a
+   `transform` — still reserves the rotated 17 × 43 box in the flex column. */
+.hero__scroll-label {
+  writing-mode: vertical-rl;
+  font: var(--t-hero-scroll);
+  color: var(--c-white);
+  white-space: nowrap;
+}
+
+/* ===========================================================================
+   Container
+   =========================================================================== */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--container-gap);
+  padding: var(--container-pad-top) var(--container-pad-x) var(--container-pad-bottom);
+}
+
+/* ===========================================================================
+   Overview / summary
+   =========================================================================== */
+
+.summary {
+  display: grid;
+  grid-template-columns: 128px 208px 368px;
+  gap: 32px;
+  padding: 80px 16px;
+  border-radius: var(--r-summary);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.summary__eyebrow {
+  font: var(--t-overview);
+  color: var(--c-ink);
+}
+
+.summary__body {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.summary__text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary__title {
+  font: var(--t-summary-title);
+  color: var(--c-ink);
+}
+
+.summary__desc {
+  font: var(--t-summary-body);
+  color: var(--c-ink);
+}
+
+.summary__actions {
+  display: flex;
+  gap: 12.8px;
+  width: fit-content;
+}
+
+/* ---- buttons ------------------------------------------------------------ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px; /* fixed in Figma — the 19px icon is centred, not height-driving */
+  padding: 8px 15.2px;
+  border: 0.8px solid var(--c-ink);
+  border-radius: var(--r-pill);
+  font: var(--t-button);
+  white-space: nowrap;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.button img {
+  width: 19px;
+  height: 19px;
+}
+
+.button--solid {
+  background: var(--c-ink);
+  color: var(--c-white);
+}
+
+.button--ghost {
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.button--solid:hover {
+  background: var(--c-ink-strong);
+}
+
+.button--ghost:hover {
+  background: #f1f1f3;
+}
+
+/* ===========================================================================
+   Card base
+   =========================================================================== */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-card);
+}
+
+.card__title {
+  padding-left: var(--card-pad-x);
+  font: var(--t-card-title);
+  color: var(--c-white);
+}
+
+.card__body {
+  padding-left: var(--card-pad-x);
+  font: var(--t-card-body);
+  color: var(--c-white);
+}
+
+.card__title--center,
+.card__body--center {
+  padding-left: 0;
+  text-align: center;
+}
+
+/* ===========================================================================
+   1 · Design strategy
+   =========================================================================== */
+
+.card--strategy {
+  height: 635px;
+  padding-top: 107px;
+  background: var(--c-surface-charcoal);
+}
+
+.card__display {
+  padding-left: var(--card-pad-x);
+  font: var(--t-display);
+  color: var(--c-white);
+}
+
+.card__lead {
+  margin-top: 43px;
+  padding-left: var(--card-pad-x);
+  font: var(--t-card-lead);
+  color: var(--c-white);
+}
+
+.strategy {
+  display: grid;
+  grid-template-columns: repeat(4, 153px);
+  gap: 13px; /* 166px column pitch */
+  margin-top: 128px;
+  padding-left: var(--card-pad-x);
+}
+
+.strategy__item img {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 44px;
+}
+
+.strategy__name {
+  font: var(--t-label-strong);
+  color: var(--c-white);
+}
+
+.strategy__desc {
+  margin-top: 4px;
+  font: var(--t-card-body);
+  color: var(--c-white);
+}
+
+/* ===========================================================================
+   2 · Universal design
+   =========================================================================== */
+
+.card--universal {
+  height: 509px;
+  padding-top: 86px;
+  background: var(--c-surface-navy);
+}
+
+.card--universal .card__body {
+  margin-top: 11px;
+}
+
+/* 642.89 × 159.11 ellipse tilted −15°; the translate matches Figma's
+   relativeTransform origin, so the resulting AABB lands at 181, 150. */
+.universal__orbit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 642.89px;
+  height: 159.11px;
+  border: 0.54px solid var(--c-white);
+  border-radius: 50%;
+  opacity: 0.6;
+  transform: translate(148.85px, 316.4px) rotate(-15deg);
+  transform-origin: 0 0;
+}
+
+.universal__grid {
+  position: absolute;
+  top: 231px;
+  left: 153px;
+  width: 654px;
+  height: 162px;
+}
+
+.universal__pin {
+  position: absolute;
+  top: 203px;
+  left: 772px;
+  width: 13px;
+  height: 17px;
+}
+
+/* ===========================================================================
+   3 · Visual effects
+   =========================================================================== */
+
+.card--visual {
+  height: 724px;
+  padding-top: 86px;
+  background: var(--c-white);
+}
+
+.card--visual .card__title {
+  color: var(--c-ink-strong);
+}
+
+.card--visual .card__body {
+  margin-top: 11px;
+  color: var(--c-ink-strong);
+}
+
+.visual__blob {
+  position: absolute;
+  top: 199px;
+  left: -106px;
+  width: 615px;
+  height: 615px;
+  border-radius: 50%;
+  background: var(--c-primary);
+}
+
+.visual__phone {
+  position: absolute;
+  top: 253px;
+  left: 197px;
+  width: 193px;
+  height: 386px;
+  border: 6.43px solid var(--c-surface-charcoal);
+  border-radius: var(--r-phone);
+  object-fit: cover;
+}
+
+.visual__themes {
+  position: absolute;
+  top: 293px;
+  left: 420px;
+  width: 613px;
+  height: 105px;
+}
+
+.visual__caption {
+  position: absolute;
+  top: 497px;
+  right: 154px;
+  text-align: right;
+}
+
+.visual__brand {
+  font: var(--t-label-strong);
+  font-size: 12.86px;
+  color: var(--c-ink-muted);
+}
+
+.visual__note {
+  margin-top: 4px;
+  font: var(--t-card-body);
+  color: var(--c-ink-muted);
+}
+
+.visual__char {
+  position: absolute;
+}
+
+.visual__char--1 {
+  top: 557px;
+  left: 147px;
+  width: 83px;
+  height: 87px;
+}
+
+.visual__char--2 {
+  top: 613px;
+  left: 222px;
+  width: 42px;
+  height: 34px;
+}
+
+/* ===========================================================================
+   4 · Dark mode & colour system
+   =========================================================================== */
+
+.card--theme {
+  height: 776px;
+  padding-top: 86px;
+  background: var(--c-primary);
+}
+
+.card--theme .card__body {
+  margin-top: 11px;
+}
+
+.theme__stage {
+  position: absolute;
+  top: 424px;
+  left: 0;
+  width: 100%;
+  height: 351px;
+  background: var(--c-surface-black);
+}
+
+.theme__phone {
+  position: absolute;
+  top: 232px;
+  left: 384px;
+  width: 193px;
+  height: 386px;
+  border: 6.43px solid var(--c-white);
+  border-radius: var(--r-phone);
+  object-fit: cover;
+}
+
+.theme__dots {
+  position: absolute;
+  top: 660px;
+  left: 379px;
+  display: flex;
+  gap: 12.86px;
+}
+
+.theme__dots li {
+  width: 30px;
+  height: 30px;
+  border: 1.07px solid rgb(255 255 255 / 0.1);
+  border-radius: 50%;
+  background: var(--dot);
+}
+
+.theme__dots li:first-child {
+  border-color: var(--c-white);
+}
+
+/* ===========================================================================
+   5 · Community
+   =========================================================================== */
+
+.card--community {
+  height: 624px;
+  padding-top: 86px;
+  background: var(--c-surface-black);
+}
+
+.card--community .card__body {
+  margin-top: 11px;
+}
+
+.shot {
+  position: absolute;
+  width: 129px;
+  border: 4.29px solid var(--c-white);
+  border-radius: var(--r-card);
+  object-fit: cover;
+}
+
+.shot--1 { top: 278px; left: 90px;  height: 365px; }
+.shot--2 { top: 343px; left: 253px; height: 365px; }
+.shot--3 { top: 214px; left: 416px; height: 358px; }
+.shot--4 { top: 343px; left: 579px; height: 256px; }
+.shot--5 { top: 278px; left: 741px; height: 257px; }
+.shot--6 { top: 569px; left: 741px; height: 368px; }
+.shot--7 { top: 607px; left: 416px; height: 96px;  }
+.shot--8 { top: 633px; left: 579px; height: 97px;  }
+
+/* ===========================================================================
+   6 · Typography & palette
+   =========================================================================== */
+
+.card--system {
+  height: 623px;
+  background: var(--c-surface-black);
+}
+
+/* The specimen reads “Noto Sans KR” but is set in Pretendard in the source
+   file — kept as-authored rather than silently swapping the family.
+   Figma reports tight glyph bounds for these two Latin nodes (not line
+   boxes), so they are placed by line-box top rather than left in flow. */
+.system__specimen {
+  position: absolute;
+  top: 73px;
+  left: var(--card-pad-x);
+  font: var(--t-specimen);
+  color: var(--c-white);
+}
+
+.system__weights {
+  position: absolute;
+  top: 139px;
+  left: var(--card-pad-x);
+  font: 400 10.71px/17.1px var(--font-sans);
+  color: var(--c-white);
+}
+
+.system__note {
+  position: absolute;
+  top: 229px;
+  right: 154px;
+  font: var(--t-fineprint);
+  color: var(--c-white);
+  text-align: right;
+}
+
+.palette {
+  position: absolute;
+  top: 323px;
+  left: 68px;
+  width: 823px;
+}
+
+.palette__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12.3px 86px 0;
+  font: var(--t-swatch);
+  color: var(--c-white);
+}
+
+.palette__row--primary   { height: 171px; background: var(--c-primary); }
+.palette__row--secondary { height: 43px;  background: var(--c-secondary); }
+.palette__row--pink      { height: 43px;  background: var(--c-point-pink); }
+.palette__row--yellow    { height: 43px;  background: var(--c-point-yellow); color: var(--c-ink-strong); }
+
+/* ===========================================================================
+   Footer
+   =========================================================================== */
+
+.footer {
+  position: relative;
+  height: var(--footer-height);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.footer > * {
+  position: absolute;
+}
+
+.footer__logo {
+  top: 314px;
+  left: 48px;
+  width: 448px;
+  height: 140px;
+}
+
+.footer__nav {
+  top: 627px;
+  left: 48px;
+  display: flex;
+  gap: 56px;
+}
+
+.footer__nav a {
+  display: flex;
+  align-items: center;
+  padding-block: 4px;
+  border-bottom: 1px solid var(--c-ink);
+  font: var(--t-footer-link);
+  color: var(--c-ink);
+  transition: opacity 0.18s ease;
+}
+
+.footer__nav a:hover {
+  opacity: 0.6;
+}
+
+.footer__copy {
+  top: 696px;
+  left: 48px;
+  font: var(--t-footer);
+  color: var(--c-ink);
+  text-transform: uppercase;
+}
+
+.footer__contact {
+  top: 634px;
+  left: 608px;
+  width: 304px;
+  font: var(--t-footer);
+  font-style: normal;
+  color: var(--c-ink);
+}
+
+.footer__contact p + p {
+  margin-top: 16px;
+}
+
+.footer__contact a:hover {
+  text-decoration: underline;
+}
+
+.footer__tel {
+  display: flex;
+}
+
+.footer__tel span:first-child {
+  width: 159px;
+}

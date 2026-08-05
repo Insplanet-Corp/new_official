@@ -1,0 +1,17 @@
+/* Dropdown.module.css */
+
+.container {
+  position: relative;
+  display: inline-block;
+}
+
+.fullWidth {
+  width: 100% !important;
+  display: block;
+}
+
+/* 열렸을 때(opened) 트리거 내부 화살표 아이콘 회전 */
+.opened :global(.dropdown-trigger .right-icon) {
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
