@@ -14,8 +14,6 @@
          문구만 바꾸면 되고, platform 에 서비스 주소를 넣으면 View Platform 버튼이 살아난다.
          | 는 줄바꿈 (제목/부제는 모바일에서만, 본문은 항상). -->
     <project-detail
-      ko="신한투자증권 모바일 웹 개편"
-      en="Shinhan|Securities"
       client="신한투자증권"
       launch="Jan, 2024"
       hero="img/hero-bg.jpg"
@@ -23,499 +21,504 @@
       overview-title="더 쉽고 편안한,|더 새로운 금융투자서비스"
       overview-text="인스플래닛은 더 쉽고 편안한, 더 새로운 금융을 비전으로 하는 신한투자증권 모바일 웹 개편 및 콘텐츠관리시스템|(CMS) 연계 구축 프로젝트를 진행하였습니다. 신한투자증권에서 제공하는 정보를 디바이스와 해상도의 제약 없이|빠르게 제공받을 수 있게 되었으며, 금융상품, 투자가이드 등 유용한 투자정보를 다양한 채널로 공유하여|잠재고객의 유입기반을 마련하였습니다."
       platform=""
+      launch="Jan, 2024"
     >
-    <div class="work-container">
+      <div class="work-container">
+        <!-- ============================================== -->
+        <!-- 2. 신한투자증권 본문 내용 (Vue -> HTML 완벽 치환) -->
+        <!-- ============================================== -->
 
-      <!-- ============================================== -->
-      <!-- 2. 신한투자증권 본문 내용 (Vue -> HTML 완벽 치환) -->
-      <!-- ============================================== -->
-
-      <!-- 모바일 퍼스트 Mobile First -->
-      <div class="works-content">
-        <div class="works-section theme-darkblue section01">
-          <div class="works-desc">
-            <h3 class="works-desc-title">
-              모바일 퍼스트 <br class="only-mobile" />Mobile First
-            </h3>
-            <p class="works-desc-text" style="--delay: 1s">
-              신한투자증권에서 제공하는 정보를 디바이스와 해상도의 제약없이
-              빠르게 제공받을 수 있도록 반응형 그리드 시스템을 활용하여 모바일에
-              최적화된 디자인을 적용하였습니다.<br /><br />
-              신한투자증권 모바일 웹사이트 개편은 디지털 홍보채널의 역할에
-              포커스를 두었으며, 비 로그인 상태인 신규 고객이 신한금융투자
-              콘텐츠를 소비하고 공유하는것에 대한 모든 장벽을 없애고, 유용한
-              투자정보를 다양한 채널로 공유하여 잠재고객의 유입기반을
-              마련하였습니다.
-            </p>
-          </div>
-          <figure class="works-figure">
-            <img
-              src="./img/img_pc_mobile_first.png"
-              class="only-pc"
-              style="--delayImg: 1s"
-              alt=""
-            />
-            <img
-              src="./img/img_mobile_mobile_first.png"
-              class="only-mobile"
-              alt=""
-            />
-            <dl class="blind">
-              <dt>모바일 홍보채널 강화</dt>
-              <dd>모바일 퍼스트</dd>
-              <dd>모바일 콘텐츠 증가</dd>
-              <dd>투자연령층 다양화</dd>
-              <dd>개인투자자 증가</dd>
-            </dl>
-          </figure>
-        </div>
-      </div>
-
-      <!-- 모바일 대세 소형+세로형 콘텐츠 -->
-      <div class="works-content">
-        <div class="works-section section02">
-          <figure class="works-figure">
-            <ul class="works-figure-content">
-              <li class="only-pc">
-                <img
-                  src="./img/img_pc_content01.png"
-                  alt=""
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-              <li class="only-pc">
-                <img
-                  src="./img/img_pc_content02.png"
-                  alt=""
-                  style="--delayImg: 0.5s"
-                />
-              </li>
-              <li class="only-pc">
-                <img
-                  src="./img/img_pc_content03.png"
-                  alt=""
-                  style="--delayImg: 1s"
-                />
-              </li>
-              <li class="only-mobile">
-                <img
-                  src="./img/img_mobile_content.png"
-                  alt=""
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-            </ul>
-          </figure>
-        </div>
-      </div>
-
-      <!-- 콘텐츠관리시스템 (CMS) 도입 -->
-      <div class="works-content">
-        <div class="works-section theme-blue section03">
-          <div class="works-desc">
-            <h3 class="works-desc-title">콘텐츠관리시스템<br />(CMS) 도입</h3>
-            <p class="works-desc-text">
-              콘텐츠관리시스템(CMS)을 도입으로 금융상품, 투자정보, 트레이딩 등
-              유용한 투자정보를 효율적으로 관리하고 배포할 수 있습니다.
-            </p>
-          </div>
-          <figure class="works-figure">
-            <ul class="works-figure-content">
-              <li class="figure-cms01">
-                <img
-                  src="./img/img_pc_cms01.png"
-                  alt=""
-                  class="only-pc"
-                  style="--delayImg: 0.75s"
-                />
-                <img
-                  src="./img/img_mobile_cms01.png"
-                  alt=""
-                  class="only-mobile"
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-              <li class="figure-cms02">
-                <img
-                  src="./img/img_pc_cms02.png"
-                  alt=""
-                  class="only-pc"
-                  style="--delayImg: 0.5s"
-                />
-                <img
-                  src="./img/img_mobile_cms02.png"
-                  alt=""
-                  class="only-mobile"
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-              <li class="figure-cms03">
-                <img
-                  src="./img/img_pc_cms03.png"
-                  alt=""
-                  class="only-pc"
-                  style="--delayImg: 1s"
-                />
-                <img
-                  src="./img/img_mobile_cms03.png"
-                  alt=""
-                  class="only-mobile"
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-            </ul>
-          </figure>
-        </div>
-      </div>
-
-      <!-- 누구나 모바일 콘텐츠를 소비하는 시대 -->
-      <div class="works-content">
-        <div class="works-section theme-gradient section04">
-          <div class="works-desc">
-            <h3 class="works-desc-title">
-              누구나 모바일 콘텐츠를 <br class="only-mobile" />소비하는 시대
-            </h3>
-            <p class="works-desc-text">
-              누구나 맘에 드는 콘텐츠를 지인에 공유할 수 있도록<span
-                class="br_pc"
-              ></span
-              >디바이스 OS 별 모바일웹 공유기능을 구현했습니다.
-            </p>
-          </div>
-          <div class="works-figure">
-            <img
-              src="./img/img_pc_anyone.png"
-              alt=""
-              class="only-pc"
-              style="--delayImg: 0.75s"
-            />
-            <img
-              src="./img/img_mobile_anyone.png"
-              alt=""
-              class="only-mobile"
-              style="--delayImg: 0.75s"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- 신한투자증권 디지털 홍보채널 -->
-      <div class="works-content">
-        <div class="works-section theme-darkblue section05">
-          <div class="works-desc">
-            <h3 class="works-desc-title">
-              신한투자증권 <br class="only-mobile" />디지털 홍보채널
-            </h3>
-            <p class="works-desc-text">
-              원페이지 스크롤링 형식의 카드형 UI로 신규고객을 위한 다양한
-              금융이벤트를 집중도 있게 전달합니다. 디지털 홍보의 특성에 맞는
-              다양한 컬러와 이미지로 시각적 임팩트를 높이고, 캐주얼한 톤앤매너로
-              밝은 이미지를 구축하였습니다.
-            </p>
-          </div>
-          <div class="works-figure">
-            <img
-              src="./img/img_pc_channel.png"
-              alt=""
-              class="only-pc"
-              style="--delayImg: 0.75s"
-            />
-            <img
-              src="./img/img_mobile_channel.png"
-              alt=""
-              class="only-mobile"
-              style="--delayImg: 0.75s"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- 신한투자증권 브랜드 아이덴티티 -->
-      <div class="works-content">
-        <div class="works-section section06">
-          <div class="works-figure only-pc">
-            <img src="./img/img_pc_bi01.png" alt="" style="--delayImg: 0.75s" />
-          </div>
-          <div class="works-desc">
-            <h3 class="works-desc-title">
-              신한투자증권 <br class="only-mobile" />브랜드 아이덴티티
-            </h3>
-            <p class="works-desc-text">
-              브랜드 아이덴티티에 집중한 디자인으로 브랜드 톤 앤 매너의 통일성을
-              유지하며 밝고 생생한 <br />컬러와 3D 요소로 친근한 이미지를
-              부여했다.
-            </p>
-          </div>
-          <div class="works-figure">
-            <!-- PC용 이미지 리스트 (Vue v-if 대체) -->
-            <ul class="works-figure-content only-pc">
-              <li>
-                <img
-                  src="./img/img_pc_bi0201.png"
-                  alt=""
-                  style="--delayImg: 0.75s"
-                />
-              </li>
-              <li>
-                <img
-                  src="./img/img_pc_bi0202.png"
-                  alt=""
-                  style="--delayImg: 0.5s"
-                />
-              </li>
-            </ul>
-            <!-- 모바일용 이미지 리스트 (Vue v-if 대체) -->
-            <ul class="works-figure-content only-mobile">
-              <li>
-                <img
-                  src="./img/img_mobile_bi01.png"
-                  alt=""
-                  style="--delayImg: 0.5s"
-                />
-              </li>
-              <li>
-                <img
-                  src="./img/img_mobile_bi02.png"
-                  alt=""
-                  style="--delayImg: 0.65s"
-                />
-              </li>
-              <li>
-                <img
-                  src="./img/img_mobile_bi03.png"
-                  alt=""
-                  style="--delayImg: 0.8s"
-                />
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- 검색엔진 최적화(SEO) -->
-      <div class="works-content">
-        <div class="works-section section07">
-          <div class="works-desc">
-            <h3 class="works-desc-title">검색엔진 최적화(SEO)</h3>
-            <p class="works-desc-text">
-              검색엔진 최적화(SEO)를 통해 네이버, 구글 등 검색 사이트에서
-              검색결과에 콘텐츠가 <br />잘 노출되도록 하고, 해당 콘텐츠 페이지로
-              바로 진입시켜 잠재고객 내재화 및 <br />고객의 빠른 주식 거래
-              여정을 지원한다.
-            </p>
-          </div>
-          <div class="works-figure">
-            <img
-              src="./img/img_pc_seo.png"
-              alt=""
-              class="only-pc"
-              style="--delayImg: 0.75s"
-            />
-            <img
-              src="./img/img_mobile_seo.png"
-              alt=""
-              class="only-mobile"
-              style="--delayImg: 0.75s"
-            />
-            <div class="blind">
-              <h3>길을 잃을 염려가 없는 순환구조의 서비스</h3>
-              <dl>
-                <dt>인지</dt>
-                <dd>
-                  광고, 소셜미디어, 검색 등을 통해 고객이 제품/서비스 발견
-                </dd>
-              </dl>
-              <dl>
-                <dt>탐색</dt>
-                <dd>제품/서비스를 자세히 보기 위해 검색 또는 웹사이트 방문</dd>
-              </dl>
-              <dl>
-                <dt>결정</dt>
-                <dd>가격/기능/특징 등을 고려하며 구매의사 결정</dd>
-              </dl>
-              <dl>
-                <dt>구매</dt>
-                <dd>쉽고 빠르게 구매할 수 있는 프로세스 제공</dd>
-              </dl>
-              <dl>
-                <dt>사용</dt>
-                <dd>만족도가 높은 사용자경험을 위한 UI/UX</dd>
-              </dl>
-              <dl>
-                <dt>추천</dt>
-                <dd>UI/UX 만족도가 높은 고객의 추천 및 신규 고객 유입</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 신한카드 UX Writing 가이드 -->
-      <div class="works-content">
-        <div class="works-section section08">
-          <div class="works-figure">
-            <img
-              src="./img/img_pc_ux01.png"
-              alt=""
-              class="only-pc ux-icon"
-              style="--delayImg: 0.5s"
-            />
+        <!-- 모바일 퍼스트 Mobile First -->
+        <div class="works-content">
+          <div class="works-section theme-darkblue section01">
             <div class="works-desc">
               <h3 class="works-desc-title">
-                신한카드 <br class="only-mobile" />UX Writing 가이드
+                모바일 퍼스트 <br class="only-mobile" />Mobile First
               </h3>
-              <p class="works-desc-text">
-                투자 콘텐츠에 대한 이해도를 높이고 고객과 '통’ 하는 글쓰기를
-                위해<br class="only-pc" />신한카드 UX Writing 가이드 를
-                준수하였습니다.<br class="only-pc" />한눈에 알 수 있는 표시,
-                직접적이고 구체적인 표현을 사용하였으며
-                <br class="only-pc" />문장 톤앤매너를 통일성 있게
-                유지하였습니다.
+              <p class="works-desc-text" style="--delay: 1s">
+                신한투자증권에서 제공하는 정보를 디바이스와 해상도의 제약없이
+                빠르게 제공받을 수 있도록 반응형 그리드 시스템을 활용하여
+                모바일에 최적화된 디자인을 적용하였습니다.<br /><br />
+                신한투자증권 모바일 웹사이트 개편은 디지털 홍보채널의 역할에
+                포커스를 두었으며, 비 로그인 상태인 신규 고객이 신한금융투자
+                콘텐츠를 소비하고 공유하는것에 대한 모든 장벽을 없애고, 유용한
+                투자정보를 다양한 채널로 공유하여 잠재고객의 유입기반을
+                마련하였습니다.
               </p>
             </div>
-            <img
-              src="./img/img_mobile_ux01.png"
-              alt=""
-              class="only-mobile ux-icon"
-              style="--delayImg: 0.5s"
-            />
-            <img
-              src="./img/img_pc_ux02.png"
-              alt=""
-              class="only-pc ux-device"
-              style="--delayImg: 0.75s"
-            />
-            <img
-              src="./img/img_mobile_ux02.png"
-              alt=""
-              class="only-mobile ux-device"
-              style="--delayImg: 0.75s"
-            />
+            <figure class="works-figure">
+              <img
+                src="./img/img_pc_mobile_first.png"
+                class="only-pc"
+                style="--delayImg: 1s"
+                alt=""
+              />
+              <img
+                src="./img/img_mobile_mobile_first.png"
+                class="only-mobile"
+                alt=""
+              />
+              <dl class="blind">
+                <dt>모바일 홍보채널 강화</dt>
+                <dd>모바일 퍼스트</dd>
+                <dd>모바일 콘텐츠 증가</dd>
+                <dd>투자연령층 다양화</dd>
+                <dd>개인투자자 증가</dd>
+              </dl>
+            </figure>
+          </div>
+        </div>
 
-            <div class="device-text">
-              <ul class="left">
-                <li class="device-text-uno">
+        <!-- 모바일 대세 소형+세로형 콘텐츠 -->
+        <div class="works-content">
+          <div class="works-section section02">
+            <figure class="works-figure">
+              <ul class="works-figure-content">
+                <li class="only-pc">
                   <img
-                    src="./img/img_pc_ux0301.png"
-                    class="only-pc"
+                    src="./img/img_pc_content01.png"
                     alt=""
-                    style="--delayImg: 1s"
+                    style="--delayImg: 0.75s"
                   />
+                </li>
+                <li class="only-pc">
                   <img
-                    src="./img/img_mobile_ux0301.png"
-                    class="only-mobile"
+                    src="./img/img_pc_content02.png"
+                    alt=""
+                    style="--delayImg: 0.5s"
+                  />
+                </li>
+                <li class="only-pc">
+                  <img
+                    src="./img/img_pc_content03.png"
                     alt=""
                     style="--delayImg: 1s"
                   />
                 </li>
-                <li class="device-text-dos">
+                <li class="only-mobile">
                   <img
-                    src="./img/img_pc_ux0302.png"
-                    class="only-pc"
+                    src="./img/img_mobile_content.png"
                     alt=""
-                    style="--delayImg: 1.05s"
-                  />
-                  <img
-                    src="./img/img_mobile_ux0302.png"
-                    class="only-mobile"
-                    alt=""
-                    style="--delayImg: 1.05s"
-                  />
-                </li>
-                <li class="device-text-tres">
-                  <img
-                    src="./img/img_pc_ux0303.png"
-                    class="only-pc"
-                    alt=""
-                    style="--delayImg: 1.15s"
-                  />
-                  <img
-                    src="./img/img_mobile_ux0303.png"
-                    class="only-mobile"
-                    alt=""
-                    style="--delayImg: 1.15s"
+                    style="--delayImg: 0.75s"
                   />
                 </li>
               </ul>
-              <ul class="right">
-                <li class="device-text-uno">
+            </figure>
+          </div>
+        </div>
+
+        <!-- 콘텐츠관리시스템 (CMS) 도입 -->
+        <div class="works-content">
+          <div class="works-section theme-blue section03">
+            <div class="works-desc">
+              <h3 class="works-desc-title">콘텐츠관리시스템<br />(CMS) 도입</h3>
+              <p class="works-desc-text">
+                콘텐츠관리시스템(CMS)을 도입으로 금융상품, 투자정보, 트레이딩 등
+                유용한 투자정보를 효율적으로 관리하고 배포할 수 있습니다.
+              </p>
+            </div>
+            <figure class="works-figure">
+              <ul class="works-figure-content">
+                <li class="figure-cms01">
                   <img
-                    src="./img/img_pc_ux0401.png"
-                    class="only-pc"
+                    src="./img/img_pc_cms01.png"
                     alt=""
+                    class="only-pc"
+                    style="--delayImg: 0.75s"
+                  />
+                  <img
+                    src="./img/img_mobile_cms01.png"
+                    alt=""
+                    class="only-mobile"
+                    style="--delayImg: 0.75s"
+                  />
+                </li>
+                <li class="figure-cms02">
+                  <img
+                    src="./img/img_pc_cms02.png"
+                    alt=""
+                    class="only-pc"
+                    style="--delayImg: 0.5s"
+                  />
+                  <img
+                    src="./img/img_mobile_cms02.png"
+                    alt=""
+                    class="only-mobile"
+                    style="--delayImg: 0.75s"
+                  />
+                </li>
+                <li class="figure-cms03">
+                  <img
+                    src="./img/img_pc_cms03.png"
+                    alt=""
+                    class="only-pc"
                     style="--delayImg: 1s"
                   />
                   <img
-                    src="./img/img_mobile_ux0401.png"
-                    class="only-mobile"
+                    src="./img/img_mobile_cms03.png"
                     alt=""
-                    style="--delayImg: 1s"
+                    class="only-mobile"
+                    style="--delayImg: 0.75s"
                   />
                 </li>
-                <li class="device-text-dos">
+              </ul>
+            </figure>
+          </div>
+        </div>
+
+        <!-- 누구나 모바일 콘텐츠를 소비하는 시대 -->
+        <div class="works-content">
+          <div class="works-section theme-gradient section04">
+            <div class="works-desc">
+              <h3 class="works-desc-title">
+                누구나 모바일 콘텐츠를 <br class="only-mobile" />소비하는 시대
+              </h3>
+              <p class="works-desc-text">
+                누구나 맘에 드는 콘텐츠를 지인에 공유할 수 있도록<span
+                  class="br_pc"
+                ></span
+                >디바이스 OS 별 모바일웹 공유기능을 구현했습니다.
+              </p>
+            </div>
+            <div class="works-figure">
+              <img
+                src="./img/img_pc_anyone.png"
+                alt=""
+                class="only-pc"
+                style="--delayImg: 0.75s"
+              />
+              <img
+                src="./img/img_mobile_anyone.png"
+                alt=""
+                class="only-mobile"
+                style="--delayImg: 0.75s"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 신한투자증권 디지털 홍보채널 -->
+        <div class="works-content">
+          <div class="works-section theme-darkblue section05">
+            <div class="works-desc">
+              <h3 class="works-desc-title">
+                신한투자증권 <br class="only-mobile" />디지털 홍보채널
+              </h3>
+              <p class="works-desc-text">
+                원페이지 스크롤링 형식의 카드형 UI로 신규고객을 위한 다양한
+                금융이벤트를 집중도 있게 전달합니다. 디지털 홍보의 특성에 맞는
+                다양한 컬러와 이미지로 시각적 임팩트를 높이고, 캐주얼한
+                톤앤매너로 밝은 이미지를 구축하였습니다.
+              </p>
+            </div>
+            <div class="works-figure">
+              <img
+                src="./img/img_pc_channel.png"
+                alt=""
+                class="only-pc"
+                style="--delayImg: 0.75s"
+              />
+              <img
+                src="./img/img_mobile_channel.png"
+                alt=""
+                class="only-mobile"
+                style="--delayImg: 0.75s"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 신한투자증권 브랜드 아이덴티티 -->
+        <div class="works-content">
+          <div class="works-section section06">
+            <div class="works-figure only-pc">
+              <img
+                src="./img/img_pc_bi01.png"
+                alt=""
+                style="--delayImg: 0.75s"
+              />
+            </div>
+            <div class="works-desc">
+              <h3 class="works-desc-title">
+                신한투자증권 <br class="only-mobile" />브랜드 아이덴티티
+              </h3>
+              <p class="works-desc-text">
+                브랜드 아이덴티티에 집중한 디자인으로 브랜드 톤 앤 매너의
+                통일성을 유지하며 밝고 생생한 <br />컬러와 3D 요소로 친근한
+                이미지를 부여했다.
+              </p>
+            </div>
+            <div class="works-figure">
+              <!-- PC용 이미지 리스트 (Vue v-if 대체) -->
+              <ul class="works-figure-content only-pc">
+                <li>
                   <img
-                    src="./img/img_pc_ux0402.png"
-                    class="only-pc"
+                    src="./img/img_pc_bi0201.png"
                     alt=""
-                    style="--delayImg: 1.05s"
-                  />
-                  <img
-                    src="./img/img_mobile_ux0402.png"
-                    class="only-mobile"
-                    alt=""
-                    style="--delayImg: 1.05s"
+                    style="--delayImg: 0.75s"
                   />
                 </li>
-                <li class="device-text-tres">
+                <li>
                   <img
-                    src="./img/img_pc_ux0403.png"
-                    class="only-pc"
+                    src="./img/img_pc_bi0202.png"
                     alt=""
-                    style="--delayImg: 1.15s"
-                  />
-                  <img
-                    src="./img/img_mobile_ux0403.png"
-                    class="only-mobile"
-                    alt=""
-                    style="--delayImg: 1.15s"
+                    style="--delayImg: 0.5s"
                   />
                 </li>
-                <li class="device-text-quatro">
+              </ul>
+              <!-- 모바일용 이미지 리스트 (Vue v-if 대체) -->
+              <ul class="works-figure-content only-mobile">
+                <li>
                   <img
-                    src="./img/img_pc_ux0404.png"
-                    class="only-pc"
+                    src="./img/img_mobile_bi01.png"
                     alt=""
-                    style="--delayImg: 1.3s"
+                    style="--delayImg: 0.5s"
+                  />
+                </li>
+                <li>
+                  <img
+                    src="./img/img_mobile_bi02.png"
+                    alt=""
+                    style="--delayImg: 0.65s"
+                  />
+                </li>
+                <li>
+                  <img
+                    src="./img/img_mobile_bi03.png"
+                    alt=""
+                    style="--delayImg: 0.8s"
                   />
                 </li>
               </ul>
             </div>
           </div>
         </div>
+
+        <!-- 검색엔진 최적화(SEO) -->
+        <div class="works-content">
+          <div class="works-section section07">
+            <div class="works-desc">
+              <h3 class="works-desc-title">검색엔진 최적화(SEO)</h3>
+              <p class="works-desc-text">
+                검색엔진 최적화(SEO)를 통해 네이버, 구글 등 검색 사이트에서
+                검색결과에 콘텐츠가 <br />잘 노출되도록 하고, 해당 콘텐츠
+                페이지로 바로 진입시켜 잠재고객 내재화 및 <br />고객의 빠른 주식
+                거래 여정을 지원한다.
+              </p>
+            </div>
+            <div class="works-figure">
+              <img
+                src="./img/img_pc_seo.png"
+                alt=""
+                class="only-pc"
+                style="--delayImg: 0.75s"
+              />
+              <img
+                src="./img/img_mobile_seo.png"
+                alt=""
+                class="only-mobile"
+                style="--delayImg: 0.75s"
+              />
+              <div class="blind">
+                <h3>길을 잃을 염려가 없는 순환구조의 서비스</h3>
+                <dl>
+                  <dt>인지</dt>
+                  <dd>
+                    광고, 소셜미디어, 검색 등을 통해 고객이 제품/서비스 발견
+                  </dd>
+                </dl>
+                <dl>
+                  <dt>탐색</dt>
+                  <dd>
+                    제품/서비스를 자세히 보기 위해 검색 또는 웹사이트 방문
+                  </dd>
+                </dl>
+                <dl>
+                  <dt>결정</dt>
+                  <dd>가격/기능/특징 등을 고려하며 구매의사 결정</dd>
+                </dl>
+                <dl>
+                  <dt>구매</dt>
+                  <dd>쉽고 빠르게 구매할 수 있는 프로세스 제공</dd>
+                </dl>
+                <dl>
+                  <dt>사용</dt>
+                  <dd>만족도가 높은 사용자경험을 위한 UI/UX</dd>
+                </dl>
+                <dl>
+                  <dt>추천</dt>
+                  <dd>UI/UX 만족도가 높은 고객의 추천 및 신규 고객 유입</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 신한카드 UX Writing 가이드 -->
+        <div class="works-content">
+          <div class="works-section section08">
+            <div class="works-figure">
+              <img
+                src="./img/img_pc_ux01.png"
+                alt=""
+                class="only-pc ux-icon"
+                style="--delayImg: 0.5s"
+              />
+              <div class="works-desc">
+                <h3 class="works-desc-title">
+                  신한카드 <br class="only-mobile" />UX Writing 가이드
+                </h3>
+                <p class="works-desc-text">
+                  투자 콘텐츠에 대한 이해도를 높이고 고객과 '통’ 하는 글쓰기를
+                  위해<br class="only-pc" />신한카드 UX Writing 가이드 를
+                  준수하였습니다.<br class="only-pc" />한눈에 알 수 있는 표시,
+                  직접적이고 구체적인 표현을 사용하였으며
+                  <br class="only-pc" />문장 톤앤매너를 통일성 있게
+                  유지하였습니다.
+                </p>
+              </div>
+              <img
+                src="./img/img_mobile_ux01.png"
+                alt=""
+                class="only-mobile ux-icon"
+                style="--delayImg: 0.5s"
+              />
+              <img
+                src="./img/img_pc_ux02.png"
+                alt=""
+                class="only-pc ux-device"
+                style="--delayImg: 0.75s"
+              />
+              <img
+                src="./img/img_mobile_ux02.png"
+                alt=""
+                class="only-mobile ux-device"
+                style="--delayImg: 0.75s"
+              />
+
+              <div class="device-text">
+                <ul class="left">
+                  <li class="device-text-uno">
+                    <img
+                      src="./img/img_pc_ux0301.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0301.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1s"
+                    />
+                  </li>
+                  <li class="device-text-dos">
+                    <img
+                      src="./img/img_pc_ux0302.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1.05s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0302.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1.05s"
+                    />
+                  </li>
+                  <li class="device-text-tres">
+                    <img
+                      src="./img/img_pc_ux0303.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1.15s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0303.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1.15s"
+                    />
+                  </li>
+                </ul>
+                <ul class="right">
+                  <li class="device-text-uno">
+                    <img
+                      src="./img/img_pc_ux0401.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0401.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1s"
+                    />
+                  </li>
+                  <li class="device-text-dos">
+                    <img
+                      src="./img/img_pc_ux0402.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1.05s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0402.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1.05s"
+                    />
+                  </li>
+                  <li class="device-text-tres">
+                    <img
+                      src="./img/img_pc_ux0403.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1.15s"
+                    />
+                    <img
+                      src="./img/img_mobile_ux0403.png"
+                      class="only-mobile"
+                      alt=""
+                      style="--delayImg: 1.15s"
+                    />
+                  </li>
+                  <li class="device-text-quatro">
+                    <img
+                      src="./img/img_pc_ux0404.png"
+                      class="only-pc"
+                      alt=""
+                      style="--delayImg: 1.3s"
+                    />
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("show");
-              }
-            });
-          },
-          {
-            threshold: 0.1,
-          },
-        );
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("show");
+                }
+              });
+            },
+            {
+              threshold: 0.1,
+            },
+          );
 
-        document.querySelectorAll(".works-content").forEach((section) => {
-          observer.observe(section);
+          document.querySelectorAll(".works-content").forEach((section) => {
+            observer.observe(section);
+          });
         });
-      });
-    </script>
-
+      </script>
     </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
