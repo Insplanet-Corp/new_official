@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import BodyClass from "@/components/BodyClass";
-import PageShell from "@/components/PageShell";
 import DetailFrame from "@/components/projects/DetailFrame";
 import { type Portfolio, detailSrc, titleOneLine } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
-import "@/styles/projects.css";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +46,10 @@ export default async function ProjectDetailPage({
   const src = detailSrc(row.html_file);
   if (!src) notFound();
 
-  /* 사이트 헤더·푸터는 iframe 밖(PageShell)에 둔다. 케이스 스터디 본문만
-     iframe 안에 있으므로 공통 크롬은 그대로 붙는다.
+  /* ⚠️ 사이트 헤더·푸터(PageShell)를 두르지 않는다. 상세 문서가 자기 CI 로고와
+     닫기 버튼을 화면 모서리에 fixed 로 직접 그리므로 우리 헤더와 겹친다.
+     시트에서 보든 이 주소로 바로 들어오든 같은 화면이 나오는 편이 낫다 —
+     닫기는 상세 안의 링크가 /projects 로 보낸다.
 
      퍼블리셔 산출물은 public/portfolio/<폴더>/ 에 그대로 올린다 — index.html 이
      css/·img/ 를 상대경로로 참조하므로 같은 폴더에 두면 경로가 저절로 맞는다.
@@ -61,25 +60,20 @@ export default async function ProjectDetailPage({
      ⚠️ 본문이 iframe 안이라 검색엔진이 내용을 읽지 못한다. 최소한 제목만이라도
      문서에 남기려고 아래 h1 을 iframe 밖에 둔다(화면에는 안 보이게). */
   return (
-    <>
-      <BodyClass name="projects-page" />
-      <PageShell>
-        <main className="pj">
-          <h1
-            style={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              overflow: "hidden",
-              clip: "rect(0 0 0 0)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {titleOneLine(row.title)}
-          </h1>
-          <DetailFrame src={src} title={`${titleOneLine(row.title)} 상세`} />
-        </main>
-      </PageShell>
-    </>
+    <main>
+      <h1
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {titleOneLine(row.title)}
+      </h1>
+      <DetailFrame src={src} title={`${titleOneLine(row.title)} 상세`} />
+    </main>
   );
 }

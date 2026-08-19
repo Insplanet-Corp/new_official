@@ -6,27 +6,26 @@ import type { ProjectCard } from '@/data/projectsPage';
 import { prefersReducedMotion } from '@/lib/dom';
 
 type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; destroy?: () => void };
-type LenisCtor = new (opts: {
-  wrapper: HTMLElement;
-  content: HTMLElement;
-  lerp: number;
-  smoothWheel: boolean;
-  autoRaf: boolean;
-}) => LenisLike & { raf: (t: number) => void };
-
 /* ===== project-detail SHEET =====
    Clicking a project card on /projects no longer navigates: the detail rises from the bottom in a
    full-screen sheet while the list stays put underneath. Ported from the static site's
-   js/project-sheet.js — same .ps-* markup and CSS (src/styles/style.css), same beats:
-   load behind a top progress bar → slide up → sheet-local Lenis → ESC/X/back closes.
+   js/project-sheet.js — same .ps-* markup and CSS (src/styles/style.css):
+   load behind a top progress bar → slide up → ESC/X/back closes.
 
    ⚠️ ONE deliberate difference from the static original: it fetches the detail HTML and injects it
-   into the page. We do NOT. The publisher's document keeps running inside DetailFrame's sandboxed
-   iframe, because injecting it would run the publisher's scripts in OUR document — with read access
-   to the Supabase session token in localStorage. See DetailFrame for the sandbox rationale. The
-   knock-on effects: progress comes from the iframe's load + first height message instead of
-   counting images, and the detail's own controls (.pd-close / .pd-btn) can't be reached from here,
-   so the generic .ps-close is always the way out.
+   into the page. We do NOT. The publisher's document keeps running inside a sandboxed iframe,
+   because injecting it would run the publisher's scripts in OUR document — with read access to the
+   Supabase session token in localStorage. See DetailFrame for the sandbox rationale.
+
+   ⚠️ THE IFRAME MUST BE A FIXED VIEWPORT (100% of the sheet), NOT sized to its content.
+   css/project-detail.css builds the detail around `height:100vh` (hero) and `position:fixed`
+   (close, SCROLL hint) — it assumes it IS the viewport. Size the iframe to the document height
+   instead and both assumptions break: `100vh` resolves to the iframe's own (content) height, so the
+   hero grows every time the height bridge reports back — a runaway loop — and `position:fixed`
+   pins to the top of the document rather than the viewport. That is exactly what broke here.
+   Because the iframe scrolls internally now, public/portfolio/_height.js is NOT needed for the
+   sheet (it stays for details that are laid out as plain flowing documents), and there is no
+   sheet-local Lenis — the smooth-scroll would have to live inside the detail document.
 
    The route /projects/<id> still renders the same detail as a normal page — deep links, refresh and
    crawlers keep working; the sheet is what you get when you arrive from the list. */
@@ -45,24 +44,15 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   const [open, setOpen] = useState(false); // sheet is up (drives the slide)
   const [loaded, setLoaded] = useState(false); // .ps-body fade-in
   const [barOn, setBarOn] = useState(false); // 진행 바가 보이는가
-  const [atEnd, setAtEnd] = useState(false);
 
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLIFrameElement>(null);
 
-  // 상세 문서가 알려 오는 높이 (_height.js). DetailFrame 과 같은 다리를 쓴다.
-  const [height, setHeight] = useState(1200);
 
   /* 어디까지 진행했는지 — 렌더에 쓰지 않으므로 ref 로 둔다 (매 프레임 setState 를 피한다) */
   const bar = useRef({ real: 0, shown: 0, raf: 0, last: 0, trickle: 0, onFull: null as null | (() => void) });
   const seq = useRef(0); // open/close 마다 증가 — 늦게 도착한 로드가 닫힌 시트를 열지 못하게
   const pushed = useRef(false); // 이 탭이 직접 pushState 한 항목인가 (닫을 때 back 으로 빠질 수 있는가)
   const savedY = useRef(0);
-  const lenis = useRef<(LenisLike & { raf: (t: number) => void }) | null>(null);
-  const lenisRaf = useRef(0);
   const guard = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reduce = useRef(false);
 
@@ -170,43 +160,6 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
     }
   }, []);
 
-  /* ---- 시트 전용 Lenis — 페이지와 같은 탄성 휠 감각 ---------------------- */
-  const startSheetLenis = useCallback(() => {
-    const Ctor = (window as Window & { Lenis?: LenisCtor }).Lenis;
-    if (lenis.current || !Ctor || reduce.current || !scrollRef.current || !bodyRef.current) return;
-    try {
-      const l = new Ctor({
-        wrapper: scrollRef.current,
-        content: bodyRef.current,
-        lerp: 0.09,
-        smoothWheel: true,
-        autoRaf: false,
-      });
-      lenis.current = l;
-      const loop = (t: number) => {
-        if (!lenis.current) return;
-        lenis.current.raf(t);
-        lenisRaf.current = requestAnimationFrame(loop);
-      };
-      lenisRaf.current = requestAnimationFrame(loop);
-    } catch {
-      lenis.current = null;
-    }
-  }, []);
-
-  const stopSheetLenis = useCallback(() => {
-    if (lenisRaf.current) cancelAnimationFrame(lenisRaf.current);
-    lenisRaf.current = 0;
-    if (lenis.current) {
-      try {
-        lenis.current.destroy?.();
-      } catch {
-        /* 이미 파기됐을 수 있다 */
-      }
-      lenis.current = null;
-    }
-  }, []);
-
   /* ---- 열기 / 닫기 -------------------------------------------------------- */
 
   /** 로드가 끝났다 — 바를 걷고 시트를 올린다. 높이 통지와 보호 타이머가 같이 쓴다. */
@@ -226,10 +179,8 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
         history.pushState({ psDetail: detail }, '', push);
         pushed.current = true;
       }
-      setHeight(1200);
       setLoaded(false);
-      setAtEnd(false);
-      barReset();
+        barReset();
       // 시트가 아직 올라오지 않은 동안에도 html 의 스크롤바 자리를 미리 없앤다 —
       // 슬라이드 첫 프레임에 리플로우가 겹치지 않도록
       document.documentElement.classList.add('ps-open');
@@ -258,7 +209,6 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   const closeSheet = useCallback(() => {
     seq.current += 1;
     if (guard.current) clearTimeout(guard.current);
-    stopSheetLenis();
     barReset();
     setBarOn(false);
     document.documentElement.classList.remove('ps-open');
@@ -267,7 +217,7 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
     setLoaded(false);
     // 슬라이드가 끝난 뒤에 iframe 을 버린다 — 내려가는 도중 내용이 사라지면 빈 판이 보인다
     setTimeout(() => setSrc(null), reduce.current ? 0 : SLIDE_MS);
-  }, [barReset, stopSheetLenis]);
+  }, [barReset]);
 
   /* 사용자가 누른 닫기(X / ESC): 우리가 만든 history 항목이면 뒤로 빠진다(popstate 가
      closeSheet 를 부른다). 아니면 — /projects/<id> 로 바로 들어와 시트가 열린 경우 —
@@ -281,24 +231,12 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
     }
   }, [closeSheet, src]);
 
-  /* 시트가 열린 상태(open)로 전환되면 잠금·Lenis 를 건다 */
+  /* 시트가 올라오면 뒤쪽 목록의 스크롤을 잠근다 */
   useEffect(() => {
     if (!open) return;
     lockScroll(true);
-    startSheetLenis();
-    const sheet = sheetRef.current;
-    const scroll = scrollRef.current;
-    // 상세가 자기 fixed 크롬을 콘텐츠 가장자리 기준으로 놓을 수 있도록 스크롤바 폭을 알려준다
-    const syncSbw = () => {
-      if (sheet && scroll) sheet.style.setProperty('--ps-sbw', `${scroll.offsetWidth - scroll.clientWidth}px`);
-    };
-    syncSbw();
-    addEventListener('resize', syncSbw);
-    return () => {
-      removeEventListener('resize', syncSbw);
-      lockScroll(false);
-    };
-  }, [open, lockScroll, startSheetLenis]);
+    return () => lockScroll(false);
+  }, [open, lockScroll]);
 
   /* 목록의 카드 링크를 가로챈다 — 같은 주소로 pushState 하고 시트를 올린다 */
   useEffect(() => {
@@ -337,36 +275,11 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
     return () => removeEventListener('keydown', onKey);
   }, [requestClose]);
 
-  /* 상세 문서가 알려 오는 높이. 첫 통지 = 레이아웃이 잡혔다는 신호라 바를 끝까지 민다. */
-  useEffect(() => {
-    if (!src) return;
-    let first = true;
-    const onMessage = (e: MessageEvent) => {
-      // sandbox iframe 의 origin 은 'null' 이라 origin 으로 못 거른다. source 로 확인한다.
-      if (!frameRef.current || e.source !== frameRef.current.contentWindow) return;
-      const h = (e.data as { __portfolioHeight?: number })?.__portfolioHeight;
-      if (typeof h !== 'number' || h <= 0) return;
-      setHeight(h);
-      if (!first) return;
-      first = false;
-      const mine = seq.current;
-      stopTrickle();
-      bar.current.real = 1;
-      bar.current.onFull = () => {
-        if (mine !== seq.current) return; // 그 사이 닫혔다면 올리지 않는다
-        reveal();
-      };
-      barKick();
-    };
-    addEventListener('message', onMessage);
-    return () => removeEventListener('message', onMessage);
-  }, [src, barKick, reveal, stopTrickle]);
 
   useEffect(() => () => {
     stopTrickle();
-    stopSheetLenis();
     if (guard.current) clearTimeout(guard.current);
-  }, [stopSheetLenis, stopTrickle]);
+  }, [stopTrickle]);
 
   if (!mounted) return null;
 
@@ -378,8 +291,7 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
       <div className="ps-bar" ref={barRef} aria-hidden="true" style={{ opacity: barOn ? 1 : 0 }} />
       <div
         id="project-sheet"
-        className={`ps-sheet${open ? ' is-open' : ''}${atEnd ? ' is-at-end' : ''}`}
-        ref={sheetRef}
+        className={`ps-sheet${open ? ' is-open' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-hidden={open ? 'false' : 'true'}
@@ -396,28 +308,29 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
             />
           </svg>
         </button>
-        <div
-          className="ps-scroll"
-          ref={scrollRef}
-          data-lenis-prevent
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            setAtEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - el.clientHeight * 0.5);
-          }}
-        >
-          <div className={`ps-body${loaded ? ' is-loaded' : ''}`} ref={bodyRef}>
+        {/* ⚠️ .ps-scroll 은 더 이상 스크롤하지 않는다 — 스크롤은 iframe 안에서 일어난다.
+            여기서는 iframe 이 height:100% 를 풀 수 있도록 확정 높이를 주는 역할만 한다. */}
+        <div className="ps-scroll" style={{ overflow: 'hidden' }}>
+          <div
+            className={`ps-body${loaded ? ' is-loaded' : ''}`}
+            style={{ height: '100%' }}
+          >
             {src ? (
               <iframe
-                ref={frameRef}
                 src={src}
                 title="프로젝트 상세"
                 sandbox="allow-scripts"
                 onLoad={() => {
+                  const mine = seq.current;
                   stopTrickle();
-                  barReal(0.7);
-                  trickle(0.7, 0.95);
+                  bar.current.real = 1;
+                  bar.current.onFull = () => {
+                    if (mine !== seq.current) return; // 그 사이 닫혔다면 올리지 않는다
+                    reveal();
+                  };
+                  barKick();
                 }}
-                style={{ display: 'block', width: '100%', height, border: 0 }}
+                style={{ display: 'block', width: '100%', height: '100%', border: 0 }}
               />
             ) : null}
           </div>

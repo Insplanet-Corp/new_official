@@ -395,9 +395,10 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 `localStorage` 의 Supabase 세션 토큰을 읽을 수 있다. `DetailFrame` 이 `sandbox`
 (`allow-same-origin` 없이)를 쓰는 이유가 그것이다. 그래서 시트 안에도 **iframe 을 그대로
 넣는다.** 파급 효과 두 가지:
-- 진행률을 이미지 개수로 못 센다 → iframe 의 `load` + `_height.js` 의 **첫 높이 통지**로 만든다
-- 상세의 자체 컨트롤(`.pd-close` `.pd-btn`)에 손이 닿지 않는다 → 일반 `.ps-close` 만 쓴다
-  (`is-own-close` · `project-detail.css` 는 그래서 안 가져왔다)
+- 진행률을 이미지 개수로 못 센다 → iframe 의 `load` 하나로 만든다
+- 상세의 자체 컨트롤(`.pd-btn` 의 Copy URL 등)에 손이 닿지 않는다 — 상세 문서가 자기
+  인라인 스크립트로 처리한다 (`window.ProjectSheet` 가 없으면 스스로 동작하게 짜여 있다)
+- **iframe 크기 전제는 17번을 반드시 읽을 것**
 
 **진행 바 rAF 함정** — 공개 시점을 "그려진 바가 1 에 닿는 rAF 루프"에 매달아 뒀는데,
 **백그라운드 탭에서는 rAF 가 통째로 멈춘다.** 그러면 카드를 누른 사람이 주소만 바뀐 채
@@ -420,11 +421,81 @@ src 로 마운트 · `html.ps-open` · 보호 타이머로 `is-open` · `body{po
 ESC → `history.back()` → 주소 복귀 · `inert` 복원 · 슬라이드 후 iframe 해제.
 `.ps-scroll` 1440×900 / scrollHeight 1200 로 스크롤 가능.
 
-**확인 못 한 것**: 슬라이드 애니메이션 자체, 진행 바가 차는 모습, 시트 전용 Lenis 의 감각,
-`_height.js` 높이 왕복. **브라우저 패널이 백그라운드라 rAF·IO·타이머가 전부 스로틀되고,
+**확인 못 한 것**: 슬라이드 애니메이션 자체, 진행 바가 차는 모습.
+**브라우저 패널이 백그라운드라 rAF·IO·타이머가 전부 스로틀되고,
 `innerWidth/Height` 가 0 으로 잡힌다.** iframe 은 패널이 `ERR_BLOCKED_BY_CLIENT` 로 막아
 본문이 아예 안 뜬다(문서 자체는 `fetch` 로 200·13KB 확인). **사람이 실제 브라우저에서
 봐야 한다.**
+
+### 16. 상세화면 산출물을 옮겨오면서 깨진 경로 (`public/portfolio/`)
+
+정적 사이트의 `projects/kb-app.html` 산출물을 `public/portfolio/heyyoung-1024/` 로
+옮기면서 경로가 어긋났다. **HTML 의 `src`/`href` 만 봐서는 절반밖에 안 보인다** —
+나머지 절반이 CSS 의 `url()` 안에 있었다.
+
+| 깨진 것 | 원인 | 고친 값 |
+|---|---|---|
+| **`css/fonts.css` 안의 웹폰트 7개** | `url("../assets/fonts/…")` 가 `/portfolio/assets/fonts/…` 로 풀린다. **HTML 스캔으로는 안 잡힌다** | `url("/assets/fonts/…")` |
+| `/ci_logo_white.svg` | 정적 사이트는 루트에 에셋이 있었다 | `/assets/ci_logo_white.svg` |
+| `img/kb-app/sec-0N.*` (6장) | 옮기면서 `kb-app/` 한 단계가 평평해졌다 | `./img/sec-0N.*` |
+| `./projects.html` (닫기) | 404 는 아니었지만 Next 목록이 아니라 딸려 온 정적 더미 목록으로 갔다 | `/projects` |
+
+스타일시트 링크(`../css/*.css`) **자체는 안 깨져 있었다** — 옮길 때
+`public/portfolio/css/` 에 사본이 같이 들어와서 200 으로 떴다. 진짜 문제는 그 안의
+폰트였다. **다음에 산출물을 옮길 때는 CSS 안의 `url()` 까지 확인할 것.**
+
+### 17. ⚠️ 상세 iframe 은 내용 높이가 아니라 **뷰포트 크기**여야 한다
+
+이게 "경로를 고쳤는데 오히려 아예 안 되던" 진짜 원인이었다.
+
+`css/project-detail.css` 는 상세를 **자기가 곧 뷰포트라는 전제** 위에 세워 놨다:
+
+```
+.pd-hero{height:100vh}                 /* 히어로가 한 화면 */
+.pd-close, .pd-hero-scroll{position:fixed}
+```
+
+원본 정적 사이트에서는 상세를 **시트 DOM 안에 주입**하므로 `.ps-scroll` 이 곧
+뷰포트가 되어 전제가 성립한다. 우리는 세션 토큰 때문에 주입 대신 **sandbox iframe**
+을 쓰는데(15번), 여기에 `_height.js` 로 **내용 높이만큼 iframe 을 늘리자** 둘 다 깨졌다:
+
+- `100vh` 가 **iframe 자기 높이**로 풀린다 → 히어로가 커짐 → 문서가 길어짐 →
+  높이를 다시 통지 → iframe 이 더 커짐 → **끝없이 자란다**
+- `position:fixed` 가 뷰포트가 아니라 **문서 맨 위**에 붙는다 → 닫기·SCROLL 힌트가
+  스크롤하면 사라지고, 시트의 `.ps-close` 와 같은 자리에 겹친다
+
+→ **iframe 높이를 고정하고 스크롤은 iframe 안에서 일어나게 둔다.**
+시트는 `height:100%`(= 시트 = 뷰포트), 단독 라우트는 `100svh`.
+
+파급 효과:
+- **`public/portfolio/_height.js` 는 이 방식에서 필요 없다.** 파일은 남겨 뒀다 —
+  `100vh`/`fixed` 를 안 쓰고 그냥 흐르는 문서로 짠 산출물이라면 그쪽이 맞다.
+  **어느 쪽인지는 산출물 CSS 를 보고 판단할 것.**
+- **시트 전용 Lenis 를 걷어냈다.** 스크롤이 iframe 안에서 일어나므로 부모가 걸 수
+  있는 게 없다. 탄성 스크롤을 원하면 상세 문서 안에 Lenis 를 넣어야 한다.
+- `.ps-scroll` 은 이제 스크롤하지 않는다 — iframe 이 `height:100%` 를 풀 수 있게
+  확정 높이를 주는 상자일 뿐이다. `--ps-sbw`·`is-at-end` 도 같이 죽었다.
+- **`/projects/[id]` 에서 `PageShell` 을 뺐다.** 상세가 자기 CI 로고와 닫기를
+  화면 모서리에 fixed 로 그리므로 사이트 헤더와 겹친다. 시트에서 보든 주소로 바로
+  들어오든 같은 화면이 나온다. SEO 용 `h1` 은 iframe 밖에 그대로 남겼다.
+
+**새 상세 산출물 체크리스트**
+1. 폴더째 `public/portfolio/<이름>/` 에 넣는다 (상대경로가 저절로 맞는다)
+2. 공용 CSS 는 `public/portfolio/css/` 를 `../css/…` 로 부른다
+3. 사이트 공용 에셋은 `/assets/…` **절대경로**로
+4. **CSS 안의 `url()` 도 확인** — 상대경로면 `/assets/…` 로 고친다
+5. 어드민의 `html_file` 에 `<이름>/index.html` (앞의 `/` 는 있어도 된다 — 15번)
+
+**아직 남은 것**: `public/portfolio/heyyoung-1024/projects.html` — 옮겨올 때 딸려 온
+정적 목록 페이지 사본(725줄, 더미 카드 85개)이다. 이제 아무 데서도 참조하지 않지만
+**그 주소로 공개돼 있다.** 지울지 사용자 확인 필요.
+
+같은 폴더의 `img/hero-bg.png` 는 예시를 kb-app 산출물로 갈아끼우면서 사라졌다
+(지금 히어로는 `hero-bg.jpg`). 필요하면 `git show 6deb523:public/portfolio/heyyoung-1024/img/hero-bg.png` 로 꺼낼 수 있다.
+
+**브라우저에서 확인함**: 상세 페이지의 참조 12개 + CSS 안 폰트 7개 전부 200 ·
+시트에서 iframe 이 1440×900(= 뷰포트)로 잡힘 · 단독 라우트 문서 높이 900 (폭주 없음) ·
+사이트 헤더 미노출 · `h1` 유지.
 
 ---
 
