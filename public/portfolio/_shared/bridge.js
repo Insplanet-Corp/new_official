@@ -67,8 +67,68 @@
     post({ pdClose: true });
   });
 
+  /* Copy URL — 지금 보고 있는 상세의 공유용 주소를 복사한다.
+     iframe 안에서는 location 이 /portfolio/<슬러그>/index.html 이라 그대로 쓰면 안 된다.
+     부모(시트)가 주소창에 띄우고 있는 /projects/<id> 를 써야 하므로 부모에게 물어본다.
+     단독 열람이면 이 다리 자체가 돌지 않으므로 문서 쪽 폴백이 location.href 를 쓴다. */
+  var shareUrl = null;
+  addEventListener('message', function (e) {
+    var d = e.data;
+    if (d && typeof d === 'object' && typeof d.pdShareUrl === 'string') shareUrl = d.pdShareUrl;
+  });
+
+  function showHint(btn) {
+    var h = btn.querySelector('.works-copy-hint');
+    if (!h) {
+      h = document.createElement('span');
+      h.className = 'works-copy-hint';
+      h.setAttribute('role', 'status');
+      h.textContent = 'URL이 복사되었습니다';
+      btn.appendChild(h);
+    }
+    h.classList.add('is-on');
+    clearTimeout(btn._copyTimer);
+    btn._copyTimer = setTimeout(function () {
+      h.classList.remove('is-on');
+    }, 1600);
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('.works-btn') : null;
+    if (!t) return;
+    // 주소를 아직 안 넣은 View Platform 은 눌러도 아무 일이 없어야 한다 (현재 페이지가 새 탭에 열리는 것 방지)
+    if (t.classList.contains('works-btn--primary') && !t.getAttribute('href')) {
+      e.preventDefault();
+      return;
+    }
+    if (!t.classList.contains('works-btn--copy')) return;
+    e.preventDefault();
+    var url = shareUrl || location.href;
+    // sandbox iframe 은 불투명 출처라 clipboard API 가 막힌다 — execCommand 폴백이 실제로 쓰인다
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = url;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        /* 그래도 안 되면 조용히 넘어간다 */
+      }
+      document.body.removeChild(ta);
+      showHint(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () {
+        showHint(t);
+      }, fallback);
+    } else fallback();
+  });
+
   /* 커서가 커지는 요소들 — 부모의 GROW_SEL 과 같은 역할을 상세 안에서 한다 */
-  var GROW = '.pd-close,.pd-btn,a,button';
+  var GROW = '.pd-close,.pd-btn,.works-close,.works-btn,a,button';
   var last = 0;
   document.addEventListener(
     'mousemove',

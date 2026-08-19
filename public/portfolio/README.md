@@ -9,7 +9,8 @@ public/portfolio/
 ├─ _shared/                 모든 상세가 같이 쓰는 것 (여기만 한 벌)
 │  ├─ fonts.css
 │  ├─ style.css
-│  ├─ project-detail.css    .pd-* 디자인 시스템
+│  ├─ project-detail.css    .pd-* 디자인 시스템 (kb-app 계열)
+│  ├─ works.css             공통 크롬: 닫기·버튼·좌우 거터 (works-* 계열)
 │  └─ bridge.js             상세 ↔ 시트 다리
 ├─ kb-app/                  .pd-* 템플릿을 쓰는 문서 (자기 CSS 없음)
 │  ├─ index.html
@@ -31,11 +32,13 @@ public/portfolio/
 2. **스타일을 붙인다** — 두 가지 중 하나입니다.
 
    *(a) 문서가 스타일을 통째로 들고 있는 경우* (onNuri·shinhan·dap) —
-   **인라인 `<style>` 을 같은 폴더의 `style.css` 로 빼고** 이 한 줄로 부릅니다:
+   **인라인 `<style>` 을 같은 폴더의 `style.css` 로 빼고** 공통 크롬을 **먼저** 부릅니다:
    ```html
+   <link rel="stylesheet" href="../_shared/works.css" />
    <link rel="stylesheet" href="./style.css" />
    ```
-   `_shared/*.css` 는 연결하지 않습니다 — 문서가 자기 리셋을 갖고 있어 충돌합니다.
+   순서가 중요합니다 — 문서 고유 규칙이 이겨야 합니다.
+   `project-detail.css` 는 연결하지 않습니다 (그건 kb-app 계열 전용).
 
    *(b) `.pd-*` 디자인 시스템을 쓰는 경우* (heyyoung-1024) — `<head>` 에:
    ```html
@@ -51,7 +54,18 @@ public/portfolio/
    ⚠️ 빠뜨리면 닫기 버튼이 시트를 닫지 않고 **iframe 안에서 목록 페이지를 열어
    버립니다.** 커스텀 커서도 상세 위에서 멈춥니다.
 
-4. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에
+4. **공통 크롬을 넣는다** — `works-*` 계열이라면 `.work-container` 맨 앞에 닫기 버튼을,
+   상단 소개 영역 안에 액션 버튼을 넣습니다. 기존 문서(예: `dap/index.html`)를 그대로
+   복사해 문구만 바꾸는 게 가장 빠릅니다.
+   - 닫기: `<a class="works-close pd-close" href="/projects">` + 셰브론 SVG
+     ⚠️ `pd-close` 클래스를 같이 붙여야 `bridge.js` 가 알아보고 시트의 X 를 숨깁니다.
+   - 버튼: `.works-actions > .works-btn`. `View Platform` 은 주소가 없으면 눌러도
+     아무 일이 없고, `Copy URL` 은 시트가 알려 준 `/projects/<id>` 를 복사합니다.
+   - 좌우 거터: 배경이 걸린 요소에 `padding-inline` 을 줍니다. 문서마다 그 자리가
+     달라서 `_shared/works.css` 아래쪽에 문서별로 한 줄씩 적혀 있습니다 — 새 문서를
+     넣으면 거기에 한 줄 추가하세요.
+
+5. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에
    `<슬러그>/index.html` 을 적습니다.
 
 ## 지킬 것

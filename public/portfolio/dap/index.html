@@ -4,10 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Work Container - DAP GenAI Platform</title>
+    <link rel="stylesheet" href="../_shared/works.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div class="work-container dap">
+      <!-- 닫기: 시트 안에서는 _shared/bridge.js 가 가로채 시트를 닫고, 단독으로 열면 목록으로 간다 -->
+      <a class="works-close pd-close" href="/projects" aria-label="닫기">
+        <svg viewBox="0 0 44.3077 44.3077" fill="none" aria-hidden="true">
+          <path
+            d="M14.7695 19.3066L22.1553 26.0709L29.5387 19.3066"
+            stroke="currentColor"
+            stroke-width="2.2154"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </a>
+
       <!-- ============================================== -->
       <!-- 1. 공통 상단 영역 (WorkContentCommon 대체) -->
       <!-- ============================================== -->
@@ -48,6 +62,26 @@
                   <em class="work-description-key">Device</em
                   ><span class="work-description-value">Responsive Web</span>
                 </div>
+              </div>
+              <!-- View Platform 은 주소를 받으면 href 에 넣으세요. 비어 있으면 눌러도 아무 일이 없습니다
+                   (kb-app 도 같은 자리표시자입니다). Copy URL 은 현재 상세의 주소를 복사합니다. -->
+              <div class="works-actions">
+                <a class="works-btn works-btn--primary" href="" target="_blank" rel="noopener">
+                  <span>View Platform</span>
+                  <svg class="works-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9 8H16V15M16 8L8 16" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </a>
+                <button type="button" class="works-btn works-btn--copy">
+                  <span>Copy URL</span>
+                  <svg class="works-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M11.437 8.059L12.563 6.933C13.807 5.689 15.823 5.689 17.067 6.933C18.311 8.177 18.311 10.193 17.067 11.437L15.941 12.563M12.563 15.941L11.437 17.067C10.193 18.311 8.177 18.311 6.933 17.067C5.689 15.823 5.689 13.807 6.933 12.563L8.059 11.437M9.185 14.815L14.815 9.185"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                  </svg>
+                </button>
               </div>
             </section>
           </div>

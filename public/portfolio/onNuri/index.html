@@ -4,11 +4,82 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Work Container - onnuri</title>
+    <link rel="stylesheet" href="../_shared/works.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <!-- 메인 컨테이너 -->
     <div class="work-container onnuri">
+      <!-- 닫기: 시트 안에서는 _shared/bridge.js 가 가로채 시트를 닫고, 단독으로 열면 목록으로 간다 -->
+      <a class="works-close pd-close" href="/projects" aria-label="닫기">
+        <svg viewBox="0 0 44.3077 44.3077" fill="none" aria-hidden="true">
+          <path
+            d="M14.7695 19.3066L22.1553 26.0709L29.5387 19.3066"
+            stroke="currentColor"
+            stroke-width="2.2154"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </a>
+
+      <!-- ============================================== -->
+      <!-- 1. 공통 상단 영역 (dap 과 같은 구조) -->
+      <!-- ============================================== -->
+      <section class="works-image">
+        <img src="./img/cover.jpg" class="only-pc" alt="" />
+        <img src="./img/cover_m.jpg" class="only-mobile" alt="" />
+      </section>
+
+      <section class="works-content">
+        <div class="works-section works-slide-show">
+          <div class="works-inner">
+            <section class="works-box">
+              <h3 class="work-title">온누리 모바일 상품권</h3>
+              <p class="work-subtitle">온누리페이 브랜드 · UI/UX 디자인</p>
+            </section>
+            <section class="works-box">
+              <b class="work-description-key">Overview</b>
+              <p class="work-description-value">
+                소상공인시장진흥공단 CI 와 통합되는 온누리 모바일 상품권과 온누리페이의 BI 그래픽 요소를 분석해 시각화 키워드를 도출하고, 일관된 비주얼 아이덴티티를 세웠습니다. 카드형 UI 구조로 정보의 가독성을 높이고, 복잡함을 덜어낸 간편한 UI 와 고령자를 위한 큰 레이아웃·큰글씨 모드로 정보 접근성을 끌어올렸습니다.
+              </p>
+              <div class="sub-wrap">
+                <!-- TODO: Launch(오픈 시점)를 확인해서 아래 형식으로 한 칸 추가하세요.
+                     <div class="sub-box"><em class="work-description-key">Launch</em><span class="work-description-value">20XX.XX</span></div> -->
+                <div class="sub-box">
+                  <em class="work-description-key">Client</em
+                  ><span class="work-description-value">소상공인시장진흥공단</span>
+                </div>
+                <div class="sub-box">
+                  <em class="work-description-key">Device</em
+                  ><span class="work-description-value">Responsive Web</span>
+                </div>
+              </div>
+              <!-- View Platform 은 주소를 받으면 href 에 넣으세요. 비어 있으면 눌러도 아무 일이 없습니다
+                   (kb-app 도 같은 자리표시자입니다). Copy URL 은 현재 상세의 주소를 복사합니다. -->
+              <div class="works-actions">
+                <a class="works-btn works-btn--primary" href="" target="_blank" rel="noopener">
+                  <span>View Platform</span>
+                  <svg class="works-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9 8H16V15M16 8L8 16" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </a>
+                <button type="button" class="works-btn works-btn--copy">
+                  <span>Copy URL</span>
+                  <svg class="works-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M11.437 8.059L12.563 6.933C13.807 5.689 15.823 5.689 17.067 6.933C18.311 8.177 18.311 10.193 17.067 11.437L15.941 12.563M12.563 15.941L11.437 17.067C10.193 18.311 8.177 18.311 6.933 17.067C5.689 15.823 5.689 13.807 6.933 12.563L8.059 11.437M9.185 14.815L14.815 9.185"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <!-- ============================================== -->
       <!-- 2. 본문 영역 (Vue -> HTML 완벽 치환) -->
       <!-- ============================================== -->

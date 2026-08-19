@@ -260,7 +260,13 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
       const d = e.data as { pdReady?: boolean; ownClose?: boolean; pdClose?: boolean } | null;
       if (!d || typeof d !== 'object') return;
       // 상세가 자기 닫기 버튼을 갖고 있으면 우리 X 를 숨긴다 (닫기가 두 개로 보이지 않게)
-      if (d.pdReady) setOwnClose(!!d.ownClose);
+      if (d.pdReady) {
+        setOwnClose(!!d.ownClose);
+        /* 상세의 Copy URL 이 쓸 공유 주소를 알려 준다. iframe 안에서는 location 이
+           /portfolio/<슬러그>/… 라 그대로 복사하면 목록을 거치지 않는 내부 경로가 된다. */
+        const w = (e.source as Window | null) ?? null;
+        w?.postMessage({ pdShareUrl: location.href }, '*');
+      }
       // 상세의 닫기를 눌렀다. sandbox 라 iframe 이 스스로 상위 이동을 못 한다 —
       // 가로채지 않으면 iframe 안에서 목록 페이지가 열려 버린다.
       if (d.pdClose) requestClose();
