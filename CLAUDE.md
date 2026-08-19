@@ -515,6 +515,41 @@ public/portfolio/
 정리하면서 지운 것: `_height.js`(쓰는 곳 없음), `heyyoung-1024/projects.html`(옮겨올 때
 딸려 온 정적 목록 사본 725줄), 시트의 죽은 ref 4개·`SLIDE_MS`·reduced-motion 분기.
 
+### 20. 상세 3건 추가 (onNuri · shinhan · dap) — 옮겨 오며 빠진 것들
+
+사용자가 퍼블리셔 산출물 3개를 `public/portfolio/` 에 넣었다. **heyyoung-1024 와
+종류가 다르다** — `.pd-*` 디자인 시스템을 쓰지 않고 `<style>` 안에 리셋부터 전부
+들고 있는 자립형 문서다. 그래서 `_shared/*.css` 를 연결하지 않는다(연결하면 오히려
+자기 스타일과 충돌한다). 문서 종류가 두 가지라는 것을 README 에 갈라 적었다.
+
+고친 것 — **전부 "파일만 떼어 와서 원래 얹혀 있던 스타일시트가 안 온" 문제다.**
+
+| 문서 | 증상 | 원인 / 고친 것 |
+|---|---|---|
+| onNuri | 문서 폭이 **3072px** (뷰포트의 2배) | `img { max-width: 100% }` 가 없다. section06 이미지가 원본 크기로 펼쳐졌다. **문서가 `max-width: unset` 을 5군데서 쓰는 게 그 규칙을 전제한다는 증거다.** → `.onnuri img{max-width:100%}` 복원 |
+| dap | 커버 이미지 2장 **404** | `cover_pc.png`/`cover_mobile.png` 를 부르는데 폴더에는 `cover.jpg`/`cover_m.jpg` → 실제 파일명으로 |
+| dap | 다리 스크립트 없음 | `bridge.js` 추가 (onNuri·shinhan 은 사용자가 이미 넣어 뒀다) |
+| 3건 전부 | 가로로 **120px** 밀린다 (dap) | 스크롤 인 연출이 `.works-content-item` 을 `.show` 전까지 `translate(+200px)` 로 대기시킨다. **`body{overflow-x:hidden}` 으로는 안 막힌다** — `html{overflow-x:clip}` 를 넣었다 |
+
+**⚠️ `body` 의 `overflow-x:hidden` 은 문서가 옆으로 스크롤되는 것을 못 막는다.**
+세 문서 다 그 한 줄을 갖고 있었는데 dap 은 그대로 120px 밀렸다. `clip` 을 쓸 것 —
+스크롤 컨테이너를 만들지 않는다(`hidden` 은 만들어서 `position:sticky` 를 죽인다,
+`src/styles/mobile.css` 에 같은 메모가 있다).
+
+**닫기 버튼이 없는 문서다.** 다리가 `ownClose:false` 를 보내므로 시트의 기본 `.ps-close`
+X 가 그대로 보인다 — 의도한 대로다(18번).
+
+**미해결 — 외부 CDN 웹폰트.** 세 문서 다 MICEGothic 을 `cdn.jsdelivr.net` 에서 받는다.
+사이트의 나머지는 전부 자체 호스팅(`/assets/fonts/`)이라, CDN 이 막히거나 느리면
+**이 문서들만** 폰트가 바뀌며 레이아웃이 흔들린다. 자체 호스팅으로 옮길지 미결정.
+
+**어드민 등록**: shinhan(seq 10) · onNuri(seq 11) 은 등록돼 있다. **dap 은 아직이다** —
+상세화면 HTML 에 `dap/index.html` 을 넣어야 카드에서 열린다.
+
+**검증**: 4개 문서의 참조 101개 전부 200 · 1440/375 두 폭에서 가로 스크롤 0 ·
+깨진 이미지 0 · onNuri 의 `max-width:unset` 자리(`.img-glass img` 1136px)가 그대로
+살아 있는 것 확인(디자인 보존) · dap 커버가 실제로 렌더되는 것 스크린샷 확인.
+
 ---
 
 ## 현재 상태

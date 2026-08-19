@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - DAP GenAI Platform</title>
+    <style>
+      /* =========================================================
+       1. 폰트 및 기본 리셋 CSS
+       ========================================================= */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      /* 가로 넘침 차단. 스크롤 인 연출이 요소를 translate 로 오른쪽에 대기시켜 두는데
+         (.works-content-item 이 .show 전까지 +200px), body 의 overflow-x:hidden 만으로는
+         문서가 그만큼 옆으로 스크롤되는 것을 못 막는다 — 실제로 dap 이 120px 밀렸다.
+         clip 은 스크롤 컨테이너를 만들지 않고 잘라내기만 한다(hidden 은 컨테이너를 만들어
+         position:sticky 를 죽인다 — src/styles/mobile.css 에 같은 메모가 있다). */
+      html {
+        overflow-x: clip;
+      }
+
+      ul,
+      li {
+        list-style: none;
+      }
+      body {
+        font-family: "MICEGothic", sans-serif;
+        word-break: keep-all;
+        overflow-x: hidden;
+        background-color: #000; /* 전체 다크 테마 배경 */
+        color: #fff;
+      }
+
+      @font-face {
+        font-family: "MICEGothic";
+        src: url("https://cdn.jsdelivr.net/gh/fontbee/font@main/Micecontents/MICEGothic.woff2")
+          format("woff2");
+        font-weight: 400;
+        font-style: normal;
+      }
+
+      /* 공통 PC/Mobile 분기 클래스 */
+      .only-pc {
+        display: block;
+      }
+      .only-mobile {
+        display: none !important;
+      }
+      @media (max-width: 1023px) {
+        .only-pc {
+          display: none !important;
+        }
+        .only-mobile {
+          display: block !important;
+        }
+      }
+
+      /* =========================================================
+       2. 상단 WorkContentCommon 임시 스타일
+       ========================================================= */
+      .works-image img {
+        width: 100%;
+        display: block;
+      }
+      .works-slide-show {
+        padding: 60px 5%;
+        background: #111;
+        color: #fff;
+      }
+      .works-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 40px;
+      }
+      .works-box {
+        flex: 1;
+        min-width: 300px;
+      }
+      .work-title {
+        font-size: 40px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .work-subtitle {
+        font-size: 20px;
+        color: #aaa;
+        margin-bottom: 20px;
+      }
+      .work-description-key {
+        display: block;
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 8px;
+        color: #ddd;
+      }
+      .work-description-value {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #bbb;
+      }
+      .sub-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .sub-box {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      /* =========================================================
+       3. DAP 본문 CSS (SCSS 완벽 변환)
+       ========================================================= */
+      .work-container.dap {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      .works-content {
+        width: 100%;
+        margin: 0;
+      }
+
+      /* 공통 섹션 이너 및 헤더 */
+      .section-inner {
+        gap: 196px;
+        margin: 0 auto;
+        position: relative;
+      }
+      .section-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 940px;
+        margin: 0 auto;
+        gap: 24px;
+        text-align: center;
+      }
+      .section-header .section-title {
+        font-size: 40px;
+        line-height: 64px;
+        font-weight: bold;
+        color: #fff;
+        word-break: keep-all;
+        opacity: 0;
+        transform: translateY(200px);
+        transition: all ease-out 0.8s;
+        transition-delay: 0.25s;
+      }
+      .section-header .section-description {
+        font-size: 20px;
+        line-height: 32px;
+        color: #fff;
+        opacity: 0;
+        transform: translateY(200px);
+        transition: all ease-out 0.8s;
+        transition-delay: 0.5s;
+      }
+
+      /* 헤더 애니메이션 활성화 */
+      .works-content.show .section-header .section-title {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .works-content.show .section-header .section-description {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* --- SECTION 01 --- */
+      .section01 {
+        padding: 160px 0;
+        background-color: rgba(28, 7, 45, 1);
+      }
+      .section01 .section-images {
+        width: 100%;
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 160px 32px 0;
+      }
+      .section01 .section-images img {
+        width: 100%;
+        display: block;
+      }
+
+      /* --- SECTION 02 --- */
+      .section02 {
+        padding: 100px 0;
+        background: url("./img/section02_bg.png") no-repeat center center #000;
+        background-size: cover;
+      }
+      .section02 .section-images {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 160px 0 0;
+      }
+      .section02 .section-images li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+        width: 50%;
+        padding: 74px 0;
+        opacity: 0;
+        transform: translateX(200px) translateY(-50%);
+        transition: all ease-out 0.8s;
+      }
+      .section02 .section-images li img {
+        width: 216px;
+        transition: none;
+      }
+      .section02 .section-images li span {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .section02 .section-images li:nth-of-type(1),
+      .section02 .section-images li:nth-of-type(2) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .section02 .section-images li:nth-of-type(2),
+      .section02 .section-images li:nth-of-type(4) {
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .section02 .section-images li:nth-of-type(1) {
+        transition-delay: 0.75s;
+      }
+      .section02 .section-images li:nth-of-type(2) {
+        transition-delay: 1s;
+      }
+      .section02 .section-images li:nth-of-type(3) {
+        transition-delay: 1.25s;
+      }
+      .section02 .section-images li:nth-of-type(4) {
+        transition-delay: 1.5s;
+      }
+
+      .section02.show .section-images li {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* --- SECTION 03 --- */
+      .section03 {
+        padding: 200px 0;
+        background-color: rgba(21, 7, 40, 1);
+        overflow: hidden;
+      }
+      .section03 .section-images {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 200px 0 0;
+        gap: 360px;
+      }
+      .section03 .section-images li {
+        display: flex;
+        align-items: flex-end;
+        gap: 60px;
+        position: relative;
+      }
+      .section03 .section-images li span {
+        font-size: 300px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.04);
+        position: absolute;
+        top: 50%;
+        opacity: 0;
+        transform: translateX(200px) translateY(-50%);
+        transition: all ease-out 0.8s;
+        transition-delay: 0.25s;
+      }
+      .section03 .section-images li img {
+        box-shadow: 28px 28px 56px rgba(0, 0, 0, 0.25);
+        max-width: 650px;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+        opacity: 0;
+        transform: translateX(200px);
+        transition: all ease-out 0.8s;
+        transition-delay: 1.25s;
+      }
+      .section03 .section-images li div {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 280px;
+        margin-bottom: 20px;
+        gap: 8px;
+        position: relative;
+        z-index: 2;
+        opacity: 0;
+        transform: translateX(200px);
+        transition: all ease-out 0.8s;
+        transition-delay: 0.75s;
+      }
+      .section03 .section-images li div b {
+        font-size: 24px;
+        font-weight: bold;
+        color: #fff;
+      }
+      .section03 .section-images li div p {
+        font-size: 16px;
+        color: #ddd;
+        line-height: 1.5;
+      }
+
+      /* 지그재그 레이아웃 (홀수, 짝수) */
+      .section03 .section-images li:nth-of-type(odd) {
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+      }
+      .section03 .section-images li:nth-of-type(odd) span {
+        left: 10%;
+        transform: translateX(200px) translateY(-50%);
+      }
+      .section03 .section-images li:nth-of-type(odd) img {
+        margin-right: -28%;
+        transform: translateX(200px);
+      }
+      .section03 .section-images li:nth-of-type(odd) div {
+        transform: translateX(200px);
+      }
+
+      .section03 .section-images li:nth-of-type(even) {
+        justify-content: flex-end;
+      }
+      .section03 .section-images li:nth-of-type(even) span {
+        right: 10%;
+        transform: translateX(-200px) translateY(-50%);
+      }
+      .section03 .section-images li:nth-of-type(even) img {
+        margin-left: -28%;
+        transform: translateX(-200px);
+      }
+      .section03 .section-images li:nth-of-type(even) div {
+        transform: translateX(-200px);
+      }
+
+      /* 애니메이션 활성화 */
+      .works-content-item.show span {
+        opacity: 1 !important;
+        transform: translateX(0) translateY(-50%) !important;
+      }
+      .works-content-item.show img {
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+      }
+      .works-content-item.show div {
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+      }
+
+      /* =========================================================
+       4. 모바일 / 태블릿 반응형 (SCSS for-size-max xlarge 변환)
+       ========================================================= */
+      @media (max-width: 1023px) {
+        .section-header {
+          align-items: flex-start;
+          padding: 0 32px;
+          gap: 32px;
+          text-align: left;
+        }
+        .section-header .section-title {
+          font-size: 24px;
+          line-height: 30px;
+        }
+        .section-header .section-description {
+          font-size: 14px;
+          line-height: 18px;
+        }
+
+        .section01 {
+          padding: 48px 0;
+        }
+        .section01 .section-images {
+          padding-top: 48px;
+        }
+
+        .section02 .section-images {
+          flex-direction: column;
+          padding: 64px 0 0;
+        }
+        .section02 .section-images li {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 40px;
+          width: 50%;
+          margin: 0 auto;
+          padding: 64px 0;
+        }
+        .section02 .section-images li img {
+          width: 216px;
+        }
+        .section02 .section-images li + li {
+          border-bottom: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .section02 .section-images li:nth-of-type(2),
+        .section02 .section-images li:nth-of-type(4) {
+          border-left: 0;
+        }
+
+        .section03 {
+          padding: 48px 0;
+        }
+        .section03 .section-images {
+          padding: 64px 0;
+          gap: 64px;
+        }
+        .section03 .section-images li {
+          flex-direction: column !important;
+          align-items: center;
+          gap: 24px;
+        }
+        .section03 .section-images li img {
+          width: 93%;
+          margin-right: 0 !important;
+          margin-left: 0 !important;
+        }
+        .section03 .section-images li div {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          max-width: 280px;
+          gap: 8px;
+          text-align: center;
+        }
+        .section03 .section-images li span {
+          font-size: 150px;
+          top: 10%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="work-container dap">
+      <!-- ============================================== -->
+      <!-- 1. 공통 상단 영역 (WorkContentCommon 대체) -->
+      <!-- ============================================== -->
+      <section class="works-image">
+        <img src="./img/cover.jpg" class="only-pc" alt="PC Cover" />
+        <img
+          src="./img/cover_m.jpg"
+          class="only-mobile"
+          alt="Mobile Cover"
+        />
+      </section>
+
+      <section class="works-content">
+        <div class="works-section works-slide-show">
+          <div class="works-inner">
+            <section class="works-box">
+              <h3 class="work-title">DAP GenAI Platform</h3>
+              <p class="work-subtitle">기업특화 생성형 AI 플랫폼 구축</p>
+            </section>
+            <section class="works-box">
+              <b class="work-description-key">Overview</b>
+              <p class="work-description-value">
+                DAP GenAI Platform은 기업특화 생성형 AI 플랫폼으로, 기업고객은
+                온프레미스, 클라우드 등 보유중인 인프라에 설치해 비즈니스에
+                필요한 생성형 AI 서비스를 빠르게 만들어 즉각적인 가치 창출을 할
+                수 있습니다.
+              </p>
+              <div class="sub-wrap">
+                <div class="sub-box">
+                  <em class="work-description-key">Launch</em
+                  ><span class="work-description-value">202X.XX</span>
+                </div>
+                <div class="sub-box">
+                  <em class="work-description-key">Client</em
+                  ><span class="work-description-value">DAP (LG CNS)</span>
+                </div>
+                <div class="sub-box">
+                  <em class="work-description-key">Device</em
+                  ><span class="work-description-value">Responsive Web</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- 2. DAP 본문 내용 (Vue -> HTML 완벽 치환) -->
+      <!-- ============================================== -->
+
+      <!-- Section 01 -->
+      <section class="works-content section01">
+        <div class="section-inner">
+          <div class="section-header">
+            <p class="section-title">DAP GenAI Platform</p>
+            <p class="section-description">
+              DAP GenAI Platform은 기업특화 생성형 AI 플랫폼으로, 기업고객은
+              온프레미스, 클라우드 등 보유중인 인프라에 설치해 비즈니스에 필요한
+              생성형 AI 서비스를 빠르게 만들어 즉각적인 가치 창출을 할 수
+              있습니다.
+            </p>
+          </div>
+          <div class="section-images">
+            <div class="works-content">
+              <img src="./img/section01_img01.png" class="only-pc" alt="" />
+              <img
+                src="./img/section01_img01_mobile.png"
+                class="only-mobile"
+                alt=""
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 02 -->
+      <section class="works-content section02">
+        <div class="section-inner">
+          <div class="section-header">
+            <p class="section-title">Visual Image</p>
+            <p class="section-description">
+              AI 오로라 컨셉에 맞게 미래지향적이고 고차원 세계적인 비주얼을
+              표현하였습니다.
+            </p>
+          </div>
+          <ul class="section-images">
+            <li>
+              <img src="./img/section02_img01.png" alt="" />
+              <span>Data Source</span>
+            </li>
+            <li>
+              <img src="./img/section02_img02.png" alt="" />
+              <span>Chunking</span>
+            </li>
+            <li>
+              <img src="./img/section02_img03.png" alt="" />
+              <span>Parsing</span>
+            </li>
+            <li>
+              <img src="./img/section02_img04.png" alt="" />
+              <span>Embedding</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Section 03 -->
+      <section class="works-content section03">
+        <div class="section-header">
+          <p class="section-title">Unified Design</p>
+          <p class="section-description">
+            하나의 디자인 시스템을 활용해 일관되고 통일된 Design을
+            진행하였습니다.
+          </p>
+        </div>
+
+        <ul class="section-images">
+          <li class="works-content-item">
+            <span>Text</span>
+            <img src="./img/section03_img01.png" alt="" />
+            <div>
+              <b>GenAI Text</b>
+              <p>
+                비즈니스에 특화된 언어 생성형 AI서비스와 초거대 언어모델(LLM)
+                구현
+              </p>
+            </div>
+          </li>
+          <li class="works-content-item">
+            <span>KL</span>
+            <img src="./img/section03_img02.png" alt="" />
+            <div>
+              <b>GenAI KL</b>
+              <p>사내 다양한 문서를 지식화하며 필요한 지식을 찾고 활용</p>
+            </div>
+          </li>
+          <li class="works-content-item">
+            <span>Image</span>
+            <img src="./img/section03_img03.png" alt="" />
+            <div>
+              <b>GenAI Image</b>
+              <p>
+                정교한 이미지를 생성하고 맞춤형 초거대 비전모델(LVM)도 손쉽게
+                제작
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- [매우 중요] 스크롤 애니메이션 자바스크립트 -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Intersection Observer 생성
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("show");
+              }
+            });
+          },
+          {
+            threshold: 0.1, // 요소가 10% 화면에 나타났을 때 작동
+          },
+        );
+
+        // works-content 와 개별 아이템(.works-content-item) 모두 관찰 대상으로 등록
+        document
+          .querySelectorAll(".works-content, .works-content-item")
+          .forEach((section) => {
+            observer.observe(section);
+          });
+      });
+    </script>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+  </body>
+</html>

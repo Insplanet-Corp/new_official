@@ -12,8 +12,9 @@ public/portfolio/
 │  ├─ project-detail.css    .pd-* 디자인 시스템
 │  └─ bridge.js             상세 ↔ 시트 다리
 ├─ heyyoung-1024/           프로젝트 하나 = 폴더 하나
-│  ├─ index.html
-│  └─ img/
+├─ onNuri/
+├─ shinhan/
+├─ dap/
 └─ <다음-프로젝트>/          폴더를 하나 더 만들면 끝
    ├─ index.html
    └─ img/
@@ -24,7 +25,12 @@ public/portfolio/
 1. **폴더를 만든다** — `public/portfolio/<슬러그>/` 에 `index.html` 과 `img/` 를
    통째로 넣습니다. 문서 안에서 자기 이미지는 `./img/…` 로 부르면 됩니다.
 
-2. **공용 CSS 를 연결한다** — `<head>` 에:
+2. **스타일을 붙인다** — 두 가지 중 하나입니다.
+
+   *(a) 문서가 스타일을 통째로 들고 있는 경우* (onNuri·shinhan·dap 처럼 `<style>` 안에
+   리셋부터 전부 있는 산출물) — **아무것도 연결하지 않습니다.** 그대로 두세요.
+
+   *(b) `.pd-*` 디자인 시스템을 쓰는 경우* (heyyoung-1024) — `<head>` 에:
    ```html
    <link rel="stylesheet" href="../_shared/fonts.css" />
    <link rel="stylesheet" href="../_shared/style.css" />
@@ -50,5 +56,24 @@ public/portfolio/
 - **`height:100vh` · `position:fixed` 를 마음껏 써도 됩니다** — iframe 이 화면 전체
   크기로 고정돼 있어서 상세 문서가 곧 뷰포트입니다. (내용 높이에 맞춰 늘리는 방식은
   `100vh` 가 자기 높이로 풀리면서 끝없이 자라기 때문에 쓰지 않습니다.)
-- **닫기 버튼은 `.pd-close`** — `href` 는 `/projects` 로 두세요. 시트 안에서는
-  다리가 가로채고, 단독으로 열었을 때는 그 링크가 그대로 동작합니다.
+- **닫기 버튼은 선택입니다.** 문서에 `.pd-close` 가 있으면 다리가 그것을 부모에게
+  알려서 시트의 기본 X 를 숨깁니다(닫기가 두 개로 보이지 않게). `href` 는 `/projects`
+  로 두세요 — 시트 안에서는 다리가 가로채고, 단독으로 열면 그 링크가 동작합니다.
+  닫기가 없는 문서(onNuri·shinhan·dap)는 시트의 X 가 그대로 보입니다.
+
+## 옮겨 온 산출물에서 자주 나오는 것
+
+퍼블리셔 파일만 떼어 오면 **원래 얹혀 있던 스타일시트가 같이 오지 않습니다.**
+실제로 겪은 것들:
+
+- **이미지가 원본 크기로 펼쳐진다** — `img { max-width: 100% }` 가 빠진 경우입니다.
+  문서 안에 `max-width: unset` 이 보이면 그 규칙을 전제하고 있다는 뜻입니다.
+- **옆으로 스크롤된다** — 스크롤 인 연출이 요소를 오른쪽에 대기시켜 둡니다.
+  `html { overflow-x: clip }` 로 막습니다. `body` 에 `overflow-x: hidden` 만으로는
+  안 막힙니다(실제로 dap 이 120px 밀렸습니다).
+- **이미지 파일명이 안 맞는다** — `cover_pc.png` 를 부르는데 폴더에는 `cover.jpg`
+  같은 경우. 브라우저 콘솔이 아니라 네트워크 탭에만 404 로 남아 놓치기 쉽습니다.
+- **웹폰트가 외부 CDN** — 지금 세 문서가 `cdn.jsdelivr.net` 에서 MICEGothic 을
+  받습니다. 사이트의 나머지는 전부 자체 호스팅(`/assets/fonts/`)이라, CDN 이
+  막히거나 느리면 이 문서들만 폰트가 바뀌며 레이아웃이 흔들립니다. 자체 호스팅으로
+  옮길지는 아직 결정하지 않았습니다.
