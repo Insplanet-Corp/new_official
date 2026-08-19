@@ -25,13 +25,17 @@
     <main class="pd">
       <!-- ===== HERO (Main Container 2560×1440) ===== -->
       <section class="pd-hero">
-        <img
-          class="pd-hero-bg"
-          src="./img/hero-bg.jpg"
-          alt=""
-          loading="eager"
-          decoding="async"
-        />
+        <!-- hero bg: PC 4096×2286 landscape / mobile (≤1023) 720×1600 portrait — the browser fetches ONLY the matching source -->
+        <picture>
+          <source media="(max-width:1023px)" srcset="img/m-hero-bg.jpg" />
+          <img
+            class="pd-hero-bg"
+            src="img/hero-bg.jpg"
+            alt=""
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
         <div class="pd-hero-ci" aria-hidden="true">
           <img src="/assets/ci_logo_white.svg" alt="" />
         </div>
@@ -49,7 +53,9 @@
         </a>
         <h1 class="pd-hero-title">
           <span class="ko">헤이영 캠퍼스 고도화</span>
-          <span class="en pd-title-en">HeyYoung Campus</span>
+          <span class="en pd-title-en"
+            >HeyYoung <br class="pd-m-only" />Campus</span
+          >
         </h1>
         <dl class="pd-hero-info">
           <div>
@@ -74,14 +80,16 @@
         <section class="pd-summary">
           <h2 class="pd-summary-head">Overview</h2>
           <div class="pd-summary-body">
-            <h3 class="pd-summary-title">스마트한 대학생활 필수 통합앱</h3>
+            <h3 class="pd-summary-title">
+              스마트한 <br class="pd-m-only" />대학생활 필수 통합앱
+            </h3>
             <p class="pd-summary-text">
               학생증부터 학사 일정관리 등을 하나의 앱에서 모두 할 수 있는 헤이영
-              캠퍼스는<br />신한은행이 금융권 최초로 추진한 대학생 전용 모바일
-              서비스입니다. 인스플래닛은 2차 고도화 사업에 참여하여,<br />다크테마를
-              포함한 컬러 테마와 모바일 학생증 커스텀 기능 등 디자인 구성요소의
-              고도화 및 차별화를 구현하고<br />게시판, 소모임 등의 프로세스 개선
-              등 서비스를 업그레이드 하였습니다.
+              캠퍼스는 <br />신한은행이 금융권 최초로 추진한 대학생 전용 모바일
+              서비스입니다. 인스플래닛은 2차 고도화 사업에 참여하여,
+              <br />다크테마를 포함한 컬러 테마와 모바일 학생증 커스텀 기능 등
+              디자인 구성요소의 고도화 및 차별화를 구현하고 <br />게시판, 소모임
+              등의 프로세스 개선 등 서비스를 업그레이드 하였습니다.
             </p>
             <div class="pd-summary-actions">
               <a
@@ -120,23 +128,45 @@
             </div>
           </div>
         </section>
-        <figure class="pd-sec">
-          <img src="./img/sec-02.png" alt="" loading="eager" decoding="async" />
+        <!-- PC set (≥1024): the 1920 exports. Mobile set (≤1023): exported from the 360 frame (2456:39735 Contents, 328 wide @2×).
+         Only the active set is display'd (css). Both sets are loading="lazy": a lazy image inside a display:none figure is never
+         fetched, and js/project-sheet.js only force-eagers / counts images whose figure is actually displayed, so the inactive
+         set neither downloads nor gates the loading bar. -->
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-02.png" alt="" decoding="async" />
         </figure>
-        <figure class="pd-sec">
-          <img src="./img/sec-03.png" alt="" loading="eager" decoding="async" />
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-03.png" alt="" decoding="async" />
         </figure>
-        <figure class="pd-sec">
-          <img src="./img/sec-04.png" alt="" loading="eager" decoding="async" />
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-04.png" alt="" decoding="async" />
         </figure>
-        <figure class="pd-sec">
-          <img src="./img/sec-05.png" alt="" loading="eager" decoding="async" />
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-05.png" alt="" decoding="async" />
         </figure>
-        <figure class="pd-sec">
-          <img src="./img/sec-06.jpg" alt="" loading="eager" decoding="async" />
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-06.jpg" alt="" decoding="async" />
         </figure>
-        <figure class="pd-sec">
-          <img src="./img/sec-07.png" alt="" loading="eager" decoding="async" />
+        <figure class="pd-sec pd-sec--pc">
+          <img loading="lazy" src="img/sec-07.png" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-01.png" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-02.png" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-03.png" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-04.png" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-05.jpg" alt="" decoding="async" />
+        </figure>
+        <figure class="pd-sec pd-sec--m">
+          <img loading="lazy" src="img/m-sec-06.png" alt="" decoding="async" />
         </figure>
       </div>
     </main>
@@ -217,8 +247,7 @@
         });
       })();
     </script>
-    <!-- 시트와의 다리: 닫기 전달 · 커서 좌표 · 자체 닫기 보유 알림.
-         단독으로 열면 아무 일도 하지 않는다. -->
+
     <script src="/portfolio/_shared/bridge.js"></script>
   </body>
 </html>

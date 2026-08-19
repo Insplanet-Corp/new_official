@@ -550,6 +550,66 @@ X 가 그대로 보인다 — 의도한 대로다(18번).
 깨진 이미지 0 · onNuri 의 `max-width:unset` 자리(`.img-glass img` 1136px)가 그대로
 살아 있는 것 확인(디자인 보존) · dap 커버가 실제로 렌더되는 것 스크린샷 확인.
 
+### 21. kb-app 교체 — "완전 빨간색" 두 가지와 CSS 동기화
+
+사용자가 `heyyoung-1024` 를 `kb-app` 으로 갈아끼웠다. 정적 사이트의
+`projects/kb-app/` (폴더 방식으로 바뀌었다)를 가져온 것이다.
+
+**① 소스컨트롤이 온통 빨간 이유 — git 이 rename 을 못 봤다.**
+폴더를 에디터/파인더에서 바꾸면 git 은 "32개 삭제 + 폴더 하나 untracked" 로 본다
+(삭제 = 빨강). **`git add -A` 로 스테이징하면 git 이 내용 유사도로 rename(R) 을
+묶어 준다** — 실제로 index.html 포함 8건이 R 로 잡혔다. 코드 문제가 아니다.
+
+**② 화면이 깨진 이유 — `_shared/project-detail.css` 가 낡았다.**
+가져온 HTML 은 정적 사이트의 **최신** 마크업이라 `.pd-sec--pc` `.pd-sec--m`
+`.pd-m-only` 를 쓰는데, 우리 사본에는 그 규칙이 없었다. 결과:
+- `.pd-sec--pc` / `--m` 이 둘 다 보여 **섹션 이미지가 12장** 쌓였다 (PC 6 + 모바일 6)
+- `.pd-m-only` 의 `<br>` 이 PC 에서도 먹어 영문 제목이 2줄로 깨졌다
+
+→ `../insplanet/css/project-detail.css` 에서 동기화했다.
+**⚠️ 정적 사이트는 계속 움직인다.** 우리가 `f849839` 로 가져온 뒤에도
+`project-detail.css` 가 3번 더 바뀌었다(1024 앵커 · 모바일 상세 · 히어로 높이).
+**상세 마크업을 새로 가져올 때는 이 CSS 도 같이 동기화할 것.**
+
+최신본은 `.pd-hero{height:var(--ps-vh,100dvh)}` 를 쓴다. `--ps-vh` 는 정적 사이트의
+`project-sheet.js` 가 넣어 주는 값인데 **우리는 넣지 않는다 — iframe 자체가 뷰포트라
+`100dvh` 폴백이 곧 정답이다**(17번). 실측: PC 900 / 모바일 812 = 각 뷰포트 높이.
+
+**③ 링크 두 개**: `../../projects.html`(정적 사이트의 목록) → `/projects`,
+`../../assets/…` → `/assets/…`(절대경로가 폴더 깊이에 안 흔들린다).
+
+**⚠️ 아직 남은 것 — DB 가 옛 폴더를 가리킨다.** seq 16 의 `html_file` 이
+`/heyyoung-1024/index.html` 인데 폴더가 `kb-app` 으로 바뀌어 **404** 다.
+어드민에서 `kb-app/index.html` 로 고쳐야 카드에서 열린다. (anon 키로는 쓸 수 없어
+Claude 가 못 고친다 — 8번 RLS 참고.)
+
+**검증**: PC 1440 — 섹션 6장(모바일 0) · 제목 1줄 · 히어로 900 · 가로 스크롤 0.
+모바일 375 — 섹션 6장(PC 0) · 제목 2줄 · 히어로 812 · `<picture>` 가
+`m-hero-bg.jpg` 를 고름 · 깨진 이미지 0.
+
+### 22. 다른 상세를 kb-app 템플릿으로 바꿀 수 있나 (조사 결과)
+
+**`project-detail.css` 는 전부 `.pd*` 아래로 스코프돼 있다** (예외는 `.ps-sheet` 조합
+선택자 하나와 keyframe 퍼센트뿐). 따라서 onNuri·shinhan·dap 의 자체 스타일과
+**충돌 없이 같이 링크할 수 있다.** 히어로 이미지도 이미 세 폴더 다
+`cover.jpg`/`cover_m.jpg` 를 갖고 있다.
+
+두 가지 층위가 있고 비용이 전혀 다르다:
+
+- **(A) 껍데기만 통일** — `.pd-hero`(풀스크린 커버 + CI + 닫기 셰브론 + KO/EN 제목 +
+  Client/Launch + SCROLL) 와 `.pd-summary`(Overview 카드 + View Platform/Copy URL)를
+  각 문서 앞에 두르고 본문은 각자의 살아 있는 HTML 그대로. 잃는 것 없음.
+  덤으로 닫기 셰브론이 생겨 시트의 X 대신 쓰인다(18번).
+  **필요한 재료**: 프로젝트별 EN 제목 · Client · Launch · Overview 문구 · 플랫폼 URL.
+  **dap 은 이미 문서 안에 다 있다**(제목·Overview·Launch·Client·Device).
+  onNuri·shinhan 은 받아야 한다.
+- **(B) 본문까지 동일** — kb-app 처럼 섹션당 Figma export 이미지 한 장으로 교체.
+  **권하지 않는다** — 선택 가능한 텍스트·반응형 리플로우·스크롤 애니메이션을 전부
+  그림으로 바꾸는 일이고, 디자이너가 섹션마다 PC/모바일 2세트를 다시 뽑아야 한다.
+  사실상 세 문서를 다시 만드는 작업이다.
+
+사용자 결정 대기.
+
 ---
 
 ## 현재 상태
