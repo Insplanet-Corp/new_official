@@ -8,19 +8,51 @@
    un-interpolatable difference is the Experience capabilities grid, which flips from 2x2 to 4x1 at
    2240px, and the AX copy's line breaks (.br-1024 / .br-desk), which swap at 1472px. */
 
-.about-page{background:#fff}
-.about{
-  --v:clamp(0px, calc((100vw - 1024px) / 896), 1px);
-  --g:clamp(0px, calc((100vw - 1920px) / 640), 1px);
-  position:relative;z-index:1;overflow:clip}
+.about-page {
+  background: #fff;
+}
+.about {
+  --v: clamp(0px, calc((100vw - 1024px) / 896), 1px);
+  --g: clamp(0px, calc((100vw - 1920px) / 640), 1px);
+  position: relative;
+  z-index: 1;
+  overflow: clip;
+}
 
 /* shared content column — gutters 48 -> 216 / 216 -> 218 (928 / 1488 / 2126 wide) */
-.about-inner{width:auto;margin:0 max(calc(48px + 168 * var(--v) + 2 * var(--g)), calc((100vw - 2124px) / 2));position:relative}   /* gutter 48->216->218; above 2560 caps content at the 2560 width (2124), centred (header/footer + the full-bleed black-hole banner keep spreading) */
+.about-inner {
+  width: auto;
+  margin: 0
+    max(calc(48px + 168 * var(--v) + 2 * var(--g)), calc((100vw - 2124px) / 2));
+  position: relative;
+} /* gutter 48->216->218; above 2560 caps content at the 2560 width (2124), centred (header/footer + the full-bleed black-hole banner keep spreading) */
 
 /* type roles reused across sections (32->56, 18->24, 14->20; lh 150%) */
-.about-headline{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:700;font-size:calc(32px + 24 * var(--v));line-height:1.5;letter-spacing:-0.01em}
-.about-lead{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:600;font-size:calc(18px + 6 * var(--v));line-height:1.5}
-.about-paragraph{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:400;font-size:calc(14px + 6 * var(--v));line-height:1.5}
+.about-headline {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: calc(32px + 24 * var(--v));
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.about-lead {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: calc(18px + 6 * var(--v));
+  line-height: 1.5;
+}
+.about-paragraph {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: calc(14px + 6 * var(--v));
+  line-height: 1.5;
+}
 
 /* ---------- 01 hero — PINNED EXPANSION. Text column @48/325 -> 216/320 -> 216/400; the black-hole
    card rests as a wide bottom strip (top 744 -> 933 -> 1170) and scrolling scrubs it up/out to cover
@@ -28,69 +60,258 @@
    Title 120 -> 172 -> 200px; Figma line gap -64 / -92 / -102 -> line tops (auto-box + gap) apart =
    line-height 81 -> 116 -> 140px; glyph spill (-gap/2) = 32 -> 46 -> 51 above/below our boxes — hence
    52 -> 66 -> 71 (20+spill) below the symbol and 32 -> 46 -> 51 above the intro. ---------- */
-.about-hero{position:relative;height:200vh}                          /* 100vh stage + 100vh scrub */
-.about-hero-pin{position:sticky;top:0;height:100vh;overflow:hidden}
-.about-hero-inner{position:relative;z-index:2;height:100%;padding-top:calc(280px + 40 * var(--v) + 80 * var(--g))}   /* 280@1024 (was 325) -> 320@1920 -> 400@2560 */
-.about-hero-symbol{display:block;width:156px;height:8px;margin:0 0 calc(52px + 14 * var(--v) + 5 * var(--g));
-  transition:filter .35s ease}
-.about-hero-title{margin:0;color:#3E3F44;font-family:'Cormorant Garamond',serif;font-weight:600;
-  font-size:calc(120px + 52 * var(--v) + 28 * var(--g));line-height:calc(81px + 35 * var(--v) + 24 * var(--g));
-  letter-spacing:-0.01em;display:flex;flex-direction:column;transition:color .35s ease}
-.about-hero-intro{width:596px;margin-top:calc(32px + 14 * var(--v) + 5 * var(--g))}
-.about-hero-lead{margin:0 0 calc(16px + 8 * var(--v));color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:600;
-  font-size:calc(18px + 4 * var(--v) + 2 * var(--g));line-height:1.5;transition:color .35s ease}
-.about-hero-body{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:400;
-  font-size:calc(14px + 4 * var(--v) + 2 * var(--g));line-height:1.5;transition:color .35s ease}
+.about-hero {
+  position: relative;
+  height: 200vh;
+} /* 100vh stage + 100vh scrub */
+.about-hero-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.about-hero-inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding-top: calc(280px + 40 * var(--v) + 80 * var(--g));
+} /* 280@1024 (was 325) -> 320@1920 -> 400@2560 */
+.about-hero-symbol {
+  display: block;
+  width: 156px;
+  height: 8px;
+  margin: 0 0 calc(52px + 14 * var(--v) + 5 * var(--g));
+  transition: filter 0.35s ease;
+}
+.about-hero-title {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: calc(120px + 52 * var(--v) + 28 * var(--g));
+  line-height: calc(81px + 35 * var(--v) + 24 * var(--g));
+  letter-spacing: -0.01em;
+  display: flex;
+  flex-direction: column;
+  transition: color 0.35s ease;
+}
+.about-hero-intro {
+  width: 596px;
+  margin-top: calc(32px + 14 * var(--v) + 5 * var(--g));
+}
+.about-hero-lead {
+  margin: 0 0 calc(16px + 8 * var(--v));
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: calc(18px + 4 * var(--v) + 2 * var(--g));
+  line-height: 1.5;
+  transition: color 0.35s ease;
+}
+.about-hero-body {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: calc(14px + 4 * var(--v) + 2 * var(--g));
+  line-height: 1.5;
+  transition: color 0.35s ease;
+}
 /* covered state: the card is behind the text -> text goes light, symbol inverts (header flips via .on-dark) */
 .about-hero.is-covered .about-hero-title,
 .about-hero.is-covered .about-hero-lead,
-.about-hero.is-covered .about-hero-body{color:#fff}
-.about-hero.is-covered .about-hero-symbol{filter:brightness(0) invert(1)}
+.about-hero.is-covered .about-hero-body {
+  color: #fff;
+}
+.about-hero.is-covered .about-hero-symbol {
+  filter: brightness(0) invert(1);
+}
 
 /* load reveal — same feel as the home hero: title lines settle in from a soft blur (.in added by
    js/about-hero.js once the serif webfont is ready), the intro follows with a lighter blur. */
-.about-hero-title .line-1,.about-hero-title .line-2{
-  opacity:0;filter:blur(18px);transform:translateY(.05em) scale(1.04);transform-origin:left center;
-  transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
-.about-hero-title .line-2{transition-delay:.14s}
-.about-hero-lead,.about-hero-body{opacity:0;filter:blur(8px);transform:translateY(10px)}
-.about-hero-lead{transition:opacity .9s ease .5s,filter .9s ease .5s,transform .9s cubic-bezier(.22,1,.36,1) .5s,color .35s ease}
-.about-hero-body{transition:opacity .9s ease .62s,filter .9s ease .62s,transform .9s cubic-bezier(.22,1,.36,1) .62s,color .35s ease}
-.about-hero.in .about-hero-title .line-1,.about-hero.in .about-hero-title .line-2{opacity:1;filter:blur(0);transform:none}
-.about-hero.in .about-hero-lead,.about-hero.in .about-hero-body{opacity:1;filter:blur(0);transform:none}
+.about-hero-title .line-1,
+.about-hero-title .line-2 {
+  opacity: 0;
+  filter: blur(18px);
+  transform: translateY(0.05em) scale(1.04);
+  transform-origin: left center;
+  transition:
+    opacity 1.1s ease,
+    filter 1.1s ease,
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.about-hero-title .line-2 {
+  transition-delay: 0.14s;
+}
+.about-hero-lead,
+.about-hero-body {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(10px);
+}
+.about-hero-lead {
+  transition:
+    opacity 0.9s ease 0.5s,
+    filter 0.9s ease 0.5s,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s,
+    color 0.35s ease;
+}
+.about-hero-body {
+  transition:
+    opacity 0.9s ease 0.62s,
+    filter 0.9s ease 0.62s,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.62s,
+    color 0.35s ease;
+}
+.about-hero.in .about-hero-title .line-1,
+.about-hero.in .about-hero-title .line-2 {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+.about-hero.in .about-hero-lead,
+.about-hero.in .about-hero-body {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
 /* red planet-dot after "We Are" (Figma official_03_about_2560: Ellipse 1258, 32px #F03A3A = .16em,
    gap 24px = .12em; vertical nudged to -.025em so it sits just below the baseline in-browser — Figma's
    box-metric offset reads too low here). STAMPS in once the title has settled (~1.2s) with a back-ease
    scale overshoot. Uses background (not color) so it stays red when the cover flips the text white. */
-.about-hero-dot{display:inline-block;width:.16em;height:.16em;margin-left:.12em;vertical-align:-.025em;
-  border-radius:50%;background:#F03A3A;opacity:0;transform:scale(0);transform-origin:center center}
-.about-hero.in .about-hero-dot{opacity:1;transform:scale(1);
-  transition:transform .42s cubic-bezier(.34,1.56,.64,1) 1.2s, opacity .18s ease 1.18s}
-@media (prefers-reduced-motion:reduce){
-  .about-hero-title .line-1,.about-hero-title .line-2,.about-hero-lead,.about-hero-body{opacity:1;filter:none;transform:none;transition:none}
-  .about-hero-dot{opacity:1;transform:none;transition:none}}
+.about-hero-dot {
+  display: inline-block;
+  width: 0.16em;
+  height: 0.16em;
+  margin-left: 0.12em;
+  vertical-align: -0.025em;
+  border-radius: 50%;
+  background: #f03a3a;
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: center center;
+}
+.about-hero.in .about-hero-dot {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s,
+    opacity 0.18s ease 1.18s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-hero-title .line-1,
+  .about-hero-title .line-2,
+  .about-hero-lead,
+  .about-hero-body {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+  .about-hero-dot {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 /* the black-hole card — state-A geometry in CSS (matches the JS at scrub 0, so no jump on load):
    wide strip 926x480 R32 @1024 -> 1488x640 R64 @1920 -> 2129x900 R64 @2560. JS overrides inline. */
-.about-banner{position:absolute;z-index:1;top:calc(699px + 234 * var(--v) + 237 * var(--g));
-  left:calc(48px + 168 * var(--v) + 2 * var(--g));right:calc(50px + 166 * var(--v) - 3 * var(--g));
-  height:calc(480px + 160 * var(--v) + 260 * var(--g));border-radius:calc(32px + 32 * var(--v));overflow:hidden;background:#000}
-.about-banner #about-blackhole{position:absolute;inset:0;width:100%;height:100%;display:block}
+.about-banner {
+  position: absolute;
+  z-index: 1;
+  top: calc(699px + 234 * var(--v) + 237 * var(--g));
+  left: calc(48px + 168 * var(--v) + 2 * var(--g));
+  right: calc(50px + 166 * var(--v) - 3 * var(--g));
+  height: calc(480px + 160 * var(--v) + 260 * var(--g));
+  border-radius: calc(32px + 32 * var(--v));
+  overflow: hidden;
+  background: #000;
+}
+.about-banner #about-blackhole {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 /* ---------- 03 mission & vision + the three I's (gap to banner 160 -> 240) ---------- */
-.about-mission{padding-top:calc(160px + 80 * var(--v))}
-.about-eyebrow-serif{margin:0 0 calc(48px + 32 * var(--v));color:#3E3F44;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:calc(32px + 16 * var(--v));line-height:1.2}
-.about-mission-head .about-headline{margin-bottom:calc(32px + 16 * var(--v))}
+.about-mission {
+  padding-top: calc(160px + 80 * var(--v));
+}
+.about-eyebrow-serif {
+  margin: 0 0 calc(48px + 32 * var(--v));
+  color: #3e3f44;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 700;
+  font-size: calc(32px + 16 * var(--v));
+  line-height: 1.2;
+}
+.about-mission-head .about-headline {
+  margin-bottom: calc(32px + 16 * var(--v));
+}
 
-.value-cards{list-style:none;margin:calc(120px + 40 * var(--v)) 0 0;padding:0;display:flex;justify-content:space-between}
-.value-card{display:flex;flex-direction:column;align-items:center;text-align:center;flex:1 1 0}   /* three equal columns — li order: card, arrow, card, arrow, card */
-.value-pill{display:flex;align-items:center;justify-content:center;width:calc(240px + 80 * var(--v) + 80 * var(--g));height:calc(240px + 80 * var(--v) + 80 * var(--g));
-  border-radius:999px;background:#fff;border:1px solid #3E3F44;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:700;font-size:calc(20px + 4 * var(--v));letter-spacing:0.01em}   /* pill 240 -> 320 -> 400 */
-.value-card-title{margin:calc(48px + 32 * var(--v)) 0 calc(24px + 8 * var(--v));color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:700;font-size:calc(18px + 6 * var(--v));line-height:1.4}
-.value-card-body{margin:0;width:max-content;max-width:96vw;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:400;font-size:calc(14px + 4 * var(--v) + 2 * var(--g));line-height:1.5}   /* hug the <br> lines (don't wrap to the narrow card) — Figma lets the body overflow the pill column, centred */
+.value-cards {
+  list-style: none;
+  margin: calc(120px + 40 * var(--v)) 0 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.value-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1 1 0;
+} /* three equal columns — li order: card, arrow, card, arrow, card */
+.value-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(240px + 80 * var(--v) + 80 * var(--g));
+  height: calc(240px + 80 * var(--v) + 80 * var(--g));
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #3e3f44;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: calc(20px + 4 * var(--v));
+  letter-spacing: 0.01em;
+} /* pill 240 -> 320 -> 400 */
+.value-card-title {
+  margin: calc(48px + 32 * var(--v)) 0 calc(24px + 8 * var(--v));
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: calc(18px + 6 * var(--v));
+  line-height: 1.4;
+}
+.value-card-body {
+  margin: 0;
+  width: max-content;
+  max-width: 96vw;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: calc(14px + 4 * var(--v) + 2 * var(--g));
+  line-height: 1.5;
+} /* hug the <br> lines (don't wrap to the narrow card) — Figma lets the body overflow the pill column, centred */
 /* plus-arrows between the pills, centred at pill height; arrow 48 -> 64 -> 80 */
-.value-arrow{display:flex;align-self:flex-start;height:calc(240px + 80 * var(--v) + 80 * var(--g));align-items:center;flex:none}
-.value-arrow img{width:calc(48px + 16 * var(--v) + 16 * var(--g));height:calc(48px + 16 * var(--v) + 16 * var(--g));display:block}
+.value-arrow {
+  display: flex;
+  align-self: flex-start;
+  height: calc(240px + 80 * var(--v) + 80 * var(--g));
+  align-items: center;
+  flex: none;
+}
+.value-arrow img {
+  width: calc(48px + 16 * var(--v) + 16 * var(--g));
+  height: calc(48px + 16 * var(--v) + 16 * var(--g));
+  display: block;
+}
 
 /* scroll reveal — eyebrow/headline/paragraph stagger 0/.08/.16s, then the 3 value cards rise+fade
    staggered .1/.2/.3s, then the "+" separators fade in last (~.35s); TWO IOs (js inline in about.html):
@@ -98,97 +319,349 @@
    IT crosses the reveal gate, instead of the row finishing off-screen before the section's top edge
    even reaches it. Same elastic rise family as the Projects grid / Our Services cards, bigger travel
    (72px) so the rise reads as scroll-driven. */
-.about-mission-head > *{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
-.about-mission-head > *:nth-child(2){transition-delay:.08s}
-.about-mission-head > *:nth-child(3){transition-delay:.16s}
-.value-card{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
-.value-arrow{opacity:0;transition:opacity .5s ease}
-.value-cards li:nth-child(1){transition-delay:.1s}
-.value-cards li:nth-child(3){transition-delay:.2s}
-.value-cards li:nth-child(5){transition-delay:.3s}
-.value-cards li:nth-child(2),.value-cards li:nth-child(4){transition-delay:.35s}
+.about-mission-head > * {
+  opacity: 0;
+  transform: translateY(72px);
+  transition:
+    opacity 0.8s ease,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.about-mission-head > *:nth-child(2) {
+  transition-delay: 0.08s;
+}
+.about-mission-head > *:nth-child(3) {
+  transition-delay: 0.16s;
+}
+.value-card {
+  opacity: 0;
+  transform: translateY(72px);
+  transition:
+    opacity 0.8s ease,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.value-arrow {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.value-cards li:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.value-cards li:nth-child(3) {
+  transition-delay: 0.2s;
+}
+.value-cards li:nth-child(5) {
+  transition-delay: 0.3s;
+}
+.value-cards li:nth-child(2),
+.value-cards li:nth-child(4) {
+  transition-delay: 0.35s;
+}
 .about-mission-head.in > *,
-.value-cards.in .value-card{opacity:1;transform:none}
-.value-cards.in .value-arrow{opacity:1}
-@media (prefers-reduced-motion:reduce){
-  .about-mission-head > *,.value-card,.value-arrow{opacity:1;transform:none;transition:none}}
+.value-cards.in .value-card {
+  opacity: 1;
+  transform: none;
+}
+.value-cards.in .value-arrow {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-mission-head > *,
+  .value-card,
+  .value-arrow {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 /* ---------- 04 Experience — big serif headline, bold 3-line statement, 4 capability cards (2x2 ->
    4x1 @2240), then an auto-marquee photo band as the section's last child (no separate padded
    section). Vertical stack gap between title/copy/capabilities/band = 96 -> 160 (flat above 1920).
    Gap to mission 200 -> 320 -> 400. ---------- */
-.about-fusion{padding-top:calc(200px + 120 * var(--v) + 80 * var(--g))}
-.about-fusion-title{margin:0;color:#3E3F44;font-family:'Cormorant Garamond',serif;font-weight:700;
-  font-size:calc(160px + 160 * var(--v) + 80 * var(--g));line-height:1;letter-spacing:0;text-align:left;
-  opacity:0;filter:blur(18px);transform:translateY(24px);
-  transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
-.about-fusion-title.in{opacity:1;filter:blur(0);transform:none}
-.about-exp-copy{margin:calc(96px + 64 * var(--v)) 0 0}   /* reuses .about-headline's type (32/56/56, Pretendard 700, lh 1.5) */
+.about-fusion {
+  padding-top: calc(200px + 120 * var(--v) + 80 * var(--g));
+}
+.about-fusion-title {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 700;
+  font-size: calc(160px + 160 * var(--v) + 80 * var(--g));
+  line-height: 1;
+  letter-spacing: 0;
+  text-align: left;
+  opacity: 0;
+  filter: blur(18px);
+  transform: translateY(24px);
+  transition:
+    opacity 1.1s ease,
+    filter 1.1s ease,
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.about-fusion-title.in {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+.about-exp-copy {
+  margin: calc(96px + 64 * var(--v)) 0 0;
+} /* reuses .about-headline's type (32/56/56, Pretendard 700, lh 1.5) */
 /* rise+fade after the title — same IO trigger as .about-fusion-title (js below), baked-in .15s delay */
-.about-exp-copy{opacity:0;transform:translateY(72px);transition:opacity .8s ease .15s,transform 1.1s cubic-bezier(.34,1.45,.5,1) .15s}
-.about-exp-copy.in{opacity:1;transform:none}
+.about-exp-copy {
+  opacity: 0;
+  transform: translateY(72px);
+  transition:
+    opacity 0.8s ease 0.15s,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1) 0.15s;
+}
+.about-exp-copy.in {
+  opacity: 1;
+  transform: none;
+}
 
-.core-values{list-style:none;margin:calc(96px + 64 * var(--v)) 0 0;padding:0;display:grid;grid-template-columns:repeat(2, 1fr);gap:64px 32px}
-@media (min-width:2540px){ .core-values{grid-template-columns:repeat(4, 1fr);column-gap:120px} }
-.core-value{display:flex;flex-direction:column;align-items:flex-start;text-align:left;
-  opacity:0;transform:translateY(60px);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.45,.5,1)}
-.core-value.in{opacity:1;transform:none}   /* per-item scroll-reveal stagger, same easing as the Projects grid */
-.core-values li:nth-child(2){transition-delay:.07s}
-.core-values li:nth-child(3){transition-delay:.14s}
-.core-values li:nth-child(4){transition-delay:.21s}
-.core-value-icon{display:block;width:calc(64px + 16 * var(--v) + 16 * var(--g));height:calc(64px + 16 * var(--v) + 16 * var(--g));margin:0 0 calc(40px + 8 * var(--v) + 16 * var(--g))}
-.core-value-icon img{width:100%;height:100%;object-fit:contain;display:block}
-.core-value-title{margin:0 0 32px;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:700;font-size:calc(20px + 4 * var(--v));line-height:normal}
-.core-value-desc{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:400;font-size:calc(14px + 4 * var(--v));line-height:1.5}
+.core-values {
+  list-style: none;
+  margin: calc(96px + 64 * var(--v)) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 64px 32px;
+}
+@media (min-width: 2540px) {
+  .core-values {
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 120px;
+  }
+}
+.core-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(60px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.9s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.core-value.in {
+  opacity: 1;
+  transform: none;
+} /* per-item scroll-reveal stagger, same easing as the Projects grid */
+.core-values li:nth-child(2) {
+  transition-delay: 0.07s;
+}
+.core-values li:nth-child(3) {
+  transition-delay: 0.14s;
+}
+.core-values li:nth-child(4) {
+  transition-delay: 0.21s;
+}
+.core-value-icon {
+  display: block;
+  width: calc(64px + 16 * var(--v) + 16 * var(--g));
+  height: calc(64px + 16 * var(--v) + 16 * var(--g));
+  margin: 0 0 calc(40px + 8 * var(--v) + 16 * var(--g));
+}
+.core-value-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.core-value-title {
+  margin: 0 0 32px;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: calc(20px + 4 * var(--v));
+  line-height: normal;
+}
+.core-value-desc {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: calc(14px + 4 * var(--v));
+  line-height: 1.5;
+}
 
 /* the AX copy breaks differently in the 1024 frame — swap the break set at 1472 */
-.br-1024{display:none}
-@media (max-width:1471px){ .br-1024{display:inline} .br-desk{display:none} }
+.br-1024 {
+  display: none;
+}
+@media (max-width: 1471px) {
+  .br-1024 {
+    display: inline;
+  }
+  .br-desk {
+    display: none;
+  }
+}
 
-@media (prefers-reduced-motion:reduce){
-  .about-fusion-title{opacity:1;filter:none;transform:none;transition:none}
-  .about-exp-copy,.about-gallery{opacity:1;transform:none;transition:none}
-  .core-value{opacity:1;transform:none;transition:none}}
+@media (prefers-reduced-motion: reduce) {
+  .about-fusion-title {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
+  .about-exp-copy,
+  .about-gallery {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .core-value {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 /* photo band — auto-marquee, LAST child of the Experience section (stack gap, no extra top padding).
    Track starts at the content-left gutter and bleeds right; the section self-clips the bleed (hidden;clip
    = progressive fallback, see .about's overflow:clip note). 4 cards duplicated once (8 in the track,
    clones aria-hidden) slide right->left, looping seamlessly at -50% of the track's own width. */
-.about-gallery{margin-top:calc(96px + 64 * var(--v));overflow:hidden;overflow:clip;
-  margin-left:max(calc(48px + 168 * var(--v) + 2 * var(--g)), calc((100vw - 2124px) / 2))}
+.about-gallery {
+  margin-top: calc(96px + 64 * var(--v));
+  overflow: hidden;
+  overflow: clip;
+  margin-left: max(
+    calc(48px + 168 * var(--v) + 2 * var(--g)),
+    calc((100vw - 2124px) / 2)
+  );
+}
 /* the whole band rises+fades as one unit; transform lives on THIS wrapper only — the marquee's own
    continuous transform (translateX loop) stays on .about-gallery-track, unaffected. */
-.about-gallery{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
-.about-gallery.in{opacity:1;transform:none}
-.about-gallery-track{display:flex;gap:0;width:max-content;margin-left:0;
-  animation:about-marquee 40s linear infinite;animation-play-state:paused}   /* parked at frame 0 until the band reveals */
-.about-gallery.in .about-gallery-track{animation-play-state:running}         /* starts flowing only once it's in view */
-.about-gallery-item{margin:0 32px 0 0;flex:none;width:calc(448px + 278 * var(--v) + 320 * var(--g));height:calc(360px + 200 * var(--v) + 160 * var(--g));border-radius:32px;overflow:hidden}
-.about-gallery-item img{width:100%;height:100%;object-fit:cover;display:block}
-@keyframes about-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media (prefers-reduced-motion:reduce){ .about-gallery-track{animation:none} }
+.about-gallery {
+  opacity: 0;
+  transform: translateY(72px);
+  transition:
+    opacity 0.8s ease,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.about-gallery.in {
+  opacity: 1;
+  transform: none;
+}
+.about-gallery-track {
+  display: flex;
+  gap: 0;
+  width: max-content;
+  margin-left: 0;
+  animation: about-marquee 40s linear infinite;
+  animation-play-state: paused;
+} /* parked at frame 0 until the band reveals */
+.about-gallery.in .about-gallery-track {
+  animation-play-state: running;
+} /* starts flowing only once it's in view */
+.about-gallery-item {
+  margin: 0 32px 0 0;
+  flex: none;
+  width: calc(448px + 278 * var(--v) + 320 * var(--g));
+  height: calc(360px + 200 * var(--v) + 160 * var(--g));
+  border-radius: 32px;
+  overflow: hidden;
+}
+.about-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@keyframes about-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-gallery-track {
+    animation: none;
+  }
+}
 
 /* ---------- 06 Beyond UX / The AX Creator + stats — title left, fixed-width so the right column
    starts at exactly 480 -> 790 -> 1078 from the gutter: copy -> stats blocks 96 -> 160 apart;
    Years/Team spread across the column. Gap to gallery 200 -> 320 -> 400. Title line boxes 42 -> 64px
    vs Figma auto-boxes -> glyphs sit 8 -> 16px high; padding compensates. ---------- */
-.about-axcreator{padding-top:calc(200px + 120 * var(--v) + 80 * var(--g))}
-.about-axcreator-grid{display:flex;justify-content:flex-start;align-items:flex-start}
-.about-display{margin:0;padding-top:calc(8px + 8 * var(--v));color:#3E3F44;font-family:'Cormorant Garamond',serif;font-weight:700;
-  font-size:calc(48px + 32 * var(--v));line-height:calc(42px + 22 * var(--v));display:flex;flex-direction:column;
-  flex:0 1 calc(480px + 310 * var(--v) + 288 * var(--g))}   /* right col left edge = gutter + 480/790/1078 */
-.about-axcreator-right{flex:none;width:calc(448px + 250 * var(--v));display:flex;flex-direction:column;gap:calc(96px + 64 * var(--v))}
-.about-axcreator-copy{display:flex;flex-direction:column;gap:32px}
-.about-stats{margin:0;display:flex;flex-direction:column;gap:calc(96px + 64 * var(--v))}
-.about-stats-row{display:flex}
-.about-stats-row .about-stat{flex:1 1 0}   /* years / team split the row into equal halves (Figma: both fill) — team starts at 50%, NOT pushed to the right edge by space-between */
-.about-stat{display:flex;flex-direction:column;gap:calc(48px + 32 * var(--v))}   /* label -> number: 48 @1024 -> 80 @1920+ */
-.about-stat-label{margin:0;color:#3E3F44;font-family:'Pretendard',sans-serif;font-weight:700;font-size:calc(13px + 3 * var(--v));line-height:1.2}
-.about-stat-num{margin:0;line-height:0}
-.about-stat-num img{display:block;width:auto}
-.about-stats > .about-stat .about-stat-num img{height:calc(98px + 68 * var(--v))}                 /* 100+ */
-.about-stats-row .about-stat:first-child .about-stat-num img{height:calc(71px + 47 * var(--v))}   /* 8+  */
-.about-stats-row .about-stat:last-child .about-stat-num img{height:calc(82px + 54 * var(--v))}    /* 30+ */
+.about-axcreator {
+  padding-top: calc(200px + 120 * var(--v) + 80 * var(--g));
+}
+.about-axcreator-grid {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.about-display {
+  margin: 0;
+  padding-top: calc(8px + 8 * var(--v));
+  color: #3e3f44;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 700;
+  font-size: calc(48px + 32 * var(--v));
+  line-height: calc(42px + 22 * var(--v));
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 calc(480px + 310 * var(--v) + 288 * var(--g));
+} /* right col left edge = gutter + 480/790/1078 */
+.about-axcreator-right {
+  flex: none;
+  width: calc(448px + 250 * var(--v));
+  display: flex;
+  flex-direction: column;
+  gap: calc(96px + 64 * var(--v));
+}
+.about-axcreator-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.about-stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(96px + 64 * var(--v));
+}
+.about-stats-row {
+  display: flex;
+}
+.about-stats-row .about-stat {
+  flex: 1 1 0;
+} /* years / team split the row into equal halves (Figma: both fill) — team starts at 50%, NOT pushed to the right edge by space-between */
+.about-stat {
+  display: flex;
+  flex-direction: column;
+  gap: calc(48px + 32 * var(--v));
+} /* label -> number: 48 @1024 -> 80 @1920+ */
+.about-stat-label {
+  margin: 0;
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: calc(13px + 3 * var(--v));
+  line-height: 1.2;
+}
+.about-stat-num {
+  margin: 0;
+  line-height: 0;
+}
+.about-stat-num img {
+  display: block;
+  width: auto;
+}
+.about-stats > .about-stat .about-stat-num img {
+  height: calc(98px + 68 * var(--v));
+} /* 100+ */
+.about-stats-row .about-stat:first-child .about-stat-num img {
+  height: calc(71px + 47 * var(--v));
+} /* 8+  */
+.about-stats-row .about-stat:last-child .about-stat-num img {
+  height: calc(82px + 54 * var(--v));
+} /* 30+ */
 
 /* scroll reveal — title rises+fades in, the right-column copy follows .1s behind, then the stat
    groups land with a bigger rise (96px) + the elastic ease (the 100+/8+/30+ figures are SVGs, so a
@@ -197,17 +670,51 @@
    below the fold, so it's observed at threshold 0) drives the title+copy; .about-stats is its own
    [data-rv] root so the stat row fires independently once IT crosses the gate, instead of finishing
    off-screen long before it's seen. */
-.about-display,.about-axcreator-copy{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
-.about-axcreator-copy{transition-delay:.1s}
-.about-stat{opacity:0;transform:translateY(96px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
-.about-stats > .about-stat{transition-delay:.1s}
-.about-stats-row .about-stat:first-child{transition-delay:.25s}
-.about-stats-row .about-stat:last-child{transition-delay:.35s}
+.about-display,
+.about-axcreator-copy {
+  opacity: 0;
+  transform: translateY(72px);
+  transition:
+    opacity 0.8s ease,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.about-axcreator-copy {
+  transition-delay: 0.1s;
+}
+.about-stat {
+  opacity: 0;
+  transform: translateY(96px);
+  transition:
+    opacity 0.8s ease,
+    transform 1.1s cubic-bezier(0.34, 1.45, 0.5, 1);
+}
+.about-stats > .about-stat {
+  transition-delay: 0.1s;
+}
+.about-stats-row .about-stat:first-child {
+  transition-delay: 0.25s;
+}
+.about-stats-row .about-stat:last-child {
+  transition-delay: 0.35s;
+}
 .about-axcreator.in .about-display,
-.about-axcreator.in .about-axcreator-copy{opacity:1;transform:none}
-.about-stats.in .about-stat{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){
-  .about-display,.about-axcreator-copy,.about-stat{opacity:1;transform:none;transition:none}}
+.about-axcreator.in .about-axcreator-copy {
+  opacity: 1;
+  transform: none;
+}
+.about-stats.in .about-stat {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-display,
+  .about-axcreator-copy,
+  .about-stat {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 /* ---------- 07 closing image — PINNED EXPANSION, same mechanism as the 01 hero above: a TINY
    rounded card (6.25vw wide, landscape 1:0.62) centered in a 100vh sticky stage grows (scrubbed by
@@ -221,15 +728,44 @@
    radius (min(32/64/64px, width*0.2)) so a 64-160px card never gets an oversized 32-64px radius.
    JS drives top/left/width/height/border-radius every frame; the CSS below only sets the matching
    state-A geometry so there's no jump before JS's first render(). ---------- */
-.about-fullbleed{position:relative;height:100vh;margin:calc(200px + 120 * var(--v) + 80 * var(--g)) 0 0}   /* stage only — no hold */
-.about-fullbleed-pin{position:sticky;top:0;height:100vh;overflow:hidden}
-.about-fullbleed-box{position:absolute;z-index:1;
-  top:calc((100vh - 3.875vw) / 2);   /* startH = 6.25vw * 0.62 = 3.875vw */
-  left:46.875vw;right:46.875vw;      /* (100vw - 6.25vw) / 2 */
-  height:3.875vw;
-  border-radius:min(calc(32px + 32 * var(--v)), 1.25vw);   /* 1.25vw = 6.25vw * 0.2 */
-  overflow:hidden;background:#3E3F44}
-.about-fullbleed-box img{width:100%;height:100%;object-fit:cover;display:block}
+.about-fullbleed {
+  position: relative;
+  height: 100vh;
+  margin: calc(200px + 120 * var(--v) + 80 * var(--g)) 0 0;
+} /* stage only — no hold */
+.about-fullbleed-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.about-fullbleed-box {
+  position: absolute;
+  z-index: 1;
+  top: calc((100vh - 3.875vw) / 2); /* startH = 6.25vw * 0.62 = 3.875vw */
+  left: 46.875vw;
+  right: 46.875vw; /* (100vw - 6.25vw) / 2 */
+  height: 3.875vw;
+  border-radius: min(
+    calc(32px + 32 * var(--v)),
+    1.25vw
+  ); /* 1.25vw = 6.25vw * 0.2 */
+  overflow: hidden;
+  background: #3e3f44;
+}
+.about-fullbleed-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 /* reduced-motion: static full-bleed end state, no scrub (js/about-hero.js also skips its listeners) */
-@media (prefers-reduced-motion:reduce){
-  .about-fullbleed-box{top:0;left:0;width:100%;height:100vh;border-radius:0}}
+@media (prefers-reduced-motion: reduce) {
+  .about-fullbleed-box {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+}

@@ -10,7 +10,8 @@ public/portfolio/
 │  ├─ fonts.css
 │  ├─ style.css
 │  ├─ project-detail.css    .pd-* 디자인 시스템 (kb-app 계열)
-│  ├─ works.css             공통 크롬: 닫기·버튼·좌우 거터 (works-* 계열)
+│  ├─ works.css             본문 좌우 거터 (문서별 한 줄씩)
+│  ├─ works.js              <project-hero> 컴포넌트 — 히어로 + Overview + 버튼
 │  └─ bridge.js             상세 ↔ 시트 다리
 ├─ kb-app/                  .pd-* 템플릿을 쓰는 문서 (자기 CSS 없음)
 │  ├─ index.html
@@ -26,47 +27,53 @@ public/portfolio/
 
 ## 새 프로젝트 추가하기
 
-1. **폴더를 만든다** — `public/portfolio/<슬러그>/` 에 `index.html` 과 `img/` 를
-   통째로 넣습니다. 문서 안에서 자기 이미지는 `./img/…` 로 부르면 됩니다.
+1. **폴더를 만든다** — `public/portfolio/<슬러그>/` 에 `index.html` 과 `img/` 를 통째로
+   넣습니다. 문서 안에서 자기 이미지는 `./img/…` 로 부르면 됩니다.
+   히어로 배경은 `img/hero-bg.jpg`(PC 가로)와 `img/m-hero-bg.png`(모바일 세로) 두 장.
 
-2. **스타일을 붙인다** — 두 가지 중 하나입니다.
-
-   *(a) 문서가 스타일을 통째로 들고 있는 경우* (onNuri·shinhan·dap) —
-   **인라인 `<style>` 을 같은 폴더의 `style.css` 로 빼고** 공통 크롬을 **먼저** 부릅니다:
+2. **`<head>` 에 네 줄** — 순서가 중요합니다. 문서 고유 규칙이 마지막에 와야 이깁니다.
    ```html
+   <link rel="stylesheet" href="../_shared/fonts.css" />
+   <link rel="stylesheet" href="../_shared/project-detail.css" />
    <link rel="stylesheet" href="../_shared/works.css" />
    <link rel="stylesheet" href="./style.css" />
    ```
-   순서가 중요합니다 — 문서 고유 규칙이 이겨야 합니다.
-   `project-detail.css` 는 연결하지 않습니다 (그건 kb-app 계열 전용).
 
-   *(b) `.pd-*` 디자인 시스템을 쓰는 경우* (heyyoung-1024) — `<head>` 에:
+3. **`<body>` 첫머리에 `<project-hero>` 한 줄** — 히어로(배경·CI·닫기·제목·Client/Launch·
+   SCROLL)와 Overview 카드(제목·본문·View Platform·Copy URL)가 통째로 나옵니다.
    ```html
-   <link rel="stylesheet" href="../_shared/fonts.css" />
-   <link rel="stylesheet" href="../_shared/style.css" />
-   <link rel="stylesheet" href="../_shared/project-detail.css" />
+   <project-hero
+     ko="온누리 디지털상품권"
+     en="Onnuri digital|gift card"
+     client="신한은행"
+     launch="Oct, 2022"
+     hero="img/hero-bg.jpg"
+     hero-mobile="img/m-hero-bg.png"
+     overview-title="언제 어디서나 편리하게|혜택을 받으세요"
+     overview-text="첫 줄|둘째 줄"
+     platform="https://…"
+   ></project-hero>
    ```
+   - `|` 는 줄바꿈입니다. **제목(`ko`/`en`/`overview-title`)에서는 모바일에서만** 끊기고,
+     `overview-text` 에서는 항상 끊깁니다.
+   - `platform` 을 비우면 View Platform 버튼은 눌러도 아무 일이 없습니다(자리표시자).
+   - `launch` 나 `client` 를 빼면 그 칸이 아예 안 나옵니다.
 
-3. **다리를 넣는다** — `</body>` 바로 앞에:
+4. **`</body>` 앞에 두 줄**
    ```html
    <script src="/portfolio/_shared/bridge.js"></script>
+   <script src="/portfolio/_shared/works.js"></script>
    ```
-   ⚠️ 빠뜨리면 닫기 버튼이 시트를 닫지 않고 **iframe 안에서 목록 페이지를 열어
-   버립니다.** 커스텀 커서도 상세 위에서 멈춥니다.
+   ⚠️ `bridge.js` 를 빠뜨리면 닫기가 시트를 못 닫고 **iframe 안에서 목록 페이지가 열립니다.**
+   커스텀 커서도 상세 위에서 멈춥니다.
 
-4. **공통 크롬을 넣는다** — `works-*` 계열이라면 `.work-container` 맨 앞에 닫기 버튼을,
-   상단 소개 영역 안에 액션 버튼을 넣습니다. 기존 문서(예: `dap/index.html`)를 그대로
-   복사해 문구만 바꾸는 게 가장 빠릅니다.
-   - 닫기: `<a class="works-close pd-close" href="/projects">` + 셰브론 SVG
-     ⚠️ `pd-close` 클래스를 같이 붙여야 `bridge.js` 가 알아보고 시트의 X 를 숨깁니다.
-   - 버튼: `.works-actions > .works-btn`. `View Platform` 은 주소가 없으면 눌러도
-     아무 일이 없고, `Copy URL` 은 시트가 알려 준 `/projects/<id>` 를 복사합니다.
-   - 좌우 거터: 배경이 걸린 요소에 `padding-inline` 을 줍니다. 문서마다 그 자리가
-     달라서 `_shared/works.css` 아래쪽에 문서별로 한 줄씩 적혀 있습니다 — 새 문서를
-     넣으면 거기에 한 줄 추가하세요.
+5. **좌우 거터 한 줄** — `_shared/works.css` 아래쪽에 문서별 규칙이 있습니다.
+   그 문서의 **배경이 걸린 요소**를 찾아 한 줄 추가하세요 (배경은 풀블리드로 두고 안쪽
+   내용만 들여쓰기 위해서입니다).
 
-5. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에
-   `<슬러그>/index.html` 을 적습니다.
+6. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에 `<슬러그>/index.html`.
+
+> 가장 빠른 길은 `onNuri/index.html` 을 복사해 문구만 바꾸는 것입니다.
 
 ## 지킬 것
 

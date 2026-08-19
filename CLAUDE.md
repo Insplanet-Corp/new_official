@@ -673,6 +673,67 @@ opacity 지문**을 비교 — 해시가 정확히 같았다(`-1218488085`).
   프로젝트별 Client·Launch·Overview 문구·플랫폼 URL 이 필요하다. dap 은 문서 안에 이미
   다 있고 onNuri·shinhan 은 없다.
 
+### 25. `<project-hero>` — 상단을 컴포넌트로 (`_shared/works.js`)
+
+사용자 요청: onNuri·shinhan 을 kb-app 과 같은 히어로로, 그리고 **"컴포넌트화해서 추후에도
+바로 쓸 수 있게"**. 상세는 React 가 아니라 `public/` 에 그대로 올라가는 정적 HTML 이고
+sandbox iframe 안에서 자기 문서로 돈다 — **빌드 단계가 없으므로 브라우저 표준인 커스텀
+엘리먼트가 유일한 수단**이다.
+
+```html
+<project-hero ko="…" en="Onnuri digital|gift card" client="…" launch="Oct, 2022"
+  hero="img/hero-bg.jpg" hero-mobile="img/m-hero-bg.png"
+  overview-title="…" overview-text="…" platform="https://…"></project-hero>
+```
+태그 하나가 히어로(배경·CI·닫기·KO/EN 제목·Client/Launch·SCROLL)와 Overview 카드
+(제목·본문·View Platform·Copy URL)를 통째로 그린다.
+
+**⚠️ Shadow DOM 을 쓰지 않는다.** 모양은 전부 `_shared/project-detail.css` 의 `.pd-*` 가
+내는데, 그 CSS 는 `.pd` 컨테이너에 정의된 변수(`--q --dv --gx …`)에 매달려 있다. 그늘 안에
+넣으면 그 CSS 가 닿지 않는다. 그래서 컴포넌트가 `.pd` 래퍼까지 같이 그린다.
+
+**⚠️ `|` 줄바꿈에서 공백을 잃기 쉽다.** 제목류의 `|` 는 `<br class="pd-m-only">` 가 되는데
+PC 에서는 그게 `display:none` 이라, 공백 없이 이으면 **"ShinhanSecurities"** 로 붙어 버린다.
+`' <br …>'` 로 앞에 공백을 넣는다 (kb-app 원본 마크업도 같은 이유로 공백이 있다).
+
+**⚠️ `.pd-btn` 클릭 처리가 두 곳에 있다.** kb-app 은 자기 인라인 스크립트가, 컴포넌트 문서는
+`works.js` 가 한다. **둘 다 부르면 복사가 두 번 일어난다** — kb-app 에 `works.js` 를 넣지 말 것.
+
+**kb-app 은 컴포넌트로 바꾸지 않았다.** 정적 사이트에서 그대로 받아온 문서라 마크업을 손대면
+다음 동기화 때 충돌한다. 같은 결과를 내는 경로가 둘인 셈이니 `.pd-*` 마크업을 바꿀 일이
+생기면 양쪽을 같이 볼 것.
+
+`bridge.js` 는 버튼 처리를 놓고 **공유 주소만 중계**한다 — 부모가 `pdShareUrl` 로
+`/projects/<id>` 를 내려보내고 `window.__pdShareUrl` 에 담는다. iframe 의 `location` 은
+`/portfolio/<슬러그>/…` 라 Copy URL 이 그대로 쓰면 공유가 안 된다. sandbox 는 불투명 출처라
+clipboard API 가 막히므로 `execCommand` 폴백이 실제 경로다.
+
+`_shared/works.css` 는 **본문 좌우 거터만** 담당한다(PC 64 / 모바일 20). 배경은 풀블리드로
+두고 안쪽만 들여쓰기 위해 **배경이 걸린 요소**에 패딩을 준다 — 문서마다 그 자리가 달라
+문서별로 한 줄씩 적혀 있다.
+
+**실측** (1440 / 375, 세 문서): 히어로 900/812 = 뷰포트 · `<picture>` 가 PC `hero-bg.jpg` /
+모바일 `m-hero-bg.png` 를 고름 · CI·닫기(44/36)·KO+EN 제목·Client/Launch·SCROLL 전부 렌더 ·
+Overview 카드 1346 폭 · 버튼 2개 · 본문 패딩 64/20 · 가로 스크롤 0 · 깨진 이미지 0.
+
+**문구 출처와 미해결**
+- shinhan·onNuri 는 사용자가 준 시안에서 그대로 옮겼다. **단, onNuri 시안의 모바일 컷에는
+  Overview 문구가 shinhan 것으로 들어가 있다**(시안 복붙 흔적) — PC 컷의 온누리 문구를 썼다.
+- shinhan 의 KO 제목은 시안에서 휴대폰 이미지에 가려 안 보여 `신한투자증권 모바일 웹 개편`
+  으로 적었다. **확인 필요.**
+- dap 은 시안이 없어 자기 문서의 값을 썼고 히어로는 `cover.jpg`/`cover_m.jpg` 를 쓴다.
+  `launch` 는 문서에도 `202X.XX` 로만 있어 **비워 뒀다**(속성을 빼면 그 칸이 안 나온다).
+- **`platform` 세 개 다 비어 있다** — 주소를 받으면 속성에 넣기만 하면 된다.
+
+### 26. `src/styles/fonts.css` 의 폰트 경로가 되돌아가 빌드가 깨졌다
+
+에디터 포매터가 이 파일을 정리하면서 `url('/assets/fonts/…')` 를 **`url("../assets/fonts/…")`
+로 되돌려** Turbopack 빌드가 9개 에러로 실패했다. Next 가 번들하는 CSS 라 상대경로는
+`src/assets/fonts/` 를 가리키는데 그런 디렉터리가 없다.
+
+**이 파일은 반드시 절대경로여야 한다** (`public/assets/` 를 가리킨다). `public/portfolio/_shared/fonts.css`
+사본도 같다. 포맷을 다시 돌릴 때 이 값이 살아 있는지 확인할 것.
+
 ---
 
 ## 현재 상태

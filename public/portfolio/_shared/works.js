@@ -1,0 +1,214 @@
+/* ===================================================================================================
+   <project-hero> — 프로젝트 상세의 공통 상단 (히어로 + Overview 카드).
+
+   왜 커스텀 엘리먼트인가 —
+   상세는 React 가 아니라 public/ 에 그대로 올라가는 정적 HTML 이고, sandbox iframe 안에서
+   자기 문서로 돌아간다. 빌드 단계가 없으므로 컴포넌트화 수단은 브라우저 표준인 커스텀
+   엘리먼트가 유일하다. 태그 하나 + 속성만 적으면 kb-app 과 똑같은 상단이 나온다.
+
+   쓰는 법 — <head> 에 세 줄, <body> 첫머리에 태그 하나, </body> 앞에 스크립트 두 줄:
+
+     <link rel="stylesheet" href="../_shared/fonts.css" />
+     <link rel="stylesheet" href="../_shared/project-detail.css" />
+     <link rel="stylesheet" href="../_shared/works.css" />
+     <link rel="stylesheet" href="./style.css" />
+     ...
+     <project-hero
+       ko="온누리 디지털상품권"
+       en="Onnuri digital|gift card"        ← | 는 모바일에서만 줄바꿈
+       client="신한은행"
+       launch="Oct, 2022"
+       hero="img/hero-bg.jpg"
+       hero-mobile="img/m-hero-bg.png"
+       overview-title="언제 어디서나 편리하게 혜택을 받으세요"
+       overview-text="첫 문단|둘째 줄"      ← | 는 <br>
+       platform="https://…"                 ← 없으면 버튼이 눌리지 않는다
+     ></project-hero>
+     ...
+     <script src="/portfolio/_shared/bridge.js"></script>
+     <script src="/portfolio/_shared/works.js"></script>
+
+   ⚠️ 모양은 전부 _shared/project-detail.css 의 .pd-* 가 낸다. 그 CSS 는 .pd 컨테이너에
+   정의된 변수(--q --dv --gx …)에 매달려 있어서, 이 컴포넌트가 .pd 래퍼까지 같이 그린다.
+   그래서 Shadow DOM 을 쓰지 않는다 — 그늘 안에 넣으면 그 CSS 가 닿지 않는다.
+
+   ⚠️ kb-app 은 이 컴포넌트를 쓰지 않는다. 정적 사이트에서 그대로 받아온 문서라
+   마크업을 손대면 다음 동기화 때 충돌한다. 같은 결과를 내는 두 경로가 있는 셈이니,
+   .pd-* 마크업을 바꿀 일이 생기면 양쪽을 같이 볼 것.
+   =================================================================================================== */
+(function () {
+  var CHEVRON =
+    '<svg viewBox="0 0 44.3077 44.3077" fill="none" aria-hidden="true">' +
+    '<path d="M14.7695 19.3066L22.1553 26.0709L29.5387 19.3066" stroke="currentColor" ' +
+    'stroke-width="2.2154" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_LINK =
+    '<svg class="pd-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M9 8H16V15M16 8L8 16" stroke="currentColor" stroke-width="1.5"/></svg>';
+  var ICON_COPY =
+    '<svg class="pd-btn-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M11.437 8.059L12.563 6.933C13.807 5.689 15.823 5.689 17.067 6.933C18.311 8.177 18.311 10.193 17.067 11.437L15.941 12.563M12.563 15.941L11.437 17.067C10.193 18.311 8.177 18.311 6.933 17.067C5.689 15.823 5.689 13.807 6.933 12.563L8.059 11.437M9.185 14.815L14.815 9.185" ' +
+    'stroke="currentColor" stroke-width="1.5"/></svg>';
+
+  // 속성값은 작성자가 쓰지만 그대로 innerHTML 에 넣으므로 이스케이프한다
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  /** 'a|b' -> 'a<br>b'. cls 를 주면 그 클래스가 붙은 <br> (모바일 전용 줄바꿈).
+      ⚠️ 모바일 전용 줄바꿈은 <br> 앞에 공백을 넣는다 — PC 에서는 그 <br> 이 display:none 이라
+      공백이 없으면 'ShinhanSecurities' 처럼 두 단어가 붙어 버린다 (kb-app 도 같은 이유로
+      원본 마크업에 공백이 들어 있다). */
+  function lines(v, cls) {
+    var br = cls ? ' <br class="' + cls + '">' : '<br>';
+    return esc(v).split('|').join(br);
+  }
+
+  function render(el) {
+    var a = function (n) {
+      return el.getAttribute(n) || '';
+    };
+    var heroM = a('hero-mobile');
+    var platform = a('platform');
+
+    var picture = heroM
+      ? '<picture><source media="(max-width:1023px)" srcset="' +
+        esc(heroM) +
+        '"><img class="pd-hero-bg" src="' +
+        esc(a('hero')) +
+        '" alt="" loading="eager" decoding="async"></picture>'
+      : '<img class="pd-hero-bg" src="' + esc(a('hero')) + '" alt="" loading="eager" decoding="async">';
+
+    var info = '';
+    if (a('client')) info += '<div><dt>Client</dt><dd>' + esc(a('client')) + '</dd></div>';
+    if (a('launch')) info += '<div><dt>Launch</dt><dd>' + esc(a('launch')) + '</dd></div>';
+
+    el.innerHTML =
+      '<main class="pd">' +
+      '<section class="pd-hero">' +
+      picture +
+      '<div class="pd-hero-ci" aria-hidden="true"><img src="/assets/ci_logo_white.svg" alt=""></div>' +
+      // 시트 안에서는 bridge.js 가 클릭을 가로채고, 단독으로 열면 이 href 가 동작한다
+      '<a class="pd-close" href="/projects" aria-label="닫기">' + CHEVRON + '</a>' +
+      '<h1 class="pd-hero-title">' +
+      '<span class="ko">' + lines(a('ko'), 'pd-m-only') + '</span>' +
+      '<span class="en pd-title-en">' + lines(a('en'), 'pd-m-only') + '</span>' +
+      '</h1>' +
+      (info ? '<dl class="pd-hero-info">' + info + '</dl>' : '') +
+      '<div class="pd-hero-scroll" aria-hidden="true"><span class="bar"></span><span class="label">SCROLL</span></div>' +
+      '</section>' +
+      '<div class="pd-secs">' +
+      '<section class="pd-summary">' +
+      '<h2 class="pd-summary-head">Overview</h2>' +
+      '<div class="pd-summary-body">' +
+      '<h3 class="pd-summary-title">' + lines(a('overview-title'), 'pd-m-only') + '</h3>' +
+      '<p class="pd-summary-text">' + lines(a('overview-text')) + '</p>' +
+      '<div class="pd-summary-actions">' +
+      '<a class="pd-btn pd-btn--primary" href="' + esc(platform) + '" target="_blank" rel="noopener">' +
+      '<span class="pd-btn-label">View Platform</span>' + ICON_LINK + '</a>' +
+      '<button type="button" class="pd-btn pd-btn--copy">' +
+      '<span class="pd-btn-label">Copy URL</span>' + ICON_COPY + '</button>' +
+      '</div>' +
+      '</div>' +
+      '</section>' +
+      '</div>' +
+      '</main>';
+
+    arm(el);
+  }
+
+  /* Overview 카드의 스크롤 인 — kb-app 의 인라인 스크립트와 같은 동작.
+     .pd.rv 가 붙어야 CSS 가 숨기므로, JS 가 없으면 그냥 보인다. */
+  function arm(el) {
+    var main = el.querySelector('main.pd');
+    var card = el.querySelector('.pd-summary');
+    if (!main || !card) return;
+    if (matchMedia('(prefers-reduced-motion:reduce)').matches || !('IntersectionObserver' in window)) return;
+    main.classList.add('rv');
+    var io = new IntersectionObserver(
+      function (entries, obs) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' },
+    );
+    io.observe(card);
+  }
+
+  if ('customElements' in window) {
+    customElements.define(
+      'project-hero',
+      class extends HTMLElement {
+        connectedCallback() {
+          if (!this.__rendered) {
+            this.__rendered = true;
+            render(this);
+          }
+        }
+      },
+    );
+  }
+
+  /* ---- 버튼 동작 ---------------------------------------------------------------------------------
+     ⚠️ kb-app 은 자기 인라인 스크립트가 같은 일을 한다. 그 문서는 이 파일을 부르지 않으므로
+     한 번만 처리된다 — 둘 다 부르면 복사가 두 번 일어난다. */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.pd-btn') : null;
+    if (!btn) return;
+
+    // 주소를 아직 안 넣은 View Platform: 눌러도 아무 일이 없어야 한다
+    // (href="" 는 현재 페이지를 새 탭에 여는 것과 같다)
+    if (btn.classList.contains('pd-btn--primary') && !btn.getAttribute('href')) {
+      e.preventDefault();
+      return;
+    }
+    if (!btn.classList.contains('pd-btn--copy')) return;
+    e.preventDefault();
+
+    /* 복사할 주소 — 시트 안에서는 부모가 알려 준 /projects/<id> 를 쓴다.
+       iframe 의 location 은 /portfolio/<슬러그>/… 라 그대로 복사하면 공유가 안 된다.
+       bridge.js 가 부모 응답을 window.__pdShareUrl 에 담아 둔다. */
+    var url = window.__pdShareUrl || location.href;
+
+    function hint() {
+      var h = btn.querySelector('.pd-copy-hint');
+      if (!h) {
+        h = document.createElement('span');
+        h.className = 'pd-copy-hint';
+        h.setAttribute('role', 'status');
+        h.textContent = 'URL이 복사되었습니다';
+        btn.appendChild(h);
+      }
+      h.classList.add('is-on');
+      clearTimeout(btn.__copyTimer);
+      btn.__copyTimer = setTimeout(function () {
+        h.classList.remove('is-on');
+      }, 1600);
+    }
+    // sandbox iframe 은 불투명 출처라 clipboard API 가 막힌다 — 폴백이 실제 경로다
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = url;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        /* 안 되면 조용히 넘어간다 */
+      }
+      document.body.removeChild(ta);
+      hint();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(hint, fallback);
+    } else fallback();
+  });
+})();

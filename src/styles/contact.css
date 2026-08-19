@@ -299,7 +299,7 @@
 .ct-rv .ct-field,
 .ct-rv .ct-consent,
 .ct-rv .ct-submit {
-  opacity: 0.5;
+  opacity: 0;
   transform: translateY(48px);
   pointer-events: none;
   transition:
@@ -605,13 +605,12 @@
   line-height: 1.5;
   transition: color 0.15s ease;
 }
-/* 이용약관/개인정보처리방침 terms only — matches the mobile Figma ts1 style */
 .ct-consent-text a {
   color: var(--ct-text);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
-}
+} /* 이용약관/개인정보처리방침 terms only — matches the mobile Figma ts1 style */
 .ct-consent-input:checked ~ .ct-consent-text {
   color: var(--ct-text);
   font-weight: 600;
@@ -641,8 +640,6 @@
 } /* inactive (gray) until every required field is filled */
 .ct-submit.is-ready {
   background: var(--ct-text);
-  opacity: 1;
-  pointer-events: fill;
 } /* all filled -> dark / active */
 .ct-submit.is-ready:hover .ct-arrow img {
   animation: project-arrow-cycle 0.55s cubic-bezier(0.22, 1, 0.36, 1);
