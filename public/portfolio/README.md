@@ -11,13 +11,16 @@ public/portfolio/
 │  ├─ style.css
 │  ├─ project-detail.css    .pd-* 디자인 시스템
 │  └─ bridge.js             상세 ↔ 시트 다리
-├─ heyyoung-1024/           프로젝트 하나 = 폴더 하나
-├─ onNuri/
+├─ kb-app/                  .pd-* 템플릿을 쓰는 문서 (자기 CSS 없음)
+│  ├─ index.html
+│  └─ img/
+├─ onNuri/                  자기 CSS 를 갖는 문서
+│  ├─ index.html
+│  ├─ style.css             ← 문서 전용 (인라인 <style> 을 빼낸 것)
+│  └─ img/
 ├─ shinhan/
 ├─ dap/
-└─ <다음-프로젝트>/          폴더를 하나 더 만들면 끝
-   ├─ index.html
-   └─ img/
+└─ <다음-프로젝트>/
 ```
 
 ## 새 프로젝트 추가하기
@@ -27,8 +30,12 @@ public/portfolio/
 
 2. **스타일을 붙인다** — 두 가지 중 하나입니다.
 
-   *(a) 문서가 스타일을 통째로 들고 있는 경우* (onNuri·shinhan·dap 처럼 `<style>` 안에
-   리셋부터 전부 있는 산출물) — **아무것도 연결하지 않습니다.** 그대로 두세요.
+   *(a) 문서가 스타일을 통째로 들고 있는 경우* (onNuri·shinhan·dap) —
+   **인라인 `<style>` 을 같은 폴더의 `style.css` 로 빼고** 이 한 줄로 부릅니다:
+   ```html
+   <link rel="stylesheet" href="./style.css" />
+   ```
+   `_shared/*.css` 는 연결하지 않습니다 — 문서가 자기 리셋을 갖고 있어 충돌합니다.
 
    *(b) `.pd-*` 디자인 시스템을 쓰는 경우* (heyyoung-1024) — `<head>` 에:
    ```html
