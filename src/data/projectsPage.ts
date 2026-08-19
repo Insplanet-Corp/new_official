@@ -10,6 +10,7 @@
 
 import {
   type Portfolio,
+  detailSrc,
   formatPeriod,
   titleLines,
   titleOneLine,
@@ -36,6 +37,9 @@ export type ProjectCard = {
   award: boolean;
   /** 상세 HTML 이 등록된 카드만 링크가 된다. 없으면 클릭해도 아무 일 없음 */
   href: string | null;
+  /** 시트가 iframe 에 넣을 상세 경로. href 와 짝이다 — 목록에서 열 때 조회를 한 번 더
+      하지 않으려고 서버에서 같이 내려보낸다 */
+  detail: string | null;
 };
 
 export type OngoingRow = {
@@ -58,7 +62,8 @@ export const toCards = (rows: Portfolio[]): ProjectCard[] =>
       cat: r.category ?? '',
       category: (r.category ?? '').toLowerCase(),
       award: r.award,
-      href: r.html_file ? `/projects/${r.id}` : null,
+      href: detailSrc(r.html_file) ? `/projects/${r.id}` : null,
+      detail: detailSrc(r.html_file),
     }));
 
 /** 진행 프로젝트 -> 표 */

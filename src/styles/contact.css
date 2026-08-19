@@ -605,6 +605,13 @@
   line-height: 1.5;
   transition: color 0.15s ease;
 }
+/* 이용약관/개인정보처리방침 terms only — matches the mobile Figma ts1 style */
+.ct-consent-text a {
+  color: var(--ct-text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .ct-consent-input:checked ~ .ct-consent-text {
   color: var(--ct-text);
   font-weight: 600;

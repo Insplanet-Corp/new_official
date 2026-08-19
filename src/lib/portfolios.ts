@@ -70,6 +70,25 @@ export const EMPTY_DRAFT: PortfolioDraft = {
   html_file: "",
 };
 
+/** html_file -> iframe 에 넣을 사이트 내부 경로. 넣을 수 없으면 null.
+
+    ⚠️ DB 값을 그대로 src 에 넣으면 외부 주소를 넣어 우리 페이지 안에 임의의 사이트를
+    띄우는 통로가 된다(피싱). public/portfolio/ 밑으로만 허용한다 — 상위 이동('..')과
+    절대 URL(스킴·프로토콜 상대)을 모두 막는다. 상세 라우트와 시트가 이 하나를 같이 쓴다. */
+export const detailSrc = (htmlFile: string | null): string | null => {
+  const raw = (htmlFile ?? "").trim();
+  if (!raw) return null;
+  // 절대 URL(스킴 또는 프로토콜 상대)은 거부한다
+  if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith("//")) return null;
+  /* 앞의 '/' 와 'portfolio/' 접두는 있어도 없어도 받아 준다 — 어드민 폼의 예시는
+     '/heyyoung-1024/index.html' 인데 008 주석은 '/portfolio/...' 로 적혀 있어
+     실제 DB 에 두 표기가 섞인다. 붙여 쓰기만 하면 '/portfolio//heyyoung-...' 이
+     되어 Next 가 308 로 한 번 더 돌려보낸다. */
+  const rel = raw.replace(/^\/+/, "").replace(/^portfolio\//, "");
+  if (!rel || rel.split("/").includes("..")) return null;
+  return `/portfolio/${rel}`;
+};
+
 /* 기획서(25p)의 DETAIL_PATH(/com/resource/content/portfolio/detail/)는 없앴다.
    상세 HTML 은 이제 Storage 에 올리고 html_file 에 공개 URL 을 담는다 — 008 참고.
    웹서버 정적 디렉터리에 파일을 두는 방식은 Vercel 배포에서 성립하지 않는다. */

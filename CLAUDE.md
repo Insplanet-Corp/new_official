@@ -346,14 +346,95 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 **새 테이블에 RLS 를 걸 때는 `pg_policies` 부터 확인할 것.** 대시보드에서 만든 정책이
 이미 있을 수 있다.
 
+### 14. 정적 사이트(`../insplanet`) 변경분 흡수 — PC 분량 (2026-08-19)
+
+포팅 기준점은 정적 사이트의 **`b997b24`(2026-07-03)** 다. 그 뒤로 40커밋(08-12~08-19)이
+쌓였고, 그중 **PC 에 해당하는 것만** 가져왔다. 사용자가 범위를 A(PC 갱신)로 정했다.
+
+**기준점 대조로 확인한 것** — `style.css` · `about.css` · `projects.css` 는 포팅본이
+기준점과 **바이트 단위로 같았다.** 그래서 통째로 덮어썼다. 마케팅 CSS 를 전역으로
+남긴 결정(위 「스타일링 방침」)이 여기서 값을 했다. 손으로 합쳐야 했던 것은
+`fonts.css`(`../assets`→`/assets` 경로만 다름) 와 `contact.css`(포팅 때 271→1020줄로
+확장돼 있다) 두 개뿐이다.
+
+**가져온 것**
+- **About 04 섹션 전면 교체** — 「금융×모빌리티」→ **Experience**. 카드 4개의 문구·아이콘이
+  전부 바뀌었고(`Mobility & Enterprise Insight` → `Cross-Industry Insight`), `core-value-head`
+  래퍼가 사라졌다. 갤러리는 3+1 그리드 → **8장 마퀴 밴드**(4장 + `aria-hidden` 복제 4장)로
+  바뀌면서 **`.about-fusion` 의 마지막 자식으로 들어갔다** — `AboutGallery` 를 페이지가 아니라
+  `AboutFusion` 이 렌더한다.
+- **마무리 이미지(07) 가 핀 확대 스크럽이 됐다** — `about-fullbleed-pin` > `-box` 구조.
+  `about-hero.js` 가 +67줄로 이걸 같이 몬다. 브라우저에서 확인함: 스크롤 0 에서
+  박스가 `90×55.8px` = 스크립트의 `cw*0.0625` 계산과 일치.
+- **About 스크롤 리빌** — 인라인 `<script>` 2개를 `AboutReveals.tsx` 로 옮겼다.
+  `revealOnScroll` 에 `rootMargin` 인자를 추가했다(게이트 `-25%`).
+  ⚠️ `.about-axcreator` 만 threshold 0 이다 — 이 루트가 뷰포트보다 커서 % 임계치를 쓰면
+  너무 늦게 발화한다.
+- **Contact 동의문에 약관 링크 2개** (`href="#"` 는 정적 사이트도 자리표시자다)
+- **커서 GROW_SEL** 에 시트 닫기 버튼 추가
+- **썸네일 20장** `public/images/projects/thumb-01~20.png` (27MB) + `009` 마이그레이션
+
+**의도적으로 안 가져온 것**
+- **어댑티브 경계 767 → 1023.** 정적 사이트는 아이패드 세로까지 모바일로 보내지만,
+  그건 mobile-about/contact/projects 3페이지가 **있다는 전제**다. Next 에는 없다.
+  `/mobile` 은 히어로만 있는 WIP 작업장이므로 경계를 올리면 태블릿이 미완성 화면을 받는다.
+  about/contact/projects 에는 분기를 아예 달지 않았다 — `/mobile`(홈)로 보내면
+  About 을 요청한 사람이 홈을 받는다. **모바일 페이지를 만들 때 같이 올릴 것.**
+- 모바일 전부(3페이지 + `mobile.html` +149줄 + `mobile-menu.js` `tap-feel.js`).
+  `style.css` 를 통째로 덮었으므로 **모바일 CSS 는 이미 다 들어와 있다**(`m-*` `ma-*`
+  `mc-*` `mp-*` `mr-*`). 마크업과 런타임만 만들면 된다. JS 는 `public/js` 에 그대로
+  복사하기로 사용자와 합의했다.
+
+### 15. 프로젝트 상세를 "올라오는 시트" 로 (`ProjectSheet.tsx`)
+
+정적 사이트가 새로 만든 `project-sheet.js`(466줄) 의 **연출만** 가져왔다.
+라우트는 기존 `/projects/[id]` 를 유지한다(사용자 결정).
+
+**⚠️ 원본과 딱 하나 다르게 갔다 — 원본은 상세 HTML 을 `fetch` 해서 페이지에 주입한다.
+우리는 하지 않는다.** 주입하면 퍼블리셔 문서의 스크립트가 **우리 문서에서** 돌고,
+`localStorage` 의 Supabase 세션 토큰을 읽을 수 있다. `DetailFrame` 이 `sandbox`
+(`allow-same-origin` 없이)를 쓰는 이유가 그것이다. 그래서 시트 안에도 **iframe 을 그대로
+넣는다.** 파급 효과 두 가지:
+- 진행률을 이미지 개수로 못 센다 → iframe 의 `load` + `_height.js` 의 **첫 높이 통지**로 만든다
+- 상세의 자체 컨트롤(`.pd-close` `.pd-btn`)에 손이 닿지 않는다 → 일반 `.ps-close` 만 쓴다
+  (`is-own-close` · `project-detail.css` 는 그래서 안 가져왔다)
+
+**진행 바 rAF 함정** — 공개 시점을 "그려진 바가 1 에 닿는 rAF 루프"에 매달아 뒀는데,
+**백그라운드 탭에서는 rAF 가 통째로 멈춘다.** 그러면 카드를 누른 사람이 주소만 바뀐 채
+아무것도 못 보는 상태로 남는다. 보호 타이머(8초)를 rAF 를 거치지 않고 **직접 여는** 경로로
+따로 뒀다. 실제로 이 경로가 동작하는 것을 브라우저에서 확인함.
+
+**리액트 함정** — `.ps-bar` 의 `transform` 을 JSX `style` 에 두면 안 된다. rAF 가 매 프레임
+쓰는 값이라, 다른 state 로 리렌더가 한 번 일어나면 그때마다 0 으로 되돌아간다.
+CSS(`.ps-bar`)가 이미 `scaleX(0)` 으로 시작시키므로 JSX 에서는 빼고 `opacity` 만 state 로 몬다.
+
+**`detailSrc()` 로 경로 판정을 합쳤다** (`lib/portfolios.ts`). 상세 라우트와 시트가 같은
+함수를 쓴다. 겸사겸사 **조용한 버그를 하나 잡았다** — 어드민 폼의 예시는
+`/heyyoung-1024/index.html`(앞에 `/`) 인데 코드는 `` `/portfolio/${html_file}` `` 로 붙여서
+`/portfolio//heyyoung-...` 가 나왔다. **동작은 했다 — Next 가 308 로 한 번 더 돌려보내서.**
+이제 앞의 `/` 와 `portfolio/` 접두를 둘 다 흡수한다(008 주석은 접두 포함 표기라 DB 에
+두 표기가 섞일 수 있다).
+
+**브라우저에서 확인한 것**: 카드 클릭 → `/projects/<id>` 로 pushState · iframe 이 올바른
+src 로 마운트 · `html.ps-open` · 보호 타이머로 `is-open` · `body{position:fixed}` 잠금 ·
+ESC → `history.back()` → 주소 복귀 · `inert` 복원 · 슬라이드 후 iframe 해제.
+`.ps-scroll` 1440×900 / scrollHeight 1200 로 스크롤 가능.
+
+**확인 못 한 것**: 슬라이드 애니메이션 자체, 진행 바가 차는 모습, 시트 전용 Lenis 의 감각,
+`_height.js` 높이 왕복. **브라우저 패널이 백그라운드라 rAF·IO·타이머가 전부 스로틀되고,
+`innerWidth/Height` 가 0 으로 잡힌다.** iframe 은 패널이 `ERR_BLOCKED_BY_CLIENT` 로 막아
+본문이 아예 안 뜬다(문서 자체는 `fetch` 로 200·13KB 확인). **사람이 실제 브라우저에서
+봐야 한다.**
+
 ---
 
 ## 현재 상태
 
 ```
-브랜치   refactor/css-modules   (main 미머지)
-커밋     d01841d 포트폴리오관리 DB 연동 + /projects 공개 페이지 연결   ← 최신
-태그     backup/css-modules-full                                      ← 되돌린 전체 CSS 변환 (로컬만)
+브랜치   main
+커밋     6deb523 포트폴리오   ← 마지막 커밋. 정적 사이트 흡수분(14·15번)은 아직 미커밋
+태그     backup/css-modules-full   ← 되돌린 전체 CSS 변환 (로컬만)
+정적 원본  ../insplanet  포팅 기준점 b997b24 → 현재 bf2ac6e (PC 분량만 흡수, 모바일 미착수)
 ```
 
 빌드·타입체크 통과.
@@ -376,6 +457,8 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 | `005_portfolios_seed.sql` | ✅ 15건(종료 11 · 진행 4) 렌더 확인 |
 | `006_portfolio_storage.sql` | ✅ 버킷·정책 확인 (사용자 보고) |
 | `007_drop_legacy_portfolio_policies.sql` | ⚠️ **미확인** — 작성 후 실행 여부 확인 못 함 |
+| `008_portfolio_detail_html.sql` | ✅ 실행됨 (html_file 에 값이 들어간 행 확인) |
+| `009_portfolio_seed_thumbs.sql` | ❌ **미실행** — 작성만 했다 (14번, 아래 참고) |
 
 anon 키로는 `admin_users` 를 못 읽어(RLS 가 `to authenticated`) 프로필 수를 확인할 수 없다.
 **002 와 007 실행 여부부터 확인할 것.** 002 를 빠뜨리면 새 계정마다 9번을 반복하고,
@@ -427,6 +510,11 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
 모으고 화면은 그걸 쓰는 구조를 따라가면 된다.
 
 ### 바로 이어서 할 만한 것
+- **`009` 실행** — 안 돌리면 `/projects` 가 계속 옛 `proj-*.png` 를 가리킨다.
+  그때까지 `public/assets/projects/proj-01~11.png` 를 지우면 안 된다(정적 사이트는 지웠다).
+  돌린 뒤에 지울 것.
+- **모바일 3페이지 + `mobile.html` 확장** — 정적 사이트에서 가장 큰 덩어리이고 아직 손도
+  안 댔다. CSS 는 이미 다 들어와 있다(14번). 이걸 끝낸 뒤에 어댑티브 경계를 1023 으로 올린다.
 - **실데이터 입력** — 지금 `/projects` 에 뜨는 11건은 시드다(12번). 담당자에게 실제
   포트폴리오 목록과 이미지를 받아야 한다.
 - **`002`·`007` 실행 여부 확인** (위 「마이그레이션 실행 상태」)

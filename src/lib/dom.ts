@@ -28,8 +28,14 @@ export function bindScroll(update: () => void): () => void {
   };
 }
 
-/** One-shot `.in` reveal as each element scrolls into view. */
-export function revealOnScroll(elements: Element[], threshold: number): () => void {
+/** One-shot `.in` reveal as each element scrolls into view.
+ *  `rootMargin` moves the gate line — e.g. '0px 0px -25% 0px' makes an element rise well past the
+ *  bottom of the viewport before it fires, instead of finishing the instant it peeks into view. */
+export function revealOnScroll(
+  elements: Element[],
+  threshold: number,
+  rootMargin?: string,
+): () => void {
   if (!elements.length) return () => {};
   if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
     elements.forEach((el) => el.classList.add('in'));
@@ -44,7 +50,7 @@ export function revealOnScroll(elements: Element[], threshold: number): () => vo
         }
       });
     },
-    { threshold },
+    { threshold, rootMargin },
   );
   elements.forEach((el) => io.observe(el));
   return () => io.disconnect();

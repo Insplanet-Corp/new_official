@@ -2,7 +2,7 @@
    Line breaks differ between the 1024 and 1920+ frames: .br-1024 shows below 1472px, .br-desk above. */
 export default function AboutAxCreator() {
   return (
-    <section className="about-axcreator">
+    <section className="about-axcreator" data-rv>
       <div className="about-inner about-axcreator-grid">
         <h2 className="about-display">
           <span className="line-1">Beyond UX</span>
@@ -32,7 +32,7 @@ export default function AboutAxCreator() {
             </p>
           </div>
 
-          <dl className="about-stats">
+          <dl className="about-stats" data-rv>
             <div className="about-stat">
               <dt className="about-stat-label">Projects done</dt>
               <dd className="about-stat-num">

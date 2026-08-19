@@ -1,5 +1,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;background:#fff}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}   /* iOS Safari inflates long text blocks on landscape rotation (hit the About mission paragraph) — keep our sizes */
 /* reserve the scrollbar's space so toggling overflow (page-transition lock) doesn't reflow/jolt the
    layout. No effect with overlay scrollbars (mac/iOS default); fixes the jolt on classic scrollbars. */
 html{scrollbar-gutter:stable}
@@ -268,7 +269,7 @@ html.lenis,html.lenis body{height:auto}
   height:clamp(40px, calc(2.2321vw + 17.14px), 60px);padding:0 clamp(16px, calc(0.8929vw + 6.86px), 24px);
   border-radius:999px;background:#fff;color:#3E3F44;
   font-family:'Roboto Serif',serif;font-weight:400;font-size:clamp(24px, calc(0.8929vw + 14.86px), 32px);line-height:1}
-.menu-copy{margin:0;font-size:clamp(12px, calc(0.2232vw + 9.71px), 14px);font-weight:600;line-height:150%}
+.menu-copy{margin:0;font-size:clamp(12px, calc(0.2232vw + 9.71px), 14px);font-weight:600;line-height:150%;text-transform:uppercase}
 
 /* right column — project list */
 .project-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(32px, calc(2.6786vw + 4.57px), 56px)}
@@ -625,13 +626,58 @@ html.lenis,html.lenis body{height:auto}
    "진화된" break (sb-br-m) is mobile-only. Defaults here = desktop unchanged. */
 .sb-br-m{display:none}
 
+/* ===== project-detail SHEET (prototype, js/project-sheet.js) — full-screen layer that slides up
+   from the bottom on a project-card click (PC .pj-card / mobile .mp-card, both data-slug), instead
+   of navigating. Built + appended to <body> at runtime, OUTSIDE #page-root so its position:fixed
+   stays viewport-relative regardless of any #page-root transform/animation. Sits above every other
+   fixed layer on the site (header/menu z:60-100, recruit popup z:105/110). Content = the fetched
+   projects/<slug>.html's <main class="pd">, injected into .ps-body; that doc supplies its own
+   main.pd sizing (min-height:100vh) via the <style> block js/project-sheet.js copies in, which
+   resolves against .ps-scroll's full-height box either way. Same behaviour/markup at every width;
+   only the close button's position shifts up top-right for larger pointers. */
+.ps-sheet{position:fixed;inset:0;z-index:150;overflow:visible;background:#FFF;will-change:transform;backface-visibility:hidden;   /* own compositor layer: the content must not repaint per frame while the sheet moves */
+  transform:translateY(100%);transition:transform 1.2s cubic-bezier(.2,1.1,.3,1)}   /* soft spring (previous curve), 1.2s per user */
+.ps-sheet.is-open{transform:none}
+/* the spring overshoots upward by a few px — bleed the sheet's own bg below it so the page never peeks through at the bottom edge */
+.ps-sheet::after{content:'';position:absolute;top:100%;left:0;right:0;height:12vh;background:#0C0C0C}
+.ps-bar{position:fixed;top:0;left:0;height:6px;width:100%;z-index:200;opacity:0;pointer-events:none;
+  transform:scaleX(0);transform-origin:0 50%;
+  background:linear-gradient(90deg,#61C7FF 0%,#B899FF 40%,#FF6BF2 75%,#FF1AD1 100%);   /* hero blob palette (js/blob.js), soft end */
+  transition:opacity .3s ease}   /* transform is driven per-frame by JS (no CSS transform transition — it would lag the rAF drive); top loading bar: fills while the detail (html + its images) loads, then the sheet slides up */
+.ps-close{position:fixed;z-index:2;top:16px;right:12px;width:48px;height:48px;display:grid;place-items:center;
+  margin:0;padding:0;background:none;border:0;cursor:pointer;color:#3E3F44}
+.ps-close svg{display:block;width:24px;height:24px;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.ps-close:hover svg{transform:rotate(90deg)}
+@media (min-width:1024px){
+  .ps-close{top:48px;right:48px;width:56px;height:56px}
+  .ps-close svg{width:28px;height:28px}
+}
+.ps-scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  /* the sheet's own scrollbar stays visible (it's the only scroller while open); the page's html gutter
+     is dropped meanwhile — see html.ps-open — so there is exactly one bar */
+/* while a detail is loading/open (html.ps-open, toggled by js/project-sheet.js) html's reserved scrollbar gutter is dropped so
+   the sheet's own scroller is the only visible bar. Toggled at LOAD START (during the progress bar), well before the slide,
+   so the reflow never lands on the slide's first frame. */
+html.ps-open{scrollbar-gutter:auto}
+/* a detail file that ships its own designed close (.pd-close inside main.pd) → hide the generic X (js adds is-own-close) */
+.ps-sheet.is-own-close .ps-close{display:none}
+.ps-body{min-height:100%;opacity:0;transition:opacity .35s ease}
+.ps-body.is-loaded{opacity:1}
+.ps-error{margin:0;padding:160px 24px;text-align:center;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-size:18px;color:#3E3F44}
+@media (prefers-reduced-motion:reduce){
+  .ps-sheet{transition:none}
+  .ps-close svg{transition:none}
+  .ps-close:hover svg{transform:none}
+  .ps-body{transition:none}
+}
+
 /* ============================================================================
-   MOBILE (≤767px) — HOME HERO only. Figma official_01_main_375 (375×812).
+   MOBILE (≤1023px) — HOME HERO only. Figma official_01_main_375 (375×812).
    First pass: just the #stage hero. The sections below the hero stay desktop
    for now. Header controls (shared-ui) reposition site-wide to the 375 layout
    (they were floored at the 1024 design values, so off-screen on a phone).
    ============================================================================ */
-@media (max-width:767px){
+@media (max-width:1023px){
   /* --- header: logo / Let's Talk / hamburger / scroll-hint @ 375 --- */
   #ci-logo{left:20px;top:31px;width:104.9px;height:18px}   /* logo 104.9×18 */
   #lets-talk{right:73px;top:27px}                 /* left edge ≈ x249 */
@@ -653,7 +699,8 @@ html.lenis,html.lenis body{height:auto}
   /* --- content: symbol + title + subtitle, anchored bottom-left, 20px gutters --- */
   #left-block{left:20px;right:20px;bottom:48px}
   #symbol{width:117px;height:6px}
-  #head-title{width:auto;font-size:clamp(64px,21.3vw,88px);margin-top:20px}  /* fluid: 320→68 / 375→80 / 414→88 */
+  #head-title{width:auto;font-size:clamp(64px,21.3vmin,88px);margin-top:20px}  /* fluid on the phone's SHORT side: 320→68 / 375→80 / 414→88;
+     vmin (not vw) so rotating to landscape keeps the portrait size instead of jumping to the 88 cap */
   #head-title .line-2{margin-top:-0.5em}                    /* overlap scales with the font */
   #sub-title{width:100%;margin-top:24px;gap:16px}
   #sub-title .subtitle-head{font-size:16px}
@@ -741,4 +788,694 @@ html.lenis,html.lenis body{height:auto}
   .m-partners-heading.in,.m-partners-desc.in,.m-partner-row.in{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){
     .m-partners-heading,.m-partners-desc,.m-partner-row{opacity:1;transform:none;transition:none}}
+
+  /* --- chapter 06 (mobile): Our Projects — 3-slide swipe carousel (dummy content mirrors
+         PC index.html .projects; Figma y6945→7025, 80px gap from Partners). --- */
+  .m-proj{position:relative;z-index:1;padding:80px 20px 96px;background:transparent;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;color:#3E3F44}
+  .m-proj-title{margin:0;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:32px;line-height:1.211}
+  .m-proj-carousel{margin-top:48px;position:relative}
+  .m-proj-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .m-proj-track::-webkit-scrollbar{display:none}
+  .m-proj-card{flex:0 0 100%;height:320px;border-radius:24px;overflow:hidden;scroll-snap-align:start}
+  .m-proj-card img{display:block;width:100%;height:100%;object-fit:cover}
+  /* dots overlay the card, bottom-center (Figma: y284 in the 320 card = 24px from bottom), white on color */
+  .m-proj-dots{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);
+    display:flex;gap:12px;z-index:1}
+  .m-proj-dots span{box-sizing:border-box;width:12px;height:12px;border-radius:50%;
+    border:2px solid #FFF;background:transparent;cursor:pointer}
+  .m-proj-dots span.is-active{border-color:transparent;background:#FFF}
+  /* per-slide indicator theme: .is-dark when the active card's bottom area is light */
+  .m-proj-dots.is-dark span{border-color:#1A1A1A}
+  .m-proj-dots.is-dark span.is-active{border-color:transparent;background:#1A1A1A}
+  /* info: 3 slides stacked in the same grid cell (grid-area:1/1), crossfade via .is-active */
+  .m-proj-info{position:relative;display:grid;margin-top:48px}
+  .m-proj-slide{grid-area:1/1;opacity:0;transition:opacity .35s ease}
+  .m-proj-slide.is-active{opacity:1}
+  .m-proj-name{margin:0;font-weight:700;font-size:28px;line-height:1.2}
+  .m-proj-meta{margin:48px 0 0;display:grid;grid-template-columns:151px 1fr;row-gap:22px}
+  .m-proj-meta dt{margin:0;font-weight:700;font-size:15px;line-height:1.5}
+  .m-proj-meta dd{margin:0;font-weight:400;font-size:15px;line-height:1.5}
+  .m-proj-more{margin-top:48px;display:inline-flex;align-items:center;height:41px;
+    padding:10px 12px 10px 16px;border:0.83px solid #3E3F44;border-radius:6.67px;gap:10px;
+    text-decoration:none;font-weight:600;font-size:14px;line-height:1.5;color:#3E3F44}
+  .m-proj-more-ico{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+  .m-proj-more-ico img{width:100%;height:100%}
+  @media (prefers-reduced-motion:reduce){.m-proj-slide{transition:none}}
+
+  /* --- chapter 07 (mobile): Say Hello CTA — black full-viewport, PC's WebGL horizon glow reused
+         (js/cta-glow.js finds canvas.cta-glow — its global rule below sizes the canvas to fill
+         the section, no new rule needed here). Reveal mirrors PC .contact-cta: blur fade-in,
+         title -> sub -> arrow staggered. --- */
+  .m-cta{position:relative;height:100vh;background:#141414;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:center;padding:0 25px;color:#FFF;z-index:1;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif}
+  .m-cta-inner{position:relative;z-index:1;width:100%;max-width:325px;margin:0 auto}   /* Figma content width; centres when the viewport is wider than 375 */
+  .m-cta-title{margin:0;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:80px;line-height:1.211}
+  .m-cta-sub{margin:24px 0 0 10.5px;font-weight:400;font-size:18px;line-height:1.5}
+  .m-cta-arrow{margin:40px auto 0;width:40px;height:40px;border-radius:50%;background:#FFF;
+    display:flex;align-items:center;justify-content:center}
+  .m-cta-arrow svg{width:18px;height:18px;display:block}
+  /* reveal: fade up from a blur, staggered, once the section is 20% visible (.in added by IO in mobile.html) */
+  .m-cta-title,.m-cta-sub,.m-cta-arrow{opacity:0;filter:blur(8px);transition:opacity .9s ease,filter .9s ease}
+  .m-cta.in .m-cta-title{opacity:1;filter:blur(0)}
+  .m-cta.in .m-cta-sub{opacity:1;filter:blur(0);transition-delay:.18s}
+  .m-cta.in .m-cta-arrow{opacity:1;filter:blur(0);transition-delay:.36s}
+  @media (prefers-reduced-motion:reduce){.m-cta-title,.m-cta-sub,.m-cta-arrow{opacity:1;filter:none;transition:none}}
+
+  /* --- chapter 08 (mobile): footer — CI logo (wordmark + planet SVG) reuses the PC asset paths under
+         new m-footer-ci-* classes (see mobile.html for why: avoids inheriting the PC .footer-wordmark/
+         .footer-planet scroll-reveal, which stays opacity:0 without a .footer.in this page never sets). --- */
+  /* full-viewport section like Insight/CTA (Figma frame was mis-authored at 768 — design intent is 812
+     = device height). Top padding = fixed-header zone (~80px: hamburger bottom y64 + breathing room);
+     the CI centres itself in the space between that and the bottom info block (auto margins), so it
+     stays visually balanced under the header on any device height. vh not svh (project rule). */
+  .m-footer{background:#FFF;height:100vh;display:flex;flex-direction:column;padding:80px 20px 32px;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;color:#3E3F44}
+  .m-footer-ci{position:relative;width:246px;line-height:0;margin:auto 0}   /* centres between header pad and info block */
+  .m-footer-ci-wordmark{display:block;width:100%;height:auto}     /* in flow -> sizes the container */
+  .m-footer-ci-planet{position:absolute;inset:0;width:100%;height:100%}   /* overlay, same coords */
+  /* CI reveal on scroll-in (.m-footer.in, IO in the page scripts) — PC .footer.in port: wordmark
+     blur-fades up first, then the planet "arrives" with a soft overshoot a beat later */
+  .m-footer-ci-wordmark,.m-footer-ci-planet{opacity:0;will-change:opacity,filter,transform}
+  .m-footer-ci-wordmark{filter:blur(14px);transform:translateY(12px);
+    transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.22,1,.36,1)}
+  .m-footer-ci-planet{transform-origin:90% 33%;transform:scale(.35);
+    transition:opacity .4s ease .24s,transform .55s cubic-bezier(.34,1.56,.64,1) .24s}
+  .m-footer.in .m-footer-ci-wordmark{opacity:1;filter:blur(0);transform:translateY(0)}
+  .m-footer.in .m-footer-ci-planet{opacity:1;transform:scale(1)}
+  @media (prefers-reduced-motion:reduce){
+    .m-footer-ci-wordmark,.m-footer-ci-planet{opacity:1;filter:none;transform:none;transition:none}}
+  .m-footer-info{font-style:normal}   /* bottom-anchored by the CI's auto margins above */
+  .m-footer-info p{margin:0;font-weight:600;font-size:13px;line-height:1.5}
+  .m-footer-info p + p{margin-top:16px}
+  .m-footer-tf{display:flex}
+  .m-footer-tf span:first-child{width:159px}
+  .m-footer-copy{margin:48px 0 0;font-weight:600;font-size:13px;line-height:1.5;text-transform:uppercase}
+
+  /* --- chapter 09 (mobile): full-menu overlay — PC's circular reveal + halftone canvas (js/main.js
+         IIFE ported into mobile.html's inline script) is reused as-is via the global #menu-overlay/
+         #menu-panel/#menu-dots/#menu-logo/#menu-close rules near the top of this file; only the reveal's
+         ORIGIN and these two elements' fixed positions need a mobile override (hamburger #full-menu
+         sits at right:12px/top:16px, 48×48 -> circle center = calc(100% - 36px) 40px). Content below the
+         logo/close is mobile-only (m-menu-* classes, not the desktop 2-col .menu-inner layout). --- */
+  #menu-panel{clip-path:circle(0 at calc(100% - 36px) 40px)}
+  #menu-logo{left:20px;top:31px;width:104.9px;height:18px}
+  #menu-close{right:12px;top:16px;width:48px;height:48px}
+  #menu-close img{width:16.29px;height:16.29px}
+
+  .m-menu-scroll{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;padding:24.63vh 20px 32px;   /* nav top responds to height (Figma 200/812); bottom stack is bottom-anchored */
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;   /* like PC .menu-inner — body has no font, so without this the menu falls to Apple SD Gothic */
+    display:flex;flex-direction:column;
+    opacity:0;transform:translateY(18px);
+    transition:opacity .45s ease,transform .55s cubic-bezier(.22,1,.36,1)}
+  #menu-overlay.open .m-menu-scroll{opacity:1;transform:translateY(0);transition-delay:.3s}
+  @media (prefers-reduced-motion:reduce){
+    .m-menu-scroll{opacity:1;transform:none;transition:none}}
+
+  .m-menu-nav{display:flex;flex-direction:column;gap:0;align-items:flex-start}
+  .m-menu-item{display:flex;align-items:flex-start;gap:12px;color:#FFF;text-decoration:none;
+    font-family:'Cormorant Garamond',serif;font-weight:600;font-size:64px;line-height:1.211}   /* badge top-aligns like PC (.menu-badge superscript), per Figma row */
+  .m-menu-badge{height:32px;padding:0 12px;border-radius:999px;background:#FFF;color:#3E3F44;
+    display:flex;align-items:center;font-family:'Roboto Serif',serif;font-weight:400;font-size:20px}
+  /* the page you're on: dimmed + label-only strikethrough (PC .menu-item.is-current parity —
+     the badge span is never crossed) */
+  .m-menu-item.is-current{color:#A1A1A1}
+  .m-menu-item.is-current span:first-child{text-decoration:line-through;text-decoration-thickness:.05em}
+
+  .m-menu-family{margin:auto 0 0;list-style:none;padding:0;display:flex;flex-direction:row;gap:40px}   /* Figma rev: family row joins the bottom-anchored stack (y604); the single auto gap above it absorbs device height */
+  .m-menu-family li{display:flex;align-items:center;gap:10px;color:#FFF;font-weight:600;font-size:16px}
+  .m-menu-fam-ico{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+  .m-menu-fam-ico img{width:9px;height:9px}
+
+  .m-menu-bottom{margin-top:48px;display:flex;flex-direction:column;align-items:flex-start;gap:48px}   /* Figma bottom group: family → 48 → brief → 48 → copy */
+  .m-menu-brief{display:inline-flex;align-items:center;gap:12px;padding:10px 12px;
+    border:1px solid #FFF;border-radius:8px;color:#FFF;text-decoration:none;font-weight:600;font-size:14px;line-height:1.5}
+  .m-menu-brief-ico{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+  .m-menu-brief-ico img{width:11.31px;height:11.31px}
+  .m-menu-copy{margin:0;color:#FFF;font-weight:600;font-size:13px;line-height:1.5;text-transform:uppercase}
+
+  /* --- mobile-contact.html hero — "Hello / Build your value" + intro + Company Brief Download
+         (Figma official_05_projects_01_375). Header chrome/footer/menu reuse the shared rules
+         above; only the .mc-* hero-specific rules live here. --- */
+  /* one flow group, BOTTOM-anchored: the brief button sits 4.93vh (40/812) off the viewport bottom
+     and the sub/title stack up from it with fixed 32/40 gaps — shortening the copy moves the TOP of
+     the group down, never the button. Top padding is only a safety clearance for the fixed header;
+     on short viewports the section grows past 100vh and scrolls instead of overlapping. */
+  .mc-hero{position:relative;z-index:1;min-height:100vh;background:transparent;   /* transparent so the fixed #bg-line shows through (body is #fff); z:1 = above the arcs like every section, so the white .mc-brief button isn't crossed by them */
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+    padding:120px 20px 5.91vh}   /* bottom: Figma brief ends 764 -> 48/812 */
+  /* bg arcs come from the FIXED #bg-line chrome (sized in the page's inline style, like mobile.html)
+     — the hero stays transparent so they show through and stay put while the page scrolls */
+
+  .mc-head{position:relative}   /* in flow — start point comes from the hero's 38.67vh padding-top */
+  .mc-symbol{display:block;width:117px;height:6px}
+  .mc-title{margin:16px 0 0;font-family:'Cormorant Garamond',serif;font-weight:600;color:#3E3F44;
+    display:flex;flex-direction:column;align-items:flex-start;line-height:1.211}   /* 16px gap: symbol y314+6 -> title y336 */
+  .mc-t1{font-size:72px}
+  .mc-t2{font-size:72px;margin-top:-32px}   /* Figma had a stray 80px on "Build" — user unified to 72 */
+  .mc-t3{font-size:72px;margin-top:-48px}
+  .mc-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#F03A3A;
+    margin-left:8px;vertical-align:-.025em}   /* baseline like a full stop (PC .ct-dot) — not vertically centred */
+
+  .mc-sub{position:relative;width:100%;max-width:335px;margin-top:24px;display:flex;flex-direction:column;gap:16px;   /* Figma rev: head ends ~565, sub y589 */
+    color:#3E3F44}
+  .mc-sub-head{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;   /* body has no default font — must be explicit */
+    font-weight:600;font-size:16px;line-height:1.5;word-break:keep-all}
+  .mc-sub-body{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:400;font-size:15px;line-height:1.5;word-break:keep-all}   /* 어절 단위 줄바꿈 — CJK 기본은 글자 단위라 "당신의"가 중간에 잘림 */
+
+  .mc-brief{position:relative;margin-top:48px;   /* Figma rev: sub ends ~675, brief y723; bottom space = hero padding-bottom */
+    display:inline-flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;
+    border:1px solid #3E3F44;border-radius:8px;color:#3E3F44;text-decoration:none;background:#FFF;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:600;font-size:14px;line-height:1.5}
+  .mc-brief-ico{width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+  .mc-brief-ico img{width:11.31px;height:11.31px;
+    filter:brightness(.25)}   /* icon_download.svg is a fixed WHITE stroke (no currentColor) — .m-menu-brief-ico
+       gets away with it on the dark menu panel, but this button sits on #FFF, so darken it to
+       approximate #3E3F44 (white * .25 ≈ #3F3F3F) rather than adding a second SVG asset */
+
+  /* load reveal — PC contact hero port (contact.css .ct-hero): title lines settle from a soft blur
+     (.in added by the inline script once the serif webfont is ready), the intro follows, the brief
+     button joins last, then the red dot stamps in with a bounce. 3 title lines on mobile (PC has 2)
+     -> stagger extends 0/.14/.28 and the dot shifts to ~1.34s. */
+  .mc-t1,.mc-t2,.mc-t3{opacity:0;filter:blur(18px);transform:translateY(.05em) scale(1.04);transform-origin:left center;
+    transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
+  .mc-t2{transition-delay:.14s}
+  .mc-t3{transition-delay:.28s}
+  .mc-dot{opacity:0;transform:scale(0);transform-origin:center center}
+  .mc-sub-head,.mc-sub-body{opacity:0;filter:blur(8px);transform:translateY(10px);
+    transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.22,1,.36,1)}
+  .mc-sub-head{transition-delay:.5s}
+  .mc-sub-body{transition-delay:.62s}
+  .mc-brief{opacity:0;filter:blur(8px);transform:translateY(10px);
+    transition:opacity .9s ease .74s,filter .9s ease .74s,transform .9s cubic-bezier(.22,1,.36,1) .74s}
+  .mc-hero.in .mc-t1,.mc-hero.in .mc-t2,.mc-hero.in .mc-t3,
+  .mc-hero.in .mc-sub-head,.mc-hero.in .mc-sub-body,.mc-hero.in .mc-brief{opacity:1;filter:blur(0);transform:none}
+  .mc-hero.in .mc-dot{opacity:1;transform:scale(1);
+    transition:transform .42s cubic-bezier(.34,1.56,.64,1) 1.34s,opacity .18s ease 1.32s}
+  @media (prefers-reduced-motion:reduce){
+    .mc-t1,.mc-t2,.mc-t3,.mc-sub-head,.mc-sub-body,.mc-brief{opacity:1;filter:none;transform:none;transition:none}
+    .mc-dot{opacity:1;transform:none}}
+
+  /* --- mobile-contact.html form / step 1: 기본정보 칩 선택 (Figma 2511:43420) — ports 3 interactions
+         from PC contact.css/.html: heading colour-sweep (.mc-line/--fill), rise-reveal (html.ct-rv),
+         chip select. Colours/behaviour match PC .ct-block-head/.ct-line/.ct-chip 1:1; sizes are the
+         375 Figma values (PC has no matching breakpoint here — mobile design starts flat). --- */
+  .mc-form{position:relative;z-index:1;   /* above the fixed #bg-line (z:0) — static content paints UNDER a positioned z:0 layer, so without this the arcs drew across the white chips/inputs */
+    padding:80px 20px;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;color:#3E3F44}
+  .mc-form-headwrap{display:block}   /* left-aligned at the 20px gutter — centring the fit-content block read as fake side padding at wider viewports */
+  .mc-form-head{margin:0;font-weight:700;font-size:32px;line-height:1.2}
+  /* heading fill sweep: dark colour fills in from the LEFT as it scrolls up (per-line --fill set by the
+     inline script, line 1 first then line 2) — same gradient-clip trick as PC .ct-block-head .ct-line */
+  .mc-line{--fill:0%;display:block;width:fit-content;max-width:100%;
+    background-image:linear-gradient(90deg, #3E3F44 var(--fill), #E1E1E1 var(--fill));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .mc-fields{margin-top:80px;display:flex;flex-direction:column;gap:80px}
+  .mc-field-label{margin:0 0 24px;font-weight:700;font-size:18px;line-height:1.5}
+  .mc-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  /* pill padding is 4px (not the Figma 16) — at the 375 cell width (~74px) 16px side-padding clips
+     labels like "웹사이트" / "5억~10억"; 4px fits them all without changing the visual pill shape */
+  .mc-chip{padding:12px 4px;display:flex;align-items:center;justify-content:center;white-space:nowrap;
+    background:#FFF;border:1px solid #E5E5E5;border-radius:999px;color:#3E3F44;font-family:inherit;
+    font-weight:600;font-size:14px;line-height:1.5;cursor:pointer;
+    transition:border-color .15s ease,background .15s ease,color .15s ease}
+  .mc-chip.is-selected{background:#3E3F44;border-color:#3E3F44;color:#FFF}
+  /* rise reveal: fields are born hidden (html.ct-rv set before paint), then rise + fade in as they scroll
+     into view via the inline IO script — same html.ct-rv scoping PC contact.css uses. */
+  .ct-rv .mc-field{opacity:0;transform:translateY(48px);pointer-events:none;
+    transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)}
+  .ct-rv .mc-field.in{opacity:1;transform:none;pointer-events:auto}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .mc-field{opacity:1;transform:none;transition:none;pointer-events:auto}}
+
+  /* --- mobile-contact.html form / step 2: 의뢰인 정보 + 프로젝트 내용 + 동의 + 제출 (Figma 2520:43495) —
+         ports PC contact.css's .ct-input/.ct-cell/.ct-hint, .ct-textarea, .ct-file*, .ct-consent*,
+         .ct-submit 1:1. sizes are the 375 Figma values (PC has no matching breakpoint here). --- */
+  .mc-fields2{gap:120px}
+  .mc-content-group{display:flex;flex-direction:column;gap:32px}   /* 프로젝트 내용 field + consent, 32px apart (PC's .ct-content-group is 48 — mobile Figma is tighter) */
+  .mc-form2-inner{margin:0;border:0;padding:0}
+  .mc-field-label--lg{font-size:20px}   /* 프로젝트 내용 label only */
+
+  .mc-inputs{display:flex;flex-direction:column;gap:20px}
+  .mc-input-row{display:flex;gap:20px}
+  .mc-input{flex:1;min-width:0;height:56px;padding:0 24px;background:#FFF;border:1px solid #E5E5E5;
+    border-radius:12px;color:#3E3F44;font-family:inherit;font-weight:600;font-size:14px;line-height:1.5;outline:none}
+  .mc-input::placeholder{color:#B5B5B5;font-weight:400}
+  .mc-input:focus{border-color:#3E3F44}
+  /* input cell: relative wrapper so the Korean-detected tooltip can anchor to the field — ported from PC .ct-cell/.ct-hint */
+  .mc-cell{flex:1;min-width:0;position:relative;display:flex}
+  .mc-hint{position:absolute;left:16px;top:calc(100% + 10px);z-index:6;
+    display:inline-flex;align-items:center;gap:8px;padding:8px 12px;
+    background:#FFF;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.05);
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transform:translateY(-4px) scale(.98);transform-origin:20px -8px;
+    transition:opacity .16s ease,transform .16s ease}
+  .mc-cell.show-hint .mc-hint{opacity:1;transform:none}
+  .mc-hint::before{content:"";position:absolute;left:18px;top:-5px;width:10px;height:10px;background:#FFF;
+    border-radius:2px;transform:rotate(45deg);box-shadow:-2px -2px 3px rgba(0,0,0,.04)}
+  .mc-hint-ico{flex:none;width:20px;height:20px;border-radius:6px;background:#F5A623;color:#FFF;
+    display:grid;place-items:center;font-weight:800;font-size:13px;line-height:1}
+  .mc-hint-msg{color:#3E3F44;font-weight:500;font-size:13px;line-height:1.3}
+
+  /* project content — textarea + file attach row */
+  .mc-textarea{width:100%;margin-top:24px;height:280px;padding:24px;background:#FFF;border:1px solid #E5E5E5;
+    border-radius:12px;resize:none;color:#3E3F44;font-family:inherit;font-weight:600;font-size:14px;line-height:1.5;outline:none}
+  .mc-textarea::placeholder{color:#B5B5B5;font-weight:400}
+  .mc-textarea:focus{border-color:#3E3F44}
+  .mc-file{display:flex;gap:16px;margin-top:16px}
+  .mc-file-name{flex:1;min-width:0;cursor:default;caret-color:transparent}   /* empty: no caret; the button opens the dialog */
+  .mc-file-name:not(:placeholder-shown){cursor:text;caret-color:#3E3F44}    /* file attached: text caret so Backspace-to-remove reads as keyboard-editable */
+  .mc-file-name:placeholder-shown:focus{border-color:#E5E5E5}               /* no focus styling until a file is attached */
+  .mc-file-btn{flex:none;height:56px;padding:0 24px;display:inline-flex;align-items:center;white-space:nowrap;
+    background:#FFF;border:1px solid #3E3F44;border-radius:8px;cursor:pointer;color:#3E3F44;
+    font-family:inherit;font-weight:600;font-size:14px;line-height:1.5;transition:opacity .2s ease}
+  .mc-file-btn:active{opacity:.6}
+
+  /* consent — 24px circle checkbox (gray check default -> dark fill + white check when agreed) + linked agreement text */
+  .mc-consent{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+  .mc-consent-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  .mc-consent-box{flex:none;width:24px;height:24px;border-radius:50%;background:#FFF;border:0.6px solid #E5E5E5;   /* Figma icon: circle stroke 0.6, check 0.9 */
+    display:grid;place-items:center;color:#E1E1E1;transition:background .15s ease,border-color .15s ease,color .15s ease}
+  .mc-consent-box svg{display:block;width:24px;height:24px}
+  .mc-consent-input:checked ~ .mc-consent-box{background:#3E3F44;border-color:#3E3F44;color:#FFF}
+  .mc-consent-input:focus-visible ~ .mc-consent-box{outline:2px solid #3E3F44;outline-offset:2px}
+  /* Figma ts1: only 이용약관/개인정보처리방침 are underlined SemiBold dark — the rest of the
+     sentence stays plain gray (PC keeps the whole line plain; mobile Figma adds the term links) */
+  .mc-consent-text{color:#B5B5B5;font-family:inherit;font-weight:400;font-size:14px;line-height:1.5;
+    text-decoration:none;transition:color .15s ease}
+  .mc-consent-text a{color:#3E3F44;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+  .mc-consent-input:checked ~ .mc-consent-text{color:#3E3F44;font-weight:600}
+
+  /* submit — gray/inactive until every required field above is filled, dark/active once ready (ported
+     from PC .ct-submit gating states) */
+  .mc-submit{width:208px;height:64px;padding:0 24px;display:inline-flex;align-items:center;justify-content:space-between;gap:12px;
+    background:#B5B5B5;border:none;border-radius:999px;cursor:pointer;color:#FFF;
+    font-family:inherit;font-weight:600;font-size:16px;line-height:1.5;transition:background-color .25s ease,opacity .2s ease}
+  .mc-submit.is-ready{background:#3E3F44}
+  .mc-submit.is-ready:hover .mc-arrow img{animation:project-arrow-cycle .55s cubic-bezier(.22,1,.36,1)}
+  .mc-submit:not(.is-ready):hover{background:#A6A7AD}
+  .mc-arrow{display:grid;place-items:center;width:20px;height:20px;flex:none}
+  .mc-arrow img{width:11.31px;height:11.31px;display:block}
+  /* jump-to-missing: a brief red ring pulses on the first unfilled field when 문의하기 is pressed early */
+  @keyframes mc-flash{0%{box-shadow:0 0 0 0 rgba(240,58,58,0)}12%{box-shadow:0 0 0 3px rgba(240,58,58,.30)}100%{box-shadow:0 0 0 0 rgba(240,58,58,0)}}
+  .mc-flash{animation:mc-flash 1s ease}
+
+  /* rise reveal: consent + submit join the same html.ct-rv IO reveal as .mc-field (step 1's rule above
+     already covers .mc-field, which step 2 reuses; this adds the two step-2-only areas) */
+  .ct-rv .mc-consent,.ct-rv .mc-submit{opacity:0;transform:translateY(48px);pointer-events:none;
+    transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)}
+  .ct-rv .mc-consent.in,.ct-rv .mc-submit.in{opacity:1;transform:none;pointer-events:auto}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .mc-consent,.ct-rv .mc-submit{opacity:1;transform:none;transition:none;pointer-events:auto}}
+
+  /* ---- 03 Join Us (Figma 2542:43910, 375×680): bg doors-open scrub (inline JS sets clip-path,
+     PC .ct-join port), absolutely placed content per the Figma anchors ---- */
+  .mc-join{position:relative;z-index:1;height:680px;overflow:hidden;   /* above the fixed #bg-line so the arcs sit behind the photo */
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;color:#3E3F44}
+  .mc-join-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .mc-join-inner{position:absolute;inset:0}
+  .mc-join-title{margin:0;position:absolute;left:20px;top:80px;
+    font-family:'Cormorant Garamond',serif;font-weight:600;font-size:72px;line-height:1.21;letter-spacing:-0.01em}
+  .mc-join-sub{margin:0;position:absolute;left:20px;top:191px;width:calc(100% - 40px);font-weight:600;font-size:16px;line-height:1.5;word-break:keep-all}
+  .mc-join-desc{margin:0;position:absolute;left:20px;top:231px;width:calc(100% - 40px);font-weight:400;font-size:15px;line-height:1.5;word-break:keep-all}
+  .mc-join-btn{position:absolute;left:20px;top:420px;width:208px;height:64px;padding:0 24px;
+    display:inline-flex;align-items:center;justify-content:space-between;gap:12px;
+    background:#3E3F44;border-radius:999px;color:#FFF;text-decoration:none;font-weight:600;font-size:16px;line-height:1.5}
+  /* joined reveal (PC .ct-join.joined stagger) */
+  .ct-rv .mc-join-title,.ct-rv .mc-join-sub,.ct-rv .mc-join-desc,.ct-rv .mc-join-btn{
+    opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)}
+  .ct-rv .mc-join.joined .mc-join-title{opacity:1;transform:none}
+  .ct-rv .mc-join.joined .mc-join-sub{opacity:1;transform:none;transition-delay:.08s}
+  .ct-rv .mc-join.joined .mc-join-desc{opacity:1;transform:none;transition-delay:.16s}
+  .ct-rv .mc-join.joined .mc-join-btn{opacity:1;transform:none;transition-delay:.24s}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .mc-join-title,.ct-rv .mc-join-sub,.ct-rv .mc-join-desc,.ct-rv .mc-join-btn{opacity:1;transform:none;transition:none}}
+
+  /* ===== mobile-projects.html — "Our / Projects." hero (symbol + stacked title + dot + intro +
+         완료/진행중 filter bar) and the 2-col project grid (Figma official_05_projects_01_375, node
+         2489:51127). Header/footer/menu/scroll-hint reuse the shared rules above; .mp-* here is the
+         page-specific hero + grid, mirroring the .mc-* naming used by mobile-contact.html. ===== */
+  /* hero: bottom-anchored flow like .mc-hero — filter bar sits 48/812 (5.91vh) off the viewport
+     bottom (same value mobile-contact used for its Company Brief button), with fixed 24/48px gaps
+     stacking the sub-copy and filter bar up from it, so shortening any line only moves the TOP. */
+  .mp-hero{position:relative;z-index:1;min-height:100vh;background:transparent;   /* transparent so the fixed #bg-line shows through (body is #fff); z:1 = above the arcs (else they cross the white .mp-toggle) */
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+    padding:120px 20px 5.91vh}
+
+  .mp-head{position:relative}
+  .mp-symbol{display:block;width:117px;height:6px}   /* same assets/symbol.svg as mobile-contact/PC-projects, sized to the 375 Figma */
+  .mp-title{margin:16px 0 0}   /* 16px gap: symbol y314+6 -> title y336 */
+  .mp-title-lines{display:flex;flex-direction:column;font-family:'Cormorant Garamond',serif;font-weight:600;
+    color:#3E3F44;line-height:1.21;letter-spacing:-0.01em}
+  .mp-t1,.mp-t2{font-size:72px}
+  .mp-t2{margin-top:-32px}
+  /* dot rides the "Projects" text baseline like a full stop (inline pattern, same as PC .pj-dot / .mc-dot).
+     Figma math (node 2489:51138): dot column h52 centred + row align-end => dot bottom 20px above the 87px
+     (72*1.211) line-box bottom; Cormorant descent 287/1000*72 = 20.66px => dot bottom 0.66px (.009em) below
+     baseline. Inline + vertical-align:-.009em reproduces that exactly; 8px Figma gap = margin-left. */
+  .mp-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#F03A3A;
+    margin-left:8px;vertical-align:-.009em}
+
+  .mp-sub{position:relative;width:100%;max-width:335px;margin-top:24px;display:flex;flex-direction:column;gap:16px;color:#3E3F44}
+  .mp-sub-head{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:600;font-size:16px;line-height:1.5;word-break:keep-all}
+  .mp-sub-body{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:400;font-size:15px;line-height:1.5;word-break:keep-all}
+
+  /* filter bar: All category chip (min-width:96px so longer labels like "Consulting" can hug — a
+     native <select> overlays the whole chip, invisible, so tapping it opens the OS-native
+     bottom-sheet/picker on iOS + Android) + 완료/진행중 segmented toggle */
+  .mp-filter{position:relative;width:100%;margin-top:48px;display:flex;align-items:center;justify-content:space-between}
+  .mp-all{position:relative;min-width:96px;height:37px;padding:8px 12px 8px 16px;box-sizing:border-box;
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    background:#3E3F44;border:none;border-radius:999px;color:#FFF;cursor:pointer;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:600;font-size:14px;line-height:1.5}
+  .mp-all-ico{flex:none;width:24px;height:24px}
+  /* disabled while 진행중 is active (Figma official_05_projects_02_375: chip at 40% opacity —
+     the card list has no category filter). The select also gets the disabled ATTRIBUTE (JS),
+     so the OS picker can't open; pointer-events:none keeps iOS from flashing a focus ring. */
+  .mp-all.is-disabled{opacity:.4;cursor:default}
+  .mp-all.is-disabled .mp-all-select{pointer-events:none;cursor:default}
+  /* invisible native select, full chip coverage — iOS/Android render this as the system
+     bottom-sheet/dropdown picker; font-size:16px prevents iOS Safari's auto-zoom-on-focus */
+  .mp-all-select{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:none;
+    background:transparent;color:transparent;opacity:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
+  /* Figma 2554:44220: 116x37 outer, stroke INSIDE + 2px padding => tabs inset 2px from the outer edge.
+     CSS border eats 1px of that inset, so border 1px + padding 1px reproduces it (116 = 1+1+56+56+1+1). */
+  .mp-toggle{position:relative;display:flex;align-items:center;padding:1px;height:37px;box-sizing:border-box;
+    background:#FFF;border:1px solid #3E3F44;border-radius:8px}
+  .mp-toggle::before{content:"";position:absolute;top:1px;left:1px;width:56px;height:33px;border-radius:6px;background:#3E3F44;
+    transition:transform .3s cubic-bezier(.22,1,.36,1)}   /* the active fill slides between 완료 / 진행중 */
+  .mp-toggle.is-ongoing::before{transform:translateX(56px)}
+  .mp-status{position:relative;z-index:1;width:56px;height:33px;border:none;border-radius:6px;background:none;color:#3E3F44;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:600;font-size:13px;line-height:1.5;
+    cursor:pointer;transition:color .25s ease}
+  .mp-status.is-active{color:#FFF}
+
+  /* load reveal — same shape as .mc-hero's title/sub reveal; the filter bar takes the "last item"
+     slot (.mc-brief's spot) so it settles in after the intro copy. */
+  .mp-t1,.mp-t2{opacity:0;filter:blur(18px);transform:translateY(.05em) scale(1.04);transform-origin:left center;
+    transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
+  .mp-t2{transition-delay:.14s}
+  .mp-dot{opacity:0;transform:scale(0);transform-origin:center center}
+  .mp-sub-head,.mp-sub-body{opacity:0;filter:blur(8px);transform:translateY(10px);
+    transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.22,1,.36,1)}
+  .mp-sub-head{transition-delay:.5s}
+  .mp-sub-body{transition-delay:.62s}
+  .mp-filter{opacity:0;filter:blur(8px);transform:translateY(10px);
+    transition:opacity .9s ease .74s,filter .9s ease .74s,transform .9s cubic-bezier(.22,1,.36,1) .74s}
+  .mp-hero.in .mp-t1,.mp-hero.in .mp-t2,
+  .mp-hero.in .mp-sub-head,.mp-hero.in .mp-sub-body,.mp-hero.in .mp-filter{opacity:1;filter:blur(0);transform:none}
+  .mp-hero.in .mp-dot{opacity:1;transform:scale(1);
+    transition:transform .42s cubic-bezier(.34,1.56,.64,1) 1.2s,opacity .18s ease 1.18s}
+  @media (prefers-reduced-motion:reduce){
+    .mp-t1,.mp-t2,.mp-sub-head,.mp-sub-body,.mp-filter{opacity:1;filter:none;transform:none;transition:none}
+    .mp-dot{opacity:1;transform:none}}
+
+  /* project grid — 2-col, 8 cards (images/projects/thumb-01..08.png). cards 1-2 (row 1) get the
+     Figma's 12px radius, the rest 20px. .mp-panel wraps each status's content with display:contents so
+     its children stay direct grid items (the 2-col track). */
+  .mp-grid-section{position:relative;z-index:1;padding:80px 20px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .mp-panel{display:contents}
+  .mp-panel[hidden]{display:none}
+  .mp-card{position:relative;aspect-ratio:416/560;overflow:hidden;border-radius:20px}   /* PC .pj-card ratio (416×560 @2560 = tablet 259.44×349.25) kept at any col width */
+  .mp-card:nth-child(-n+2){border-radius:12px}
+  .mp-card img{display:block;width:100%;height:100%;object-fit:cover}
+  /* 진행중 card list (Figma official_05_projects_02_375 node 2590:43560): full-width column, 16px
+     between cards. .mp-list overrides the panel's display:contents with a real layout — it must
+     span both grid tracks (grid-column:1/-1); the .mp-panel[hidden]{display:none} rule above still
+     wins on specificity (0-2-0 vs 0-1-0), so the toggle's hidden swap keeps working. */
+  .mp-list{display:flex;flex-direction:column;gap:16px;grid-column:1/-1}
+  /* card: Figma 335w hug — padding 20/24 with the 1px #E5E5E5 stroke INSIDE, so the CSS border
+     eats 1px of the padding (19/23 + 1, same trick as .mp-toggle). #FFF, r12. Rows stack with
+     no gap: top strip h48 (logo 98×48 vs 분류), name row h80, period row h48 → 216 total. */
+  .mp-ocard{display:flex;flex-direction:column;padding:19px 23px;box-sizing:border-box;
+    background:#FFF;border:1px solid #E5E5E5;border-radius:12px;color:#3E3F44;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif}
+  .mp-ocard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;height:48px}
+  .mp-ocard-logo{display:block;flex:none;width:98px;height:48px;object-fit:cover}
+  .mp-ocard-cat{font-weight:700;font-size:14px;line-height:1.5}
+  .mp-ocard-name{margin:0;display:flex;align-items:flex-end;height:80px;   /* Figma 2590:43575: name sits at the row bottom */
+    font-weight:700;font-size:20px;line-height:1.5;word-break:keep-all}
+  .mp-ocard-period{margin:0;display:flex;align-items:center;height:48px;
+    font-weight:700;font-size:14px;line-height:1.5}
+
+  /* reveal: born-hidden via html.ct-rv (PC .pj-card port — same rise/easing as .mc-field), the inline
+     script adds row 1's .in immediately on load and observes rows 2+ on scroll. col 2 lags col 1 by .07s. */
+  .ct-rv .mp-card{opacity:0;transform:translateY(48px);pointer-events:none;
+    transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)}
+  .ct-rv .mp-card.in{opacity:1;transform:none;pointer-events:auto}
+  .mp-card:nth-child(2n){transition-delay:.07s}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .mp-card{opacity:1;transform:none;transition:none;pointer-events:auto}}
+
+  /* ===== mobile-about.html — "Who / We Are." hero (Figma official_03_about_375, node 2489:50521),
+         PC about.html/about.css .about-hero* port: symbol + stacked title + dot + lead/body over the
+         fixed #bg-line arcs, and the black-hole card as a PINNED EXPANSION (200vh track, sticky
+         100vh stage; the inline script in mobile-about.html scrubs top/left/width/height/radius —
+         js/about-hero.js shape). Header/footer/menu/scroll-hint reuse the shared rules above.
+         Figma @375x812: symbol x20 y362 117x6 -> title y384 (72px Cormorant, lines 55 apart) ->
+         dot 12px x243 y494 -> lead y550 (16/600, 2 lines) -> body y614 (15/400, 3 lines) ends 683
+         -> card x20 y731 335x480 R24 #000 (81px = ~10vh peeks in above the fold). ===== */
+  .ma-hero{position:relative;z-index:1;height:200vh;background:transparent}   /* 100vh stage + 100vh scrub; transparent so the fixed #bg-line shows through */
+  .ma-hero-pin{position:sticky;top:0;height:100vh;overflow:hidden}
+  /* text column: bottom-anchored like .mc-hero/.mp-hero — the copy's bottom edge sits 48px above the
+     card's resting top (10vh peek), so on any phone height the text/card gap is the Figma 48 and only
+     the TOP of the group moves. Top padding = fixed-header safety clearance. z:2 = above the card. */
+  .ma-hero-inner{position:relative;z-index:2;height:100%;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+    padding:120px 20px 129px}   /* 81px card peek + 48 gap — fixed px so the browser address bar can't shift the text/card gap */
+  .ma-head{position:relative}
+  .ma-symbol{display:block;width:117px;height:6px;transition:filter .35s ease}   /* same assets/symbol.svg, sized to the 375 Figma */
+  .ma-title{margin:16px 0 0}   /* 16px gap: symbol y362+6 -> title y384 */
+  .ma-title-lines{display:flex;flex-direction:column;font-family:'Cormorant Garamond',serif;font-weight:600;
+    color:#3E3F44;line-height:1.21;letter-spacing:-0.01em;transition:color .35s ease}
+  .ma-t1,.ma-t2{font-size:72px}
+  .ma-t2{margin-top:-32px}   /* Figma: "We Are" line top 55 below "Who" (87px auto box) */
+  /* dot rides the "We Are" baseline like a full stop — same Figma math as .mp-dot (dot column h52
+     centred, row align-end -> dot bottom 20px above the 87px line-box bottom = .009em below baseline);
+     8px Figma gap = margin-left. background (not color) so it stays red when the cover flips text white. */
+  .ma-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#F03A3A;
+    margin-left:8px;vertical-align:-.009em}
+  .ma-sub{position:relative;width:100%;max-width:335px;margin-top:24px;display:flex;flex-direction:column;gap:16px;color:#3E3F44}
+  .ma-sub-head{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:600;font-size:16px;line-height:1.5;word-break:keep-all;transition:color .35s ease}
+  .ma-sub-body{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:400;font-size:15px;line-height:1.5;word-break:keep-all;transition:color .35s ease}
+  /* covered state: the card is behind the text -> text goes light, symbol inverts (header flips via .on-dark) */
+  .ma-hero.is-covered .ma-title-lines,.ma-hero.is-covered .ma-sub{color:#FFF}
+  .ma-hero.is-covered .ma-symbol{filter:brightness(0) invert(1)}
+  /* the black-hole card — state-A geometry in CSS (matches the JS at scrub 0, so no jump on load;
+     also the reduced-motion / no-JS resting state): strip x20 top 90vh 335x480 R24 #000. JS overrides inline. */
+  .ma-banner{position:absolute;z-index:1;top:calc(100% - 81px);left:20px;right:20px;height:480px;border-radius:24px;overflow:hidden;background:#000}   /* 81px peek measured from the stage bottom (same box as the text) */
+  .ma-banner #about-blackhole{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* load reveal — PC about-hero port (same as .mc-hero/.mp-hero): title lines settle from a soft blur
+     (.in added once the serif webfont is ready), the intro follows, then the red dot stamps in ~1.2s
+     with a back-ease overshoot. */
+  .ma-t1,.ma-t2{opacity:0;filter:blur(18px);transform:translateY(.05em) scale(1.04);transform-origin:left center;
+    transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
+  .ma-t2{transition-delay:.14s}
+  .ma-dot{opacity:0;transform:scale(0);transform-origin:center center}
+  .ma-sub-head,.ma-sub-body{opacity:0;filter:blur(8px);transform:translateY(10px);
+    transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.22,1,.36,1),color .35s ease}
+  .ma-sub-head{transition-delay:.5s,.5s,.5s,0s}
+  .ma-sub-body{transition-delay:.62s,.62s,.62s,0s}
+  .ma-hero.in .ma-t1,.ma-hero.in .ma-t2,
+  .ma-hero.in .ma-sub-head,.ma-hero.in .ma-sub-body{opacity:1;filter:blur(0);transform:none}
+  .ma-hero.in .ma-dot{opacity:1;transform:scale(1);
+    transition:transform .42s cubic-bezier(.34,1.56,.64,1) 1.2s,opacity .18s ease 1.18s}
+  @media (prefers-reduced-motion:reduce){
+    .ma-t1,.ma-t2,.ma-sub-head,.ma-sub-body{opacity:1;filter:none;transform:none;transition:none}
+    .ma-dot{opacity:1;transform:none}}
+
+  /* ===== 02 Mission & Vision + the three I's — PC about.css .about-mission port (Figma Frame 32 @375:
+     x0 y1211 375x2073, pad 160/20/160/20, gap 80; head group gap 48 (eyebrow -> headline+body, gap 32);
+     values stacked, gap 80: 240 ring (#fff, 1px #3E3F44 inside) -> 48 -> title 18/700 lh1.4 -> 24 ->
+     body 14/400 lh1.5, centred). Content 335 = 20px gutters, fluid to 1023 (width:100%, only the ring is fixed). ===== */
+  .ma-mission{position:relative;z-index:1;padding:160px 20px;color:#3E3F44}
+  .ma-mission-head{display:flex;flex-direction:column;align-items:flex-start;width:100%}
+  .ma-eyebrow{margin:0 0 48px;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;line-height:1.2}   /* Figma h29 */
+  .ma-headline{margin:0 0 32px;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:28px;line-height:1.2;word-break:keep-all}   /* 2 lines = 66 (auto lh) */
+  .ma-paragraph{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400;font-size:15px;line-height:1.5;word-break:keep-all}   /* 6 lines = 138 */
+  .ma-values{list-style:none;margin:80px 0 0;padding:0;display:flex;flex-direction:column;align-items:center;gap:80px;width:100%}
+  .ma-value{display:flex;flex-direction:column;align-items:center;text-align:center;width:100%}
+  .ma-value-pill{display:flex;align-items:center;justify-content:center;flex:none;width:240px;height:240px;box-sizing:border-box;
+    border-radius:999px;background:#fff;border:1px solid #3E3F44;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:20px;line-height:1.2}
+  .ma-value-text{display:flex;flex-direction:column;align-items:center;gap:24px;margin-top:48px;width:100%}
+  .ma-value-title{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:18px;line-height:1.4;word-break:keep-all}
+  .ma-value-body{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400;font-size:14px;line-height:1.5;word-break:keep-all}
+  /* scroll reveal (PC about.css port, born-hidden under html.ct-rv so no-JS shows everything): head children
+     rise+fade staggered 0/.08/.16, each value card rises+fades (PC .1s lead-in kept; the row stagger .1/.2/.3
+     becomes per-card since the cards are stacked and each is its own IO root). Same 72px elastic rise family. */
+  .ct-rv .ma-mission-head > *{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
+  .ct-rv .ma-mission-head > *:nth-child(2){transition-delay:.08s}
+  .ct-rv .ma-mission-head > *:nth-child(3){transition-delay:.16s}
+  .ct-rv .ma-mission-head.in > *{opacity:1;transform:none}
+  .ct-rv .ma-value{opacity:0;transform:translateY(72px);transition:opacity .8s ease .1s,transform 1.1s cubic-bezier(.34,1.45,.5,1) .1s}
+  .ct-rv .ma-value.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .ma-mission-head > *,.ct-rv .ma-value{opacity:1;transform:none;transition:none}}
+
+  /* ===== 03 Experience — PC about.css .about-fusion port (Figma Frame 1910801891 @375: x0 y3284 375x1273,
+     pad 160/20/160/20, gap 80; "Experience" Cormorant 72/700 lh1 -> 48 -> copy 28/700 (auto lh, 4 lines = 132)
+     -> 80 -> capabilities 2x2 grid, col gap 20 (cards 157.5), row gap 64; card: icon 64 -> 40 -> title 20/700
+     -> 32 -> desc 14/400 lh1.5). The photo band (.ma-gallery, sibling right after) closes the frame:
+     64 below the caps, then the frame's 160 bottom pad lives on the band. ===== */
+  .ma-exp{position:relative;z-index:1;padding:160px 20px 0;color:#3E3F44}
+  .ma-exp-title{margin:0;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:72px;line-height:1;letter-spacing:0}
+  .ma-exp-copy{margin:48px 0 0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:28px;line-height:1.2;word-break:keep-all}
+  .ma-caps{list-style:none;margin:96px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:64px 20px;width:100%}
+  .ma-cap{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0}
+  .ma-cap-icon{display:block;width:64px;height:64px;margin:0 0 40px}
+  .ma-cap-icon img{width:100%;height:100%;object-fit:contain;display:block}
+  .ma-cap-title{margin:0 0 32px;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:20px;line-height:1.2}   /* 2 lines = 48 */
+  /* all four titles carry the same Figma <br> so they stay 2 lines together on phones; once a column can hold
+     the longest title on one line (~600px viewport) the breaks drop and all four go single-line TOGETHER */
+  @media (min-width:600px){ .ma-cap-title br{display:none} }
+  .ma-cap-desc{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400;font-size:14px;line-height:1.5}   /* Figma wraps mid-phrase at 157 — default (normal) Korean breaking */
+  /* scroll reveal (PC port): title blur-in, copy rise+fade .15s behind it, capability cards rise+fade with
+     the PC per-item stagger .07/.14/.21 (each card is its own IO root). */
+  .ct-rv .ma-exp-title{opacity:0;filter:blur(18px);transform:translateY(24px);
+    transition:opacity 1.1s ease,filter 1.1s ease,transform 1.1s cubic-bezier(.22,1,.36,1)}
+  .ct-rv .ma-exp-title.in{opacity:1;filter:blur(0);transform:none}
+  .ct-rv .ma-exp-copy{opacity:0;transform:translateY(72px);transition:opacity .8s ease .15s,transform 1.1s cubic-bezier(.34,1.45,.5,1) .15s}
+  .ct-rv .ma-exp-copy.in{opacity:1;transform:none}
+  .ct-rv .ma-cap{opacity:0;transform:translateY(60px);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.45,.5,1)}
+  .ct-rv .ma-caps li:nth-child(2){transition-delay:.07s}
+  .ct-rv .ma-caps li:nth-child(3){transition-delay:.14s}
+  .ct-rv .ma-caps li:nth-child(4){transition-delay:.21s}
+  .ct-rv .ma-cap.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .ma-exp-title{opacity:1;filter:none;transform:none;transition:none}
+    .ct-rv .ma-exp-copy,.ct-rv .ma-cap{opacity:1;transform:none;transition:none}}
+
+  /* ===== Experience photo band — PC about.css .about-gallery port 1:1 (Figma 2692:45590 @375: x20 y4461,
+     cards 266x360 r24, gap 20, starts at the 20px gutter and bleeds right; 64 below the caps grid, then the
+     Experience frame's 160 bottom pad). CSS marquee: 4 cards duplicated once (8 in the track, clones
+     aria-hidden), gap:0 + item margin-right = the 20 gap so translateX(-50%) is exactly one 4-card set
+     (seamless loop). Gutter offset sits on the CLIPPER (.ma-gallery), track margin-left 0. Duration: PC 40s
+     for a 4312px set (1046 cards + 32 gap @2560) = 108px/s; the mobile set is 4x(266+20) = 1144 -> 10.6s at
+     the same speed feels frantic on a phone, so clamped to 18s (~64px/s). No hover pause, no interaction. */
+  .ma-gallery{position:relative;z-index:1;margin:96px 0 0 20px;padding-bottom:160px;overflow:hidden;overflow:clip}
+  /* the whole band rises+fades as one unit; the transform lives on THIS wrapper only — the marquee's own
+     continuous translateX loop stays on .ma-gallery-track, unaffected. */
+  .ct-rv .ma-gallery{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
+  .ct-rv .ma-gallery.in{opacity:1;transform:none}
+  .ma-gallery-track{display:flex;gap:0;width:max-content;margin-left:0;
+    animation:ma-marquee 18s linear infinite;animation-play-state:paused}   /* parked at frame 0 until the band reveals */
+  .ma-gallery.in .ma-gallery-track{animation-play-state:running}            /* starts flowing only once it's in view */
+  .ma-gallery-item{margin:0 20px 0 0;flex:none;width:266px;height:360px;border-radius:24px;overflow:hidden}
+  .ma-gallery-item img{width:100%;height:100%;object-fit:cover;display:block}
+  @keyframes ma-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){
+    .ma-gallery-track{animation:none}
+    .ct-rv .ma-gallery{opacity:1;transform:none;transition:none}}
+
+  /* ===== 04 Beyond UX / The AX Creator + stats — PC about.css .about-axcreator port (Figma Frame 1910801892
+     @375: x0 y5029 375x1153, pad 160/20/160/20, gap 80: [title 24/700 Cormorant lh.8 (2 lines = 38) -> 48 ->
+     copy (lead 28/700 -> 32 -> para 15/400 lh1.5 -> 32 -> para)] -> 80 -> [Projects done: label 13/700 -> 48 ->
+     100+ 246x62.8] -> 80 -> [Years / Team row: 2 cols 157.5 gap 20; label -> 48 -> 8+ 68x48.9 / 30+ 87.5x49.2].
+     Figures are the PC stat SVGs; heights set, widths auto (same aspect ratios as the Figma vectors).
+     NOTE: the mobile Figma keeps the section title SMALL (24px), unlike the PC's 48-80px display. ===== */
+  .ma-beyond{position:relative;z-index:1;padding:160px 20px 160px;color:#3E3F44}
+  .ma-beyond-title{margin:0;display:flex;flex-direction:column;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;line-height:.8;letter-spacing:0}
+  .ma-beyond-copy{margin:48px 0 0;display:flex;flex-direction:column;gap:32px}
+  .ma-beyond-lead{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:28px;line-height:1.2;word-break:keep-all}   /* 3 lines = 99 */
+  .ma-beyond-para{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:400;font-size:15px;line-height:1.5}
+  .ma-stats{margin:80px 0 0;display:flex;flex-direction:column;gap:80px}
+  .ma-stats-row{display:flex;gap:20px}
+  .ma-stats-row .ma-stat{flex:1 1 0;min-width:0}   /* years / team split the row into equal 157.5 halves (Figma) */
+  .ma-stat{display:flex;flex-direction:column;gap:48px}
+  .ma-stat-label{margin:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;font-size:13px;line-height:1.2}
+  .ma-stat-num{margin:0;line-height:0}
+  .ma-stat-num img{display:block;width:auto;max-width:100%}
+  .ma-stat-projects .ma-stat-num img{height:63px}   /* 100+ 246x62.8 */
+  .ma-stat-years .ma-stat-num img{height:49px}      /* 8+   68x48.9  */
+  .ma-stat-team .ma-stat-num img{height:49px}       /* 30+  87.5x49.2 */
+  /* scroll reveal (PC port): title + copy rise+fade (copy .1s behind); the stats "land" — bigger 96px rise
+     on the elastic curve, stagger .1 / .25 / .35 (Projects / Years / Team). Two [data-rv] roots like PC. */
+  .ct-rv .ma-beyond-title,.ct-rv .ma-beyond-copy{opacity:0;transform:translateY(72px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
+  .ct-rv .ma-beyond-copy{transition-delay:.1s}
+  .ct-rv .ma-beyond-head.in .ma-beyond-title,.ct-rv .ma-beyond-head.in .ma-beyond-copy{opacity:1;transform:none}
+  .ct-rv .ma-stat{opacity:0;transform:translateY(96px);transition:opacity .8s ease,transform 1.1s cubic-bezier(.34,1.45,.5,1)}
+  .ct-rv .ma-stat-projects{transition-delay:.1s}
+  .ct-rv .ma-stat-years{transition-delay:.25s}
+  .ct-rv .ma-stat-team{transition-delay:.35s}
+  .ct-rv .ma-stats.in .ma-stat{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .ct-rv .ma-beyond-title,.ct-rv .ma-beyond-copy,.ct-rv .ma-stat{opacity:1;transform:none;transition:none}}
+
+  /* ===== 05 closing image — PC about.css .about-fullbleed port: PINNED EXPANSION. Figma (Frame 1216117571
+     @375: y6182 375x812) draws the END state — a plain full-viewport photo, 0 gap above (the Beyond frame's
+     160 pad) and 0 gap to the footer. Wrapper = 100vh (stage only, no hold), sticky 100vh stage, the box
+     starts as a small centered card: 25vw wide (94 @375; the PC's 6.25vw = 23px here would be a speck),
+     landscape x0.62 (15.5vw = 58), r12 — state-A geometry == the inline scrub script, so no jump on load.
+     vh, not svh (mobile pins). ===== */
+  .ma-close{position:relative;z-index:1;height:100vh;margin:0}
+  .ma-close-pin{position:sticky;top:0;height:100vh;overflow:hidden}
+  .ma-close-box{position:absolute;z-index:1;
+    top:calc((100vh - 15.5vw) / 2);   /* startH = 25vw * 0.62 */
+    left:37.5vw;right:37.5vw;         /* (100vw - 25vw) / 2 */
+    height:15.5vw;border-radius:12px;overflow:hidden;background:#3E3F44}
+  .ma-close-box img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.08);transform-origin:center}
+  @media (prefers-reduced-motion:reduce){
+    .ma-close-box{top:0;left:0;right:0;width:100%;height:100vh;border-radius:0}
+    .ma-close-box img{transform:none}}
+
+  /* ============================================================================
+     mobile-contact.html — Careers recruit popup (Figma 2701:45651, 375×958). Full-screen port of the
+     PC .rc-modal (contact.css): the X floats fixed top-right, Careers + copy + form scroll inside
+     .mr-scroll (data-lenis-prevent), 입사지원 stays fixed at the bottom. Leaf controls reuse the page's
+     .mc-* classes with popup-only overrides below. Figma anchors: X 48-box @(315,16) with a 24 mark /
+     head @y90 (Careers 56 serif → 16 → lead 14/1.5) / 64 / 지원분야 18-700 → 24 → 2-col chips gap 12 /
+     64 / 기본정보 → 24 → rows gap 20 (inputs 56 r12, file name+16+button 97 r8) / 64 / 입사지원 335×64
+     r999, 32 above the frame bottom. Sits above the fixed chrome (z 60) and below nothing that can open.
+     ============================================================================ */
+  .mr-popup{position:fixed;inset:0;z-index:105;background:#FFF;overflow:hidden;overflow-x:clip;color:#3E3F44;
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    opacity:0;visibility:hidden;pointer-events:none;transform:translateY(24px);
+    transition:opacity .4s ease,transform .45s cubic-bezier(.22,1,.36,1),visibility 0s linear .45s}   /* PC: dim fade .4 + card rise .45 → here the sheet itself fades + rises */
+  .mr-popup.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:none;
+    transition:opacity .4s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+  .mr-form{position:absolute;inset:0;margin:0;border:0;padding:0;display:flex;flex-direction:column}
+  .mr-close{position:absolute;z-index:2;top:16px;right:12px;width:48px;height:48px;display:grid;place-items:center;
+    margin:0;padding:0;background:none;border:0;cursor:pointer;color:#3E3F44}   /* fixed top-right, floats over the scroll */
+  .mr-close svg{display:block;width:24px;height:24px;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+  .mr-close:active svg{transform:rotate(90deg)}   /* PC hover-spin → press quarter-turn on touch */
+  /* the scroller: only the X + CTA stay fixed; heights come from the fixed inset (no vh needed).
+     bottom padding clears the fixed CTA (24 fade + 64 button + 32 margin) + the design's 64 gap. */
+  .mr-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+    padding:90px 20px calc(184px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:64px}
+  .mr-head{display:flex;flex-direction:column;gap:16px}
+  .mr-title{margin:0;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:56px;line-height:1.21;letter-spacing:0}   /* Figma 68 auto box @56 */
+  .mr-lead{margin:0;font-weight:400;font-size:14px;line-height:1.5;word-break:keep-all}
+  .mr-sec{display:flex;flex-direction:column;gap:24px}
+  .mr-label{margin:0;font-weight:700;font-size:18px;line-height:1.5}
+  /* control overrides: 지원분야 chips 2-up gap 12 (Figma 161.5×45); file row sits in the 20-gap column (no own margin) */
+  .mr-popup .mc-chips{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .mr-popup .mc-file{margin-top:0}
+  /* footer: fixed at the sheet bottom, white fade so scrolled content slides under it; the button spans the gutter width */
+  .mr-footer{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:24px 20px calc(32px + env(safe-area-inset-bottom));
+    background:linear-gradient(to bottom, rgba(255,255,255,0) 0, #FFF 24px);pointer-events:none}
+  .mr-footer .mc-submit{width:100%;pointer-events:auto}
+  /* the page-level .ct-rv scroll-reveal hides every .mc-submit until observed in; the popup's isn't part of
+     that pass, so keep it visible + restore its own background transition (PC .rc-footer .ct-submit parity) */
+  .ct-rv .mr-popup .mc-submit{opacity:1;transform:none;pointer-events:auto;transition:background-color .25s ease}
+  @media (prefers-reduced-motion:reduce){
+    .mr-popup{transform:none;transition:opacity .2s ease,visibility 0s linear .2s}
+    .mr-popup.is-open{transition:opacity .2s ease}
+    .mr-close svg{transition:none}
+    .mr-close:active svg{transform:none}
+    .mr-close:active{opacity:.55}}
+
+  /* tap feedback (js/tap-feel.js): spring scale on touch — the hover-less mobile "press feel".
+     Runs as an ANIMATION (not an :active transition) so it can't collide with elements that
+     carry their own delayed transform transitions (reveals). */
+  @keyframes m-tap{0%{transform:scale(1)}35%{transform:scale(.94)}100%{transform:scale(1)}}
+  .is-tapped{animation:m-tap .32s cubic-bezier(.34,1.56,.64,1)}
+  @media (prefers-reduced-motion:reduce){.is-tapped{animation:none}}
 }

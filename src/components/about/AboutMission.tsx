@@ -4,7 +4,7 @@ export default function AboutMission() {
   return (
     <section className="about-mission">
       <div className="about-inner">
-        <header className="about-mission-head">
+        <header className="about-mission-head" data-rv>
           <p className="about-eyebrow-serif">Mission &amp; Vision</p>
           <h2 className="about-headline">
             기술에 가치를 더해,
@@ -21,7 +21,7 @@ export default function AboutMission() {
           </p>
         </header>
 
-        <ul className="value-cards">
+        <ul className="value-cards" data-rv>
           <li className="value-card">
             <span className="value-pill">Insight</span>
             <h3 className="value-card-title">데이터 너머의 본질을 봅니다.</h3>

@@ -16,6 +16,9 @@ import { useEffect, useRef } from 'react';
 const GROW_SEL = [
   '#ci-logo', '#menu-logo', '#lets-talk', '#full-menu', '#menu-close',
   '.menu-item', '.brief-btn', '.project-head', '.footer-links a',
+  // the project-detail sheet's close control (the detail body itself is inside an iframe,
+  // so nothing under .ps-body can be reached from here)
+  '.ps-close',
 ].join(',');
 
 /* Panels that turn the cursor into the solid "View Project" button. */

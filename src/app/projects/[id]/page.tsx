@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import BodyClass from "@/components/BodyClass";
 import PageShell from "@/components/PageShell";
 import DetailFrame from "@/components/projects/DetailFrame";
-import { type Portfolio, titleOneLine } from "@/lib/portfolios";
+import { type Portfolio, detailSrc, titleOneLine } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
 import "@/styles/projects.css";
 
@@ -43,13 +43,11 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
   const row = await load(id);
-  if (!row || !row.html_file) notFound();
+  if (!row) notFound();
 
-  /* iframe 은 우리 사이트 안의 경로만 가리킬 수 있다.
-     DB 값을 그대로 src 에 넣으면 외부 주소를 넣어 우리 페이지 안에 임의의 사이트를
-     띄우는 통로가 된다(피싱). public/portfolio/ 밑으로만 허용한다. */
-  const src = `/portfolio/${row.html_file}`;
-  if (src.includes("..")) notFound();
+  // 경로 검증은 detailSrc 안에 있다 (목록의 시트도 같은 함수를 쓴다)
+  const src = detailSrc(row.html_file);
+  if (!src) notFound();
 
   /* 사이트 헤더·푸터는 iframe 밖(PageShell)에 둔다. 케이스 스터디 본문만
      iframe 안에 있으므로 공통 크롬은 그대로 붙는다.

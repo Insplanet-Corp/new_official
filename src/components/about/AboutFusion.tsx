@@ -1,15 +1,29 @@
+import AboutGallery from '@/components/about/AboutGallery';
 import Lines from '@/components/Lines';
 
-/* 04 finance × mobility fusion + core values list. */
+/* 04 Experience — Cormorant headline, bold statement, 4 capability cards, then the auto-marquee
+   photo band as the section's LAST child (no separate section / top padding for the band).
+
+   The band used to be its own <section class="about-gallery"> below this one; it now sits inside
+   .about-fusion, so AboutGallery is rendered from here and NOT from the page. */
 const CORE_VALUES = [
   {
+    icon: 'icon-mega-finance',
     title: 'Mega Finance DNA',
     desc: [
-      '신한 ‘슈퍼SOL’ 6년 전담 운영 및 차세대 통합 기획 등',
-      '제1금융권 핵심 플랫폼의 혁신을 주도해왔습니다.',
+      '신한 ‘슈퍼SOL’ 6년 전담 운영을 비롯해 KB·IBK·우리카드 등',
+      '핵심 플랫폼의 혁신을 주도해온 검증된 전문성을 갖췄습니다.',
     ],
   },
   {
+    icon: 'icon-cross-industry',
+    title: 'Cross-Industry Insight',
+    desc: [
+      '금융, 공공, 항공, 유통, 엔터프라이즈까지 산업의 경계를 넘어 축적한 경험으로 어떤 비즈니스에도 최적의 답을 제시합니다.',
+    ],
+  },
+  {
+    icon: 'icon-si-synergy',
     title: 'SI Synergy & Partnership',
     desc: [
       'LG CNS, 신한DS의 공식 협력사로서 대형 SI 주사업자와의',
@@ -17,10 +31,7 @@ const CORE_VALUES = [
     ],
   },
   {
-    title: 'Mobility & Enterprise Insight',
-    desc: ['대규모 모빌리티 플랫폼 구축 및 기술 시각화 노하우로', '차세대 비즈니스를 지원합니다.'],
-  },
-  {
+    icon: 'icon-ax-tech',
     title: 'AX Tech & Design System',
     desc: [
       '고유 디자인 시스템과 자체 AX 솔루션 R&D를 통해',
@@ -33,46 +44,22 @@ export default function AboutFusion() {
   return (
     <section className="about-fusion">
       <div className="about-inner">
-        <header className="about-fusion-head">
-          {/* 3 lines @1920, 2 @2560 (br-1920 hidden there) */}
-          <h2 className="about-headline">
-            정교한 금융의 깊이에 <br className="br-1920" />
-            모빌리티의 확장성을 더해,
-            <br />
-            세상에 없던 가치를 연결합니다.
-          </h2>
-          {/* 234x114 art, <1472px */}
-          <img
-            className="about-fusion-graphic about-fusion-graphic--1024"
-            src="/assets/about/finance-graphic-1024.svg"
-            alt=""
-            aria-hidden="true"
-          />
-          {/* 312x252 art, >=1472px */}
-          <img
-            className="about-fusion-graphic about-fusion-graphic--desk"
-            src="/assets/about/finance-graphic-2560.svg"
-            alt=""
-            aria-hidden="true"
-          />
-          <p className="about-paragraph">
-            우리는 숫자 속에 담긴 금융의 본질을 꿰뚫고, 대규모 모빌리티 플랫폼이 지닌
-            <br />
-            무한한 연결성을 탐구합니다. 단순히 두 산업을 결합하는 기술력을 넘어, 그 접점에서 피어나는
-            <br />
-            새로운 비즈니스 가능성을 발견하고 이를 고객의 실질적인 가치로 증명해 나갑니다.
-          </p>
-        </header>
+        <h2 className="about-fusion-title">Experience</h2>
+        <p className="about-headline about-exp-copy">
+          산업의 본질을 꿰뚫는 인사이트에
+          <br />
+          디자인의 정교함을 더해,
+          <br />
+          세상에 없던 경험을 연결합니다.
+        </p>
 
         <ul className="core-values">
           {CORE_VALUES.map((value) => (
             <li className="core-value" key={value.title}>
-              <div className="core-value-head">
-                <span className="core-value-icon">
-                  <img src="/assets/about/corevalue-icon-66bec6.png" alt="" aria-hidden="true" />
-                </span>
-                <h3 className="core-value-title">{value.title}</h3>
-              </div>
+              <span className="core-value-icon">
+                <img src={`/assets/about/${value.icon}.svg`} alt="" aria-hidden="true" />
+              </span>
+              <h3 className="core-value-title">{value.title}</h3>
               <p className="core-value-desc">
                 <Lines text={value.desc} />
               </p>
@@ -80,6 +67,8 @@ export default function AboutFusion() {
           ))}
         </ul>
       </div>
+
+      <AboutGallery />
     </section>
   );
 }

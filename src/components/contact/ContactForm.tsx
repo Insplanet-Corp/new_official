@@ -327,8 +327,9 @@ export default function ContactForm() {
                       />
                     </svg>
                   </span>
+                  {/* 링크 목적지 미정 — 정적 사이트도 href="#" 인 자리표시자다 */}
                   <span className="ct-consent-text">
-                    이용약관 및 개인정보처리방침에 동의합니다.
+                    <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다.
                   </span>
                 </label>
               </div>

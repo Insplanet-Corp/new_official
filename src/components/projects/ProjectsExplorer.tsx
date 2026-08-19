@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import useMagneticCards from '@/lib/hooks/useMagneticCards';
+import ProjectSheet from '@/components/projects/ProjectSheet';
 import {
   CATEGORIES,
   type Category,
@@ -186,6 +187,11 @@ export default function ProjectsExplorer({
           ))}
         </div>
       </section>
+
+      {/* 카드 클릭 -> 상세가 아래에서 올라오는 시트. 링크(card.href)를 가로채므로
+          여기 목록 쪽에는 손댈 것이 없고, 자바스크립트가 없으면 링크가 그대로 동작해
+          /projects/<id> 페이지로 이동한다. */}
+      <ProjectSheet cards={cards} />
 
       {/* 진행중 — 고객사 / 프로젝트명 / 분류 / 수행기간 */}
       <section className="pj-list" data-status-panel="ongoing" hidden={status !== 'ongoing'}>
