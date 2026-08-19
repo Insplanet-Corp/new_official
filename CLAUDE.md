@@ -673,7 +673,7 @@ opacity 지문**을 비교 — 해시가 정확히 같았다(`-1218488085`).
   프로젝트별 Client·Launch·Overview 문구·플랫폼 URL 이 필요하다. dap 은 문서 안에 이미
   다 있고 onNuri·shinhan 은 없다.
 
-### 25. `<project-hero>` — 상단을 컴포넌트로 (`_shared/works.js`)
+### 25. `<project-detail>` — 상세 껍데기를 컴포넌트로 (`_shared/works.js`)
 
 사용자 요청: onNuri·shinhan 을 kb-app 과 같은 히어로로, 그리고 **"컴포넌트화해서 추후에도
 바로 쓸 수 있게"**. 상세는 React 가 아니라 `public/` 에 그대로 올라가는 정적 HTML 이고
@@ -681,12 +681,32 @@ sandbox iframe 안에서 자기 문서로 돈다 — **빌드 단계가 없으�
 엘리먼트가 유일한 수단**이다.
 
 ```html
-<project-hero ko="…" en="Onnuri digital|gift card" client="…" launch="Oct, 2022"
+<project-detail ko="…" en="Onnuri digital|gift card" client="…" launch="Oct, 2022"
   hero="img/hero-bg.jpg" hero-mobile="img/m-hero-bg.png"
-  overview-title="…" overview-text="…" platform="https://…"></project-hero>
+  overview-title="…" overview-text="…" platform="https://…">
+  <div class="work-container onnuri">…본문 전체…</div>
+</project-detail>
 ```
 태그 하나가 히어로(배경·CI·닫기·KO/EN 제목·Client/Launch·SCROLL)와 Overview 카드
-(제목·본문·View Platform·Copy URL)를 통째로 그린다.
+(제목·본문·View Platform·Copy URL)를 그리고, **자식으로 받은 본문을 `.pd-secs` 밴드
+안으로 옮긴다.**
+
+**⚠️ 본문을 밴드 안에 넣지 않으면 Overview 만 정렬되고 아래가 따로 논다.**
+처음엔 컴포넌트가 상단만 그리고 본문 여백은 `works.css` 가 따로 줬는데, 값이 두 체계로
+갈려서 Overview 아래부터 좌우 여백과 간격이 끊겼다. kb-app 은 Overview 와 모든 섹션이
+**같은 `.pd-secs`** 안에 있어서 하나로 이어진다 — 그 구조를 그대로 가져왔다.
+`.work-container` 에는 `display:contents` 를 걸어 박스를 지운다. 그래야 섹션들이 밴드의
+직계 flex 자식이 되어 `gap` 이 섹션 사이마다 적용된다(래퍼가 남으면 래퍼 하나에만 걸린다).
+
+**⚠️ `display:contents` 는 특이도 싸움에 진다.** `works.css` 를 문서 `style.css` 보다 먼저
+로드하므로, dap 의 `.work-container.dap{display:flex}` 와 같은 특이도면 그쪽이 이겨서
+**dap 만 섹션 간격이 0** 이었다. `.work-container.work-container` 로 클래스를 두 번 적어
+올렸다.
+
+**kb-app 과 값이 정확히 같은지 실측으로 대조함** (1440):
+밴드 padding `27.7143px 46.8571px 108.571px` · gap `27.7143px` · 모든 블록 left `47` ·
+width `1346` · 블록 사이 간격 전부 `28` · radius `12px` — kb-app 과 **동일**.
+375: padding `16px 16px 48px` · gap `16` · left `16` · width `343` · radius `16px`.
 
 **⚠️ Shadow DOM 을 쓰지 않는다.** 모양은 전부 `_shared/project-detail.css` 의 `.pd-*` 가
 내는데, 그 CSS 는 `.pd` 컨테이너에 정의된 변수(`--q --dv --gx …`)에 매달려 있다. 그늘 안에

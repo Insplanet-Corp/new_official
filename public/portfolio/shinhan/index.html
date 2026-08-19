@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <!-- 공통 상단 — _shared/works.js 의 <project-hero> 가 kb-app 과 같은 히어로 + Overview 를 그린다.
+    <!-- 공통 상단 — _shared/works.js 의 <project-detail> 가 kb-app 과 같은 히어로 + Overview 를 그린다.
          문구만 바꾸면 되고, platform 에 서비스 주소를 넣으면 View Platform 버튼이 살아난다.
          | 는 줄바꿈 (제목/부제는 모바일에서만, 본문은 항상). -->
-    <project-hero
+    <project-detail
       ko="신한투자증권 모바일 웹 개편"
       en="Shinhan|Securities"
       client="신한투자증권"
@@ -23,8 +23,7 @@
       overview-title="더 쉽고 편안한,|더 새로운 금융투자서비스"
       overview-text="인스플래닛은 더 쉽고 편안한, 더 새로운 금융을 비전으로 하는 신한투자증권 모바일 웹 개편 및 콘텐츠관리시스템|(CMS) 연계 구축 프로젝트를 진행하였습니다. 신한투자증권에서 제공하는 정보를 디바이스와 해상도의 제약 없이|빠르게 제공받을 수 있게 되었으며, 금융상품, 투자가이드 등 유용한 투자정보를 다양한 채널로 공유하여|잠재고객의 유입기반을 마련하였습니다."
       platform=""
-    ></project-hero>
-
+    >
     <div class="work-container">
 
       <!-- ============================================== -->
@@ -516,6 +515,8 @@
         });
       });
     </script>
+
+    </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
     <script src="/portfolio/_shared/works.js"></script>

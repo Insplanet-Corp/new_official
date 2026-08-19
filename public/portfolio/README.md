@@ -10,8 +10,8 @@ public/portfolio/
 │  ├─ fonts.css
 │  ├─ style.css
 │  ├─ project-detail.css    .pd-* 디자인 시스템 (kb-app 계열)
-│  ├─ works.css             본문 좌우 거터 (문서별 한 줄씩)
-│  ├─ works.js              <project-hero> 컴포넌트 — 히어로 + Overview + 버튼
+│  ├─ works.css             본문을 밴드의 카드 규격에 맞추는 보정
+│  ├─ works.js              <project-detail> 컴포넌트 — 히어로 + Overview + 본문 밴드
 │  └─ bridge.js             상세 ↔ 시트 다리
 ├─ kb-app/                  .pd-* 템플릿을 쓰는 문서 (자기 CSS 없음)
 │  ├─ index.html
@@ -39,10 +39,11 @@ public/portfolio/
    <link rel="stylesheet" href="./style.css" />
    ```
 
-3. **`<body>` 첫머리에 `<project-hero>` 한 줄** — 히어로(배경·CI·닫기·제목·Client/Launch·
-   SCROLL)와 Overview 카드(제목·본문·View Platform·Copy URL)가 통째로 나옵니다.
+3. **`<body>` 안을 `<project-detail>` 로 감싼다** — 히어로(배경·CI·닫기·제목·Client/Launch·
+   SCROLL)와 Overview 카드(제목·본문·View Platform·Copy URL)가 통째로 나오고,
+   **본문이 Overview 와 같은 밴드 안으로 들어가** 좌우 여백과 세로 간격이 하나로 이어집니다.
    ```html
-   <project-hero
+   <project-detail
      ko="온누리 디지털상품권"
      en="Onnuri digital|gift card"
      client="신한은행"
@@ -52,8 +53,12 @@ public/portfolio/
      overview-title="언제 어디서나 편리하게|혜택을 받으세요"
      overview-text="첫 줄|둘째 줄"
      platform="https://…"
-   ></project-hero>
+   >
+     <div class="work-container">…본문 전체…</div>
+   </project-detail>
    ```
+   ⚠️ **본문을 반드시 태그 안에 넣으세요.** 밖에 두면 Overview 만 정렬되고 아래 섹션은
+   따로 놉니다 (실제로 그렇게 만들었다가 고쳤습니다).
    - `|` 는 줄바꿈입니다. **제목(`ko`/`en`/`overview-title`)에서는 모바일에서만** 끊기고,
      `overview-text` 에서는 항상 끊깁니다.
    - `platform` 을 비우면 View Platform 버튼은 눌러도 아무 일이 없습니다(자리표시자).
@@ -67,11 +72,7 @@ public/portfolio/
    ⚠️ `bridge.js` 를 빠뜨리면 닫기가 시트를 못 닫고 **iframe 안에서 목록 페이지가 열립니다.**
    커스텀 커서도 상세 위에서 멈춥니다.
 
-5. **좌우 거터 한 줄** — `_shared/works.css` 아래쪽에 문서별 규칙이 있습니다.
-   그 문서의 **배경이 걸린 요소**를 찾아 한 줄 추가하세요 (배경은 풀블리드로 두고 안쪽
-   내용만 들여쓰기 위해서입니다).
-
-6. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에 `<슬러그>/index.html`.
+5. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에 `<슬러그>/index.html`.
 
 > 가장 빠른 길은 `onNuri/index.html` 을 복사해 문구만 바꾸는 것입니다.
 

@@ -1,19 +1,23 @@
 /* ===================================================================================================
-   <project-hero> — 프로젝트 상세의 공통 상단 (히어로 + Overview 카드).
+   <project-detail> — 프로젝트 상세의 공통 껍데기 (히어로 + Overview + 본문 밴드).
 
    왜 커스텀 엘리먼트인가 —
    상세는 React 가 아니라 public/ 에 그대로 올라가는 정적 HTML 이고, sandbox iframe 안에서
    자기 문서로 돌아간다. 빌드 단계가 없으므로 컴포넌트화 수단은 브라우저 표준인 커스텀
    엘리먼트가 유일하다. 태그 하나 + 속성만 적으면 kb-app 과 똑같은 상단이 나온다.
 
-   쓰는 법 — <head> 에 세 줄, <body> 첫머리에 태그 하나, </body> 앞에 스크립트 두 줄:
+   ⚠️ 본문을 이 태그 **안에** 넣는다. 컴포넌트가 본문을 kb-app 과 같은 .pd-secs 밴드
+   안으로 옮겨서, Overview 카드와 그 아래 섹션들이 **같은 좌우 패딩과 같은 세로 간격**을
+   쓰게 만든다. 밖에 두면 Overview 만 정렬되고 아래는 따로 놀았다 (실제로 그렇게 됐었다).
+
+   쓰는 법 — <head> 에 네 줄, <body> 안을 태그로 감싸고, </body> 앞에 스크립트 두 줄:
 
      <link rel="stylesheet" href="../_shared/fonts.css" />
      <link rel="stylesheet" href="../_shared/project-detail.css" />
      <link rel="stylesheet" href="../_shared/works.css" />
      <link rel="stylesheet" href="./style.css" />
      ...
-     <project-hero
+     <project-detail
        ko="온누리 디지털상품권"
        en="Onnuri digital|gift card"        ← | 는 모바일에서만 줄바꿈
        client="신한은행"
@@ -23,7 +27,9 @@
        overview-title="언제 어디서나 편리하게 혜택을 받으세요"
        overview-text="첫 문단|둘째 줄"      ← | 는 <br>
        platform="https://…"                 ← 없으면 버튼이 눌리지 않는다
-     ></project-hero>
+     >
+       <div class="work-container onnuri">…본문 전체…</div>   ← 이 안에 넣는다
+     </project-detail>
      ...
      <script src="/portfolio/_shared/bridge.js"></script>
      <script src="/portfolio/_shared/works.js"></script>
@@ -70,6 +76,10 @@
     var a = function (n) {
       return el.getAttribute(n) || '';
     };
+    /* 원래 자식(문서 본문)을 잠시 빼 둔다 — innerHTML 로 껍데기를 그린 뒤 밴드 안으로 넣는다.
+       ⚠️ 통째로 옮기지 않으면 Overview 아래부터 좌우 여백·간격이 끊긴다. */
+    var content = document.createDocumentFragment();
+    while (el.firstChild) content.appendChild(el.firstChild);
     var heroM = a('hero-mobile');
     var platform = a('platform');
 
@@ -116,6 +126,9 @@
       '</div>' +
       '</main>';
 
+    // 본문을 Overview 카드 뒤, 같은 밴드 안에 붙인다
+    el.querySelector('.pd-secs').appendChild(content);
+
     arm(el);
   }
 
@@ -143,7 +156,7 @@
 
   if ('customElements' in window) {
     customElements.define(
-      'project-hero',
+      'project-detail',
       class extends HTMLElement {
         connectedCallback() {
           if (!this.__rendered) {

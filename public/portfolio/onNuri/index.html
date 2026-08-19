@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <!-- 공통 상단 — _shared/works.js 의 <project-hero> 가 kb-app 과 같은 히어로 + Overview 를 그린다.
+    <!-- 공통 상단 — _shared/works.js 의 <project-detail> 가 kb-app 과 같은 히어로 + Overview 를 그린다.
          문구만 바꾸면 되고, platform 에 서비스 주소를 넣으면 View Platform 버튼이 살아난다.
          | 는 줄바꿈 (제목/부제는 모바일에서만, 본문은 항상). -->
-    <project-hero
+    <project-detail
       ko="온누리 디지털상품권"
       en="Onnuri digital|gift card"
       client="신한은행"
@@ -23,8 +23,7 @@
       overview-title="언제 어디서나 편리하게|혜택을 받으세요"
       overview-text="안정적인 지급결제 서비스를 전국적으로 원활하게 대응할 수 있도록 확장성을 고려한 차세대 지급결제플랫폼을 구축하여|온누리 디지털상품권 서비스를 런칭하였습니다."
       platform=""
-    ></project-hero>
-
+    >
     <!-- 메인 컨테이너 -->
     <div class="work-container onnuri">
 
@@ -292,6 +291,8 @@
         });
       });
     </script>
+
+    </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
     <script src="/portfolio/_shared/works.js"></script>
