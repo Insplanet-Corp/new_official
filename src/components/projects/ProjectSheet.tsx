@@ -3,29 +3,36 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ProjectCard } from '@/data/projectsPage';
-import { prefersReducedMotion } from '@/lib/dom';
 
 type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; destroy?: () => void };
 /* ===== project-detail SHEET =====
    Clicking a project card on /projects no longer navigates: the detail rises from the bottom in a
    full-screen sheet while the list stays put underneath. Ported from the static site's
    js/project-sheet.js — same .ps-* markup and CSS (src/styles/style.css):
-   load behind a top progress bar → slide up → ESC/X/back closes.
+   load behind a top progress bar → slide up → ESC / the detail's own close / back closes.
 
    ⚠️ ONE deliberate difference from the static original: it fetches the detail HTML and injects it
    into the page. We do NOT. The publisher's document keeps running inside a sandboxed iframe,
    because injecting it would run the publisher's scripts in OUR document — with read access to the
    Supabase session token in localStorage. See DetailFrame for the sandbox rationale.
 
-   ⚠️ THE IFRAME MUST BE A FIXED VIEWPORT (100% of the sheet), NOT sized to its content.
-   css/project-detail.css builds the detail around `height:100vh` (hero) and `position:fixed`
-   (close, SCROLL hint) — it assumes it IS the viewport. Size the iframe to the document height
-   instead and both assumptions break: `100vh` resolves to the iframe's own (content) height, so the
-   hero grows every time the height bridge reports back — a runaway loop — and `position:fixed`
-   pins to the top of the document rather than the viewport. That is exactly what broke here.
-   Because the iframe scrolls internally now, public/portfolio/_height.js is NOT needed for the
-   sheet (it stays for details that are laid out as plain flowing documents), and there is no
-   sheet-local Lenis — the smooth-scroll would have to live inside the detail document.
+   Three consequences, all handled by public/portfolio/_shared/bridge.js inside the detail:
+
+   1. ⚠️ THE IFRAME MUST BE A FIXED VIEWPORT (100% of the sheet), NOT sized to its content.
+      _shared/project-detail.css builds the detail around `height:100vh` (hero) and
+      `position:fixed` (close, SCROLL hint) — it assumes it IS the viewport. Size the iframe to the
+      document height instead and both break: `100vh` resolves to the iframe's own height, so the
+      hero grows every time the height is reported back (a runaway loop), and `position:fixed` pins
+      to the top of the document. There is no sheet-local Lenis for the same reason — the scrolling
+      happens inside the detail document now.
+   2. The detail's close (.pd-close) cannot navigate out of a sandbox, and it would otherwise open
+      the LIST PAGE INSIDE THE IFRAME. The bridge relays the click (pdClose) and tells us it owns a
+      close button (pdReady/ownClose) so we hide our generic .ps-close — otherwise two X's show.
+   3. The custom cursor freezes over the iframe (mousemove never reaches this document). The bridge
+      relays coordinates; Cursor.tsx picks them up.
+
+   The iframe is kept mounted after closing, so reopening the same project is instant instead of
+   re-downloading — see closeSheet.
 
    The route /projects/<id> still renders the same detail as a normal page — deep links, refresh and
    crawlers keep working; the sheet is what you get when you arrive from the list. */
@@ -35,7 +42,6 @@ type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; d
    local load still takes a readable moment instead of flashing past. The sheet only slides once the
    DRAWN bar has arrived at 1. */
 const BAR_RATE = 1.65; // bar-widths per second → a full bar takes ≥ ~0.6s
-const SLIDE_MS = 1400; // failsafe: must exceed the CSS slide (1.2s)
 const LOAD_GUARD_MS = 8000; // never hang the open on one stuck document
 
 export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
@@ -43,6 +49,7 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   const [src, setSrc] = useState<string | null>(null); // iframe src of the detail being shown
   const [open, setOpen] = useState(false); // sheet is up (drives the slide)
   const [loaded, setLoaded] = useState(false); // .ps-body fade-in
+  const [ownClose, setOwnClose] = useState(false); // 상세가 자기 닫기 버튼을 갖고 있는가
   const [barOn, setBarOn] = useState(false); // 진행 바가 보이는가
 
   const barRef = useRef<HTMLDivElement>(null);
@@ -54,12 +61,11 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   const pushed = useRef(false); // 이 탭이 직접 pushState 한 항목인가 (닫을 때 back 으로 빠질 수 있는가)
   const savedY = useRef(0);
   const guard = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reduce = useRef(false);
+  /* 이미 다 불러서 띄운 적이 있는 상세. 닫아도 iframe 을 버리지 않으므로
+     같은 프로젝트를 다시 열면 로딩 없이 바로 올라온다. */
+  const ready = useRef<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    reduce.current = prefersReducedMotion();
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   /* ---- 진행 바 ------------------------------------------------------------ */
   const barDraw = useCallback(() => {
@@ -179,11 +185,22 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
         history.pushState({ psDetail: detail }, '', push);
         pushed.current = true;
       }
-      setLoaded(false);
-        barReset();
       // 시트가 아직 올라오지 않은 동안에도 html 의 스크롤바 자리를 미리 없앤다 —
       // 슬라이드 첫 프레임에 리플로우가 겹치지 않도록
       document.documentElement.classList.add('ps-open');
+
+      /* 같은 상세를 다시 여는 경우: iframe 이 그대로 살아 있으므로 진행 바 없이 바로 올린다.
+         닫을 때 iframe 을 버리면 다시 열 때마다 처음부터 받아 와 오히려 더 느려지고,
+         받아 오는 동안 시트의 흰 바탕이 그대로 보인다. */
+      if (ready.current === detail) {
+        setSrc(detail);
+        reveal();
+        return;
+      }
+
+      setLoaded(false);
+      setOwnClose(false); // 새 상세가 알려 줄 때까지는 우리 X 를 쓴다
+      barReset();
       setBarOn(true);
       setSrc(detail);
       barReal(0.08);
@@ -200,6 +217,7 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
         bar.current.shown = 1;
         bar.current.onFull = null;
         barDraw();
+        ready.current = detail;
         reveal();
       }, LOAD_GUARD_MS);
     },
@@ -214,9 +232,12 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
     document.documentElement.classList.remove('ps-open');
     pushed.current = false;
     setOpen(false);
-    setLoaded(false);
-    // 슬라이드가 끝난 뒤에 iframe 을 버린다 — 내려가는 도중 내용이 사라지면 빈 판이 보인다
-    setTimeout(() => setSrc(null), reduce.current ? 0 : SLIDE_MS);
+    /* ⚠️ iframe 을 버리지 않는다(setSrc(null) 하지 않는다).
+       예전에는 슬라이드가 끝나면 지웠는데 두 가지가 걸렸다 —
+       (1) 다시 열 때마다 문서를 처음부터 받아 와 오히려 느려진다,
+       (2) 1.4초 타이머가 도는 동안 다시 열면 그 타이머가 방금 띄운 iframe 을
+           지워 버려서 시트의 흰 바탕만 남는다.
+       내려간 시트는 inert 라 접근되지 않으므로 그대로 두는 편이 낫다. */
   }, [barReset]);
 
   /* 사용자가 누른 닫기(X / ESC): 우리가 만든 history 항목이면 뒤로 빠진다(popstate 가
@@ -230,6 +251,23 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
       closeSheet();
     }
   }, [closeSheet, src]);
+
+  /* 상세(iframe)가 보내오는 신호 — public/portfolio/_shared/bridge.js.
+     sandbox iframe 의 origin 은 'null' 이라 origin 으로 못 거른다. 우리가 아는 모양의
+     메시지만 받고, 좌표 같은 값은 커서 위치에만 쓰므로 위험한 입력이 아니다. */
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const d = e.data as { pdReady?: boolean; ownClose?: boolean; pdClose?: boolean } | null;
+      if (!d || typeof d !== 'object') return;
+      // 상세가 자기 닫기 버튼을 갖고 있으면 우리 X 를 숨긴다 (닫기가 두 개로 보이지 않게)
+      if (d.pdReady) setOwnClose(!!d.ownClose);
+      // 상세의 닫기를 눌렀다. sandbox 라 iframe 이 스스로 상위 이동을 못 한다 —
+      // 가로채지 않으면 iframe 안에서 목록 페이지가 열려 버린다.
+      if (d.pdClose) requestClose();
+    };
+    addEventListener('message', onMessage);
+    return () => removeEventListener('message', onMessage);
+  }, [requestClose]);
 
   /* 시트가 올라오면 뒤쪽 목록의 스크롤을 잠근다 */
   useEffect(() => {
@@ -291,7 +329,7 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
       <div className="ps-bar" ref={barRef} aria-hidden="true" style={{ opacity: barOn ? 1 : 0 }} />
       <div
         id="project-sheet"
-        className={`ps-sheet${open ? ' is-open' : ''}`}
+        className={`ps-sheet${open ? ' is-open' : ''}${ownClose ? ' is-own-close' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-hidden={open ? 'false' : 'true'}
@@ -322,10 +360,12 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
                 sandbox="allow-scripts"
                 onLoad={() => {
                   const mine = seq.current;
+                  const loadedSrc = src;
                   stopTrickle();
                   bar.current.real = 1;
                   bar.current.onFull = () => {
                     if (mine !== seq.current) return; // 그 사이 닫혔다면 올리지 않는다
+                    ready.current = loadedSrc; // 다음에 같은 상세를 열면 로딩을 건너뛴다
                     reveal();
                   };
                   barKick();

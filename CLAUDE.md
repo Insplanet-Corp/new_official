@@ -446,56 +446,74 @@ ESC → `history.back()` → 주소 복귀 · `inert` 복원 · 슬라이드 후
 
 ### 17. ⚠️ 상세 iframe 은 내용 높이가 아니라 **뷰포트 크기**여야 한다
 
-이게 "경로를 고쳤는데 오히려 아예 안 되던" 진짜 원인이었다.
+"경로를 고쳤는데 오히려 아예 안 되던" 진짜 원인이었다.
 
-`css/project-detail.css` 는 상세를 **자기가 곧 뷰포트라는 전제** 위에 세워 놨다:
+`_shared/project-detail.css` 는 상세를 **자기가 곧 뷰포트라는 전제** 위에 세워 놨다:
 
 ```
 .pd-hero{height:100vh}                 /* 히어로가 한 화면 */
 .pd-close, .pd-hero-scroll{position:fixed}
 ```
 
-원본 정적 사이트에서는 상세를 **시트 DOM 안에 주입**하므로 `.ps-scroll` 이 곧
-뷰포트가 되어 전제가 성립한다. 우리는 세션 토큰 때문에 주입 대신 **sandbox iframe**
-을 쓰는데(15번), 여기에 `_height.js` 로 **내용 높이만큼 iframe 을 늘리자** 둘 다 깨졌다:
+원본 정적 사이트는 상세를 **시트 DOM 에 주입**하므로 `.ps-scroll` 이 곧 뷰포트가 되어
+전제가 성립한다. 우리는 세션 토큰 때문에 주입 대신 **sandbox iframe** 을 쓰는데(15번),
+거기에 높이 통지(`_height.js`)로 **iframe 을 내용 높이만큼 늘리자** 둘 다 깨졌다:
 
 - `100vh` 가 **iframe 자기 높이**로 풀린다 → 히어로가 커짐 → 문서가 길어짐 →
-  높이를 다시 통지 → iframe 이 더 커짐 → **끝없이 자란다**
-- `position:fixed` 가 뷰포트가 아니라 **문서 맨 위**에 붙는다 → 닫기·SCROLL 힌트가
-  스크롤하면 사라지고, 시트의 `.ps-close` 와 같은 자리에 겹친다
+  높이를 다시 통지 → **끝없이 자란다**
+- `position:fixed` 가 뷰포트가 아니라 **문서 맨 위**에 붙는다
 
-→ **iframe 높이를 고정하고 스크롤은 iframe 안에서 일어나게 둔다.**
-시트는 `height:100%`(= 시트 = 뷰포트), 단독 라우트는 `100svh`.
+→ **iframe 높이를 고정한다** (시트 `height:100%`, 단독 라우트 `100svh`).
+스크롤은 iframe 안에서 일어난다. 그래서 **시트 전용 Lenis·`--ps-sbw`·`is-at-end`·
+높이 통지가 전부 필요 없어져서 지웠다.** `_height.js` 도 삭제했다.
 
-파급 효과:
-- **`public/portfolio/_height.js` 는 이 방식에서 필요 없다.** 파일은 남겨 뒀다 —
-  `100vh`/`fixed` 를 안 쓰고 그냥 흐르는 문서로 짠 산출물이라면 그쪽이 맞다.
-  **어느 쪽인지는 산출물 CSS 를 보고 판단할 것.**
-- **시트 전용 Lenis 를 걷어냈다.** 스크롤이 iframe 안에서 일어나므로 부모가 걸 수
-  있는 게 없다. 탄성 스크롤을 원하면 상세 문서 안에 Lenis 를 넣어야 한다.
-- `.ps-scroll` 은 이제 스크롤하지 않는다 — iframe 이 `height:100%` 를 풀 수 있게
-  확정 높이를 주는 상자일 뿐이다. `--ps-sbw`·`is-at-end` 도 같이 죽었다.
-- **`/projects/[id]` 에서 `PageShell` 을 뺐다.** 상세가 자기 CI 로고와 닫기를
-  화면 모서리에 fixed 로 그리므로 사이트 헤더와 겹친다. 시트에서 보든 주소로 바로
-  들어오든 같은 화면이 나온다. SEO 용 `h1` 은 iframe 밖에 그대로 남겼다.
+`/projects/[id]` 에서는 **`PageShell` 을 뺐다** — 상세가 자기 CI 로고와 닫기를 화면
+모서리에 fixed 로 그려서 사이트 헤더와 겹친다. SEO 용 `h1` 은 iframe 밖에 남겼다.
 
-**새 상세 산출물 체크리스트**
-1. 폴더째 `public/portfolio/<이름>/` 에 넣는다 (상대경로가 저절로 맞는다)
-2. 공용 CSS 는 `public/portfolio/css/` 를 `../css/…` 로 부른다
-3. 사이트 공용 에셋은 `/assets/…` **절대경로**로
-4. **CSS 안의 `url()` 도 확인** — 상대경로면 `/assets/…` 로 고친다
-5. 어드민의 `html_file` 에 `<이름>/index.html` (앞의 `/` 는 있어도 된다 — 15번)
+### 18. iframe 경계에서 생긴 버그 4개 → `_shared/bridge.js`
 
-**아직 남은 것**: `public/portfolio/heyyoung-1024/projects.html` — 옮겨올 때 딸려 온
-정적 목록 페이지 사본(725줄, 더미 카드 85개)이다. 이제 아무 데서도 참조하지 않지만
-**그 주소로 공개돼 있다.** 지울지 사용자 확인 필요.
+상세를 iframe 에 넣으면서 **부모와 끊긴 것들**이 한꺼번에 증상으로 나왔다.
+넷 다 원인이 같아서 다리 스크립트 하나로 푼다.
 
-같은 폴더의 `img/hero-bg.png` 는 예시를 kb-app 산출물로 갈아끼우면서 사라졌다
-(지금 히어로는 `hero-bg.jpg`). 필요하면 `git show 6deb523:public/portfolio/heyyoung-1024/img/hero-bg.png` 로 꺼낼 수 있다.
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| 아래 화살표를 누르면 **CSS 없는 목록 페이지**가 뜬다 | `.pd-close` 의 `href="/projects"` 가 **iframe 안에서** 열린다. sandbox 라 상위 이동(`allow-top-navigation`)이 없어 스스로 나갈 수도 없다 | 다리가 클릭을 가로채 `pdClose` 를 부모에게 넘긴다 |
+| **X 버튼이 같이 보인다** | 부모는 상세가 자기 닫기를 가졌는지 알 방법이 없다 | 다리가 `pdReady{ownClose}` 를 알리고 부모가 `.ps-sheet.is-own-close` 를 붙인다 (CSS 는 style.css 에 이미 있었다) |
+| 다시 열면 **더 느리고 흰 배경** | 닫을 때 `setSrc(null)` 로 iframe 을 버렸다. ① 다시 받아 와야 해서 느리고 ② **1.4초 타이머가 도는 동안 다시 열면 그 타이머가 방금 띄운 iframe 을 지워** 시트의 흰 바탕만 남는다 | iframe 을 버리지 않는다. `ready` 로 기억해 같은 상세면 진행 바 없이 즉시 올린다 |
+| 상세 위에서 **커서가 멈춘다** | `mousemove` 가 부모 문서에 도달하지 않는다 | 다리가 좌표를 넘기고 `Cursor.tsx` 가 받는다. iframe 이 화면 전체를 덮으므로 **좌표가 1:1** 이라 보정이 필요 없다 |
 
-**브라우저에서 확인함**: 상세 페이지의 참조 12개 + CSS 안 폰트 7개 전부 200 ·
-시트에서 iframe 이 1440×900(= 뷰포트)로 잡힘 · 단독 라우트 문서 높이 900 (폭주 없음) ·
-사이트 헤더 미노출 · `h1` 유지.
+**⚠️ 새 상세 산출물에 `bridge.js` 를 빠뜨리면 위 네 개가 그대로 재현된다.**
+`public/portfolio/README.md` 에 추가 절차를 적어 뒀다.
+
+`Cursor.tsx` 는 `framed` 플래그를 둔다 — 다리에서 좌표가 오는 동안에는
+`elementFromPoint` 를 쓰지 않는다(부모 입장에서는 어디를 가리켜도 iframe 하나만 잡힌다).
+커서가 커지는 판정은 다리가 같이 보내 준다. 부모에서 실제 `mousemove` 가 오면 해제된다.
+
+**검증**: `bridge.js` 를 jsdom 으로 6가지 확인 — `pdReady{ownClose}` 통지 · 자식 SVG 에서
+눌러도 `pdClose` · 좌표 전달 · 버튼 위 `grow` · 16ms 스로틀 · **단독 열람이면 아무것도 안
+보냄**. 부모 반응은 브라우저에서 확인 — `ownClose` → `.ps-close` `display:none` ·
+`pdClose` → 시트 닫힘 + 주소 복귀 · **2회차 열기는 캐시로 즉시**(1회차는 가드 타임아웃 9.6초,
+백그라운드 탭이라 rAF 가 멈춘 탓) · iframe 1440×900 = 뷰포트.
+커서 이동 자체는 rAF 가 멈춰 **눈으로 확인 못 함.**
+
+### 19. 상세 폴더 구조 — 여러 개를 넣을 수 있게
+
+```
+public/portfolio/
+├─ _shared/     fonts.css · style.css · project-detail.css · bridge.js   ← 한 벌만
+├─ heyyoung-1024/   index.html + img/     ← 프로젝트 하나 = 폴더 하나
+└─ README.md        추가 절차
+```
+
+공용 CSS 는 `../_shared/…`, 사이트 에셋은 `/assets/…`(절대), 다리는
+`/portfolio/_shared/bridge.js`. 절차는 `public/portfolio/README.md` 참고.
+
+**⚠️ 폴더명을 바꾸면 `portfolios.html_file` 이 깨진다.** DB 에 `<슬러그>/index.html`
+로 들어 있다. `heyyoung-1024` 는 내용상 `heyyoung-campus` 가 맞지만 등록 데이터가
+가리키고 있어 그대로 뒀다 — 바꾸려면 어드민에서 값을 같이 고칠 것.
+
+정리하면서 지운 것: `_height.js`(쓰는 곳 없음), `heyyoung-1024/projects.html`(옮겨올 때
+딸려 온 정적 목록 사본 725줄), 시트의 죽은 ref 4개·`SLIDE_MS`·reduced-motion 분기.
 
 ---
 

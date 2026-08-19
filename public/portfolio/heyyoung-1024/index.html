@@ -16,9 +16,9 @@
      HERO = live HTML/CSS (css/project-detail.css). Below the hero = one Figma export per section. -->
     <!-- 상세는 sandbox iframe 안의 별개 문서라 Next 번들 CSS(src/styles)를 쓸 수 없다.
          public 에 둔 사본을 절대경로로 부른다 — 폴더 깊이가 달라져도 안 깨진다. -->
-    <link rel="stylesheet" href="../css/fonts.css" />
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
   </head>
   <body class="pd-page">
     <!-- main.pd = the region js/project-sheet.js fetches + injects into the sheet on the list page. -->
@@ -217,5 +217,8 @@
         });
       })();
     </script>
+    <!-- 시트와의 다리: 닫기 전달 · 커서 좌표 · 자체 닫기 보유 알림.
+         단독으로 열면 아무 일도 하지 않는다. -->
+    <script src="/portfolio/_shared/bridge.js"></script>
   </body>
 </html>

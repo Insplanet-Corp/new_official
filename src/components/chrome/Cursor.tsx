@@ -42,8 +42,23 @@ export default function Cursor() {
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
       my = e.clientY;
+      framed = null;
     };
     addEventListener('mousemove', onMove);
+
+    /* 프로젝트 상세는 sandbox iframe 안에 있다. 포인터가 그 위로 올라가면 mousemove 가
+       이 문서에 도달하지 않아 커서가 그 자리에 그대로 멈춘다 — iframe 안의
+       bridge.js 가 좌표를 넘겨 준다. iframe 이 화면 전체를 덮으므로 좌표는 1:1 이고,
+       elementFromPoint 로는 iframe 밖에 안 보이므로 모드도 같이 받는다. */
+    let framed: null | { grow: boolean } = null;
+    const onFramedMove = (e: MessageEvent) => {
+      const m = (e.data as { pdMouse?: { x: number; y: number; grow?: boolean } } | null)?.pdMouse;
+      if (!m || typeof m.x !== 'number' || typeof m.y !== 'number') return;
+      mx = m.x;
+      my = m.y;
+      framed = { grow: !!m.grow };
+    };
+    addEventListener('message', onFramedMove);
 
     // Decide the cursor MODE each frame from the topmost element under the pointer (single source of
     // truth via elementFromPoint) instead of per-element mouseenter/leave. The top buttons overlap the
@@ -51,8 +66,8 @@ export default function Cursor() {
     let mode = '';
     let raf = 0;
     const loop = () => {
-      const el = document.elementFromPoint(mx, my);
-      let m = '';
+      const el = framed ? null : document.elementFromPoint(mx, my);
+      let m = framed && framed.grow ? 'grow' : '';
       if (el) {
         if (el.closest('.cta-arrow')) m = 'hide';          // the CTA arrow IS the cursor here -> hide the dot
         else if (el.closest(GROW_SEL)) m = 'grow';
@@ -75,6 +90,7 @@ export default function Cursor() {
 
     return () => {
       removeEventListener('mousemove', onMove);
+      removeEventListener('message', onFramedMove);
       cancelAnimationFrame(raf);
     };
     // re-runs across the site <-> admin boundary so the follow loop is torn down with the dot
