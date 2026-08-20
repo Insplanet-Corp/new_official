@@ -792,11 +792,13 @@ Overview 카드 1346 폭 · 버튼 2개 · 본문 패딩 64/20 · 가로 스크�
 
 1. `.footer{background:transparent}` → **흰색**. 원본은 흰 페이지 위에 얹히는 전제인데
    상세는 그 위가 어두운 밴드(`#0C0C0C`)다.
-2. **모바일(≤1023) 규칙을 새로 넣었다.** PC 푸터는 로고 448px + 좌우 절대배치라 375 에서
-   **121px 넘친다**(`html{overflow-x:clip}` 가 스크롤은 막지만 내용이 잘린다).
-   사이트의 `.m-footer` 규격(로고 246px · 패딩 80/20/32 · 13px · `column-reverse`)을 같은
-   `.footer*` 클래스에 얹었다. 사이트 모바일 푸터에는 ROAI/Inspick/Archy 링크가 없지만
-   여기서는 **남겼다** — 링크를 없애는 건 정보 손실이라 레이아웃만 세로로 쌓았다.
+2. **모바일(≤1023)에서는 푸터를 아예 감춘다** (사용자 결정, 2026-08-20).
+   처음엔 사이트의 `.m-footer` 규격(로고 246px · 패딩 80/20/32 · 13px · `column-reverse`)을
+   같은 `.footer*` 클래스에 얹어 세로로 쌓았는데, 사용자가 모바일에서는 안 보이길 원해
+   `@media (max-width:1023px){ .footer{display:none} }` 한 줄로 바꿨다.
+   **⚠️ 되살릴 때 `display:none` 만 지우면 안 된다** — PC 푸터는 로고 448px + 좌우 절대배치라
+   375 에서 **121px 넘친다**(`html{overflow-x:clip}` 가 스크롤은 막지만 내용이 잘린다).
+   지운 모바일 레이아웃 규칙을 git 이력(`_shared/footer.css`)에서 같이 꺼내 와야 한다.
 
 **⚠️ 회사 정보가 두 곳에 있다.** `src/data/site.ts` 의 `CONTACT`/`FOOTER_LINKS` 와
 `_shared/works.js` 의 `FOOTER` 상수. 상세는 별개 문서라 값을 공유할 수 없다 —

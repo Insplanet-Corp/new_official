@@ -144,50 +144,17 @@
 }
 
 /* ---------------------------------------------------------------------------------------------------
-   모바일 (≤1023) — 사이트의 모바일 푸터(.m-footer, style.css chapter 08 mobile)와 같은 규격.
-   PC 푸터는 로고 448px + 좌우 절대배치라 375 에서 121px 넘친다(가로 스크롤은 html{overflow-x:clip}
-   가 막지만 내용이 잘린다). 여기서는 같은 .footer* 클래스에 모바일 값을 얹는다.
+   모바일 (≤1023) — 푸터를 감춘다 (사용자 요청).
 
-   원본 .m-footer 와 다른 점 하나: 사이트 모바일 푸터에는 ROAI/Inspick/Archy 링크가 없지만
-   여기서는 남긴다 — 링크를 없애는 건 정보 손실이라 레이아웃만 세로로 쌓았다.
+   상세 문서는 모바일에서 본문만 보여 준다. 사이트 자체 모바일 푸터가 목록/홈에 따로 있으므로
+   상세 안에 또 두면 중복이고, PC 푸터는 로고 448px + 좌우 절대배치라 375 에서 121px 넘친다.
+
+   ⚠️ 다시 보여 주려면 display:none 만 지우면 되는 게 아니다 — 넘침을 막던 모바일 레이아웃
+   규칙(로고 246px · 패딩 80/20/32 · 13px · column-reverse)이 여기 있었고 지금은 지웠다.
+   git 이력(footer.css, 이 커밋 직전)에서 그대로 꺼내 올 것.
    --------------------------------------------------------------------------------------------------- */
 @media (max-width: 1023px) {
   .footer {
-    display: flex;
-    flex-direction: column;
-    padding: 80px 20px 32px;
-  }
-  /* 절대배치를 풀고 흐름에 태운다 — margin:auto 로 헤더 여백과 정보 블록 사이에서 가운데 정렬 */
-  .footer-logo {
-    position: static;
-    left: auto;
-    top: auto;
-    width: 246px;
-    margin: auto 0;
-  }
-  /* column-reverse: 주소·연락처가 먼저, 그 아래 링크 + 카피라이트 (사이트 모바일 순서) */
-  .footer-bottom {
-    position: static;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    flex-direction: column-reverse;
-    align-items: stretch;
-    gap: 48px;
-  }
-  .footer-left {
-    gap: 24px;
-  }
-  .footer-links {
-    gap: 24px;
-  }
-  .footer-links a,
-  .footer-copy,
-  .footer-contact {
-    font-size: 13px;
-  }
-  .footer-contact {
-    gap: 16px;
-    margin-right: 0;
+    display: none;
   }
 }
