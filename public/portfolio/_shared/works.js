@@ -176,12 +176,20 @@
     armFooter(el);
   }
 
-  /* Overview 카드의 스크롤 인 — kb-app 의 인라인 스크립트와 같은 동작.
-     .pd.rv 가 붙어야 CSS 가 숨기므로, JS 가 없으면 그냥 보인다. */
+  /* 밴드 안 블록들의 스크롤 인 — kb-app 의 인라인 스크립트와 같은 동작.
+     .pd.rv 가 붙어야 CSS 가 숨기므로, JS 가 없으면 그냥 보인다.
+
+     ⚠️ `.pd.rv` 는 `.pd-summary` 와 `.pd-sec` 을 **둘 다** 숨긴다. 그러니 관찰도 둘 다
+     해야 한다. 처음에 Overview 카드만 관찰했더니 kb-app 의 섹션 12장이 armed 상태로
+     남아 opacity:0 인 채 영영 안 보였다 — Overview 아래가 통째로 빈 화면이 됐다.
+     (다른 문서들은 본문이 .pd-sec 이 아니라 드러나지 않았다.)
+     숨기는 선택자를 늘리면 여기 관찰 목록도 같이 늘릴 것. */
+  var REVEAL_SEL = '.pd-summary,.pd-sec';
   function arm(el) {
     var main = el.querySelector('main.pd');
-    var card = el.querySelector('.pd-summary');
-    if (!main || !card) return;
+    if (!main) return;
+    var targets = main.querySelectorAll(REVEAL_SEL);
+    if (!targets.length) return;
     if (matchMedia('(prefers-reduced-motion:reduce)').matches || !('IntersectionObserver' in window)) return;
     main.classList.add('rv');
     var io = new IntersectionObserver(
@@ -195,7 +203,7 @@
       },
       { threshold: 0, rootMargin: '0px 0px -10% 0px' },
     );
-    io.observe(card);
+    for (var i = 0; i < targets.length; i++) io.observe(targets[i]);
   }
 
   /* 푸터 리빌 — 사이트의 public/js/main.js 가 하는 것과 같다(.footer.in 이면 워드마크가

@@ -807,6 +807,34 @@ width 343 · 간격 16 · 푸터 넘침 0.
 `_shared/style.css` 는 kb-app 만 계속 쓴다 — 그 문서에는 자기 `style.css` 가 없어 리셋을
 거기서 받는다. `footer.css` 를 뒤에 두어 푸터 배경(#fff)과 모바일 규칙이 이긴다.
 
+### 29. ⚠️ 리빌은 **숨기는 대상 전부**를 관찰해야 한다 (kb-app Overview 아래가 통째로 안 보임)
+
+kb-app 을 컴포넌트로 바꾼 뒤 **Overview 아래가 아무것도 안 보였다.**
+
+`project-detail.css` 는 이렇게 숨긴다:
+```
+.pd.rv .pd-summary, .pd.rv .pd-sec { opacity:0; transform:translateY(160px) }
+.pd.rv .pd-summary.in, .pd.rv .pd-sec.in { opacity:1; transform:none }
+```
+**둘 다 숨기는데** `works.js` 의 `arm()` 은 `.pd-summary` **하나만** 관찰했다. 그래서
+섹션 12장은 armed(`opacity:0`) 상태로 남고 `.in` 이 영영 안 붙었다. kb-app 의 원래 인라인
+스크립트는 `querySelectorAll('.pd-summary,.pd-sec')` 로 전부 관찰했는데 그걸 옮기며 놓쳤다.
+
+다른 세 문서는 본문이 `.pd-sec` 이 아니라 이 규칙에 안 걸려서 드러나지 않았다.
+
+**⚠️ 내가 검증할 때 이 버그를 스스로 가렸다.** 지문을 뜨기 전에
+`opacity='1'; transform='none'` 을 강제로 넣고 쟀기 때문에 변환 전후가 똑같이 나왔다.
+**리빌이 걸린 화면은 강제 해제하고 재면 "안 보이는 상태"를 못 잡는다.**
+
+→ `REVEAL_SEL = '.pd-summary,.pd-sec'` 하나로 모아 armed 대상과 관찰 대상을 같게 했다.
+**숨기는 선택자를 늘리면 관찰 목록도 같이 늘릴 것.**
+
+**검증** — 브라우저 패널은 IO 가 스로틀돼 리빌을 볼 수 없어서 jsdom 으로 `IntersectionObserver`
+를 가로채 관찰 목록을 직접 확인했다. 9건 통과, 그중 핵심은 "armed 4개가 전부 관찰됨".
+**고치기 전 버전으로 같은 테스트를 돌려 FAIL 하는 것도 확인**했다 (관찰 안 된 것:
+`pd-sec--pc` ×2, `pd-sec--m` ×1). 나머지 8건: main.pd 렌더 · 히어로 구성 · Overview+버튼2 ·
+본문이 밴드로 이동 · 푸터가 마지막 · `|` 줄바꿈 두 종류 · Client/Launch.
+
 ---
 
 ## 현재 상태
