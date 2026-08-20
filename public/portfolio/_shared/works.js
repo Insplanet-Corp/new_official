@@ -1,5 +1,5 @@
 /* ===================================================================================================
-   <project-detail> — 프로젝트 상세의 공통 껍데기 (히어로 + Overview + 본문 밴드).
+   <project-detail> — 프로젝트 상세의 공통 껍데기 (히어로 + Overview + 본문 밴드 + 푸터).
 
    왜 커스텀 엘리먼트인가 —
    상세는 React 가 아니라 public/ 에 그대로 올라가는 정적 HTML 이고, sandbox iframe 안에서
@@ -15,6 +15,7 @@
      <link rel="stylesheet" href="../_shared/fonts.css" />
      <link rel="stylesheet" href="../_shared/project-detail.css" />
      <link rel="stylesheet" href="../_shared/works.css" />
+     <link rel="stylesheet" href="../_shared/footer.css" />
      <link rel="stylesheet" href="./style.css" />
      ...
      <project-detail
@@ -55,6 +56,17 @@
     '<path d="M11.437 8.059L12.563 6.933C13.807 5.689 15.823 5.689 17.067 6.933C18.311 8.177 18.311 10.193 17.067 11.437L15.941 12.563M12.563 15.941L11.437 17.067C10.193 18.311 8.177 18.311 6.933 17.067C5.689 15.823 5.689 13.807 6.933 12.563L8.059 11.437M9.185 14.815L14.815 9.185" ' +
     'stroke="currentColor" stroke-width="1.5"/></svg>';
 
+  /* 푸터 문구 — src/data/site.ts 의 CONTACT / FOOTER_LINKS 와 같은 값.
+     ⚠️ 회사 주소·연락처가 바뀌면 그쪽과 여기를 같이 고칠 것 (상세는 별개 문서라 공유가 안 된다). */
+  var FOOTER = {
+    links: ['ROAI', 'Inspick', 'Archy'],
+    address: '서울특별시 중구 퇴계로27길 49, 2층 (저동2가, 센트럴에스빌딩)',
+    email: 'hello@insplanet.co.kr',
+    tel: '02.2088.5084',
+    fax: '02.2088.5184',
+    copyright: 'Ⓒ 2026. Insplanet all right reserved.',
+  };
+
   // 속성값은 작성자가 쓰지만 그대로 innerHTML 에 넣으므로 이스케이프한다
   function esc(v) {
     return String(v == null ? '' : v)
@@ -70,6 +82,34 @@
   function lines(v, cls) {
     var br = cls ? ' <br class="' + cls + '">' : '<br>';
     return esc(v).split('|').join(br);
+  }
+
+  function footerHtml() {
+    return (
+      '<footer class="footer">' +
+      '<div class="footer-logo" role="img" aria-label="Insplanet">' +
+      // 워드마크와 행성을 따로 겹쳐 둔다 — CSS 가 각각 다른 타이밍으로 리빌한다
+      '<img class="footer-wordmark" src="/portfolio/_shared/footer-wordmark.svg" alt="" aria-hidden="true">' +
+      '<img class="footer-planet" src="/portfolio/_shared/footer-planet.svg" alt="" aria-hidden="true">' +
+      '</div>' +
+      '<div class="footer-bottom">' +
+      '<div class="footer-left">' +
+      '<nav class="footer-links">' +
+      FOOTER.links.map(function (l) {
+        return '<a href="#">' + esc(l) + '</a>';
+      }).join('') +
+      '</nav>' +
+      '<p class="footer-copy">' + esc(FOOTER.copyright) + '</p>' +
+      '</div>' +
+      '<div class="footer-contact">' +
+      '<p>' + esc(FOOTER.address) + '</p>' +
+      '<p>E&nbsp;&nbsp;' + esc(FOOTER.email) + '</p>' +
+      '<p class="footer-tf"><span>T&nbsp;&nbsp;' + esc(FOOTER.tel) + '</span>' +
+      '<span>F&nbsp;&nbsp;' + esc(FOOTER.fax) + '</span></p>' +
+      '</div>' +
+      '</div>' +
+      '</footer>'
+    );
   }
 
   function render(el) {
@@ -124,12 +164,14 @@
       '</div>' +
       '</section>' +
       '</div>' +
-      '</main>';
+      '</main>' +
+      footerHtml();
 
     // 본문을 Overview 카드 뒤, 같은 밴드 안에 붙인다
     el.querySelector('.pd-secs').appendChild(content);
 
     arm(el);
+    armFooter(el);
   }
 
   /* Overview 카드의 스크롤 인 — kb-app 의 인라인 스크립트와 같은 동작.
@@ -152,6 +194,29 @@
       { threshold: 0, rootMargin: '0px 0px -10% 0px' },
     );
     io.observe(card);
+  }
+
+  /* 푸터 리빌 — 사이트의 public/js/main.js 가 하는 것과 같다(.footer.in 이면 워드마크가
+     블러에서 올라오고 행성이 뒤따라 도착한다). 여기서는 그 런타임이 없으므로 직접 건다. */
+  function armFooter(el) {
+    var footer = el.querySelector('.footer');
+    if (!footer) return;
+    if (matchMedia('(prefers-reduced-motion:reduce)').matches || !('IntersectionObserver' in window)) {
+      footer.classList.add('in');
+      return;
+    }
+    var io = new IntersectionObserver(
+      function (entries, obs) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(footer);
   }
 
   if ('customElements' in window) {

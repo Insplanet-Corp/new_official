@@ -11,7 +11,10 @@ public/portfolio/
 │  ├─ style.css
 │  ├─ project-detail.css    .pd-* 디자인 시스템 (kb-app 계열)
 │  ├─ works.css             본문을 밴드의 카드 규격에 맞추는 보정
-│  ├─ works.js              <project-detail> 컴포넌트 — 히어로 + Overview + 본문 밴드
+│  ├─ footer.css            푸터 (사이트 .footer 와 같은 모양 + 모바일 대응)
+│  ├─ footer-wordmark.svg   푸터 CI — 워드마크
+│  ├─ footer-planet.svg     푸터 CI — 행성
+│  ├─ works.js              <project-detail> 컴포넌트 — 히어로 + Overview + 본문 밴드 + 푸터
 │  └─ bridge.js             상세 ↔ 시트 다리
 ├─ kb-app/                  .pd-* 템플릿을 쓰는 문서 (자기 CSS 없음)
 │  ├─ index.html
@@ -27,21 +30,26 @@ public/portfolio/
 
 ## 새 프로젝트 추가하기
 
+> **가장 빠른 길**: `_template/` 을 통째로 복사해 이름을 바꾸고, `img/` 를 넣은 뒤
+> `<project-detail>` 의 속성 문구만 채우면 됩니다. 아래는 그 각 단계의 설명입니다.
+
+
 1. **폴더를 만든다** — `public/portfolio/<슬러그>/` 에 `index.html` 과 `img/` 를 통째로
    넣습니다. 문서 안에서 자기 이미지는 `./img/…` 로 부르면 됩니다.
    히어로 배경은 `img/hero-bg.jpg`(PC 가로)와 `img/m-hero-bg.png`(모바일 세로) 두 장.
 
-2. **`<head>` 에 네 줄** — 순서가 중요합니다. 문서 고유 규칙이 마지막에 와야 이깁니다.
+2. **`<head>` 에 다섯 줄** — 순서가 중요합니다. 문서 고유 규칙이 마지막에 와야 이깁니다.
    ```html
    <link rel="stylesheet" href="../_shared/fonts.css" />
    <link rel="stylesheet" href="../_shared/project-detail.css" />
    <link rel="stylesheet" href="../_shared/works.css" />
+   <link rel="stylesheet" href="../_shared/footer.css" />
    <link rel="stylesheet" href="./style.css" />
    ```
 
-3. **`<body>` 안을 `<project-detail>` 로 감싼다** — 히어로(배경·CI·닫기·제목·Client/Launch·
-   SCROLL)와 Overview 카드(제목·본문·View Platform·Copy URL)가 통째로 나오고,
-   **본문이 Overview 와 같은 밴드 안으로 들어가** 좌우 여백과 세로 간격이 하나로 이어집니다.
+3. **`<body>` 안을 `<project-detail>` 로 감싼다** — 이 태그 하나가 **히어로 → Overview →
+   본문 밴드 → 푸터**를 전부 그립니다. 본문은 Overview 와 같은 밴드 안으로 들어가므로
+   좌우 여백과 세로 간격이 처음부터 끝까지 하나로 이어집니다.
    ```html
    <project-detail
      ko="온누리 디지털상품권"
@@ -59,6 +67,11 @@ public/portfolio/
    ```
    ⚠️ **본문을 반드시 태그 안에 넣으세요.** 밖에 두면 Overview 만 정렬되고 아래 섹션은
    따로 놉니다 (실제로 그렇게 만들었다가 고쳤습니다).
+
+   푸터(CI 로고 · ROAI/Inspick/Archy · 주소 · 연락처)는 자동으로 맨 아래에 붙습니다.
+   회사 정보는 `_shared/works.js` 의 `FOOTER` 상수에 있습니다 —
+   ⚠️ 주소·연락처가 바뀌면 `src/data/site.ts` 와 그쪽을 **같이** 고쳐야 합니다
+   (상세는 별개 문서라 값을 공유하지 못합니다).
    - `|` 는 줄바꿈입니다. **제목(`ko`/`en`/`overview-title`)에서는 모바일에서만** 끊기고,
      `overview-text` 에서는 항상 끊깁니다.
    - `platform` 을 비우면 View Platform 버튼은 눌러도 아무 일이 없습니다(자리표시자).
