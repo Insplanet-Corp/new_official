@@ -45,6 +45,9 @@
 .pd-hero-ci{position:absolute;left:var(--gx);top:calc(48 * var(--q) + 16 * var(--dt));width:calc(105 * var(--q) + 36 * var(--dv));height:calc(18 * var(--q) + 7 * var(--dv))}
 .pd-hero-ci img{display:block;width:100%;height:100%}
 
+/* ---- hero: font-color type ---- */
+.color-type-black .pd-hero {color: #3E3F44;}
+
 .pd-hero-title{position:absolute;left:var(--gx);right:var(--gx);top:50%;transform:translateY(-50%);margin:0;
   display:flex;flex-direction:column;align-items:center;text-align:center;word-break:keep-all}
 .pd-hero-title .ko{display:block;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;font-weight:700;

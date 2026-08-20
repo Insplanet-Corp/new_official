@@ -61,6 +61,7 @@ public/portfolio/
      overview-title="언제 어디서나 편리하게|혜택을 받으세요"
      overview-text="첫 줄|둘째 줄"
      platform="https://…"
+     class="color-type-black"
    >
      <div class="work-container">…본문 전체…</div>
    </project-detail>
@@ -76,6 +77,8 @@ public/portfolio/
      `overview-text` 에서는 항상 끊깁니다.
    - `platform` 을 비우면 View Platform 버튼은 눌러도 아무 일이 없습니다(자리표시자).
    - `launch` 나 `client` 를 빼면 그 칸이 아예 안 나옵니다.
+
+   **hero 영역 폰트 color: #3E3F44 인 경우에 class="color-type-black" 을 추가한다.
 
 4. **`</body>` 앞에 두 줄**
    ```html
