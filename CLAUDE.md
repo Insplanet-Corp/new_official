@@ -45,22 +45,22 @@ ID 셀렉터           #ci-logo #full-menu #lets-talk #head-title #bg-line #stag
 
 ## 스타일링 방침 (확정)
 
-| 영역 | 방식 | 이유 |
-|---|---|---|
-| **마케팅 페이지** | 전역 CSS 유지 (`src/styles/*.css`) | 레거시 결합 + 측정된 페이로드 회귀 |
-| **어드민** | CSS Modules | 레거시 런타임과 무관, 자유롭게 스코프 가능 |
+| 영역              | 방식                               | 이유                                       |
+| ----------------- | ---------------------------------- | ------------------------------------------ |
+| **마케팅 페이지** | 전역 CSS 유지 (`src/styles/*.css`) | 레거시 결합 + 측정된 페이로드 회귀         |
+| **어드민**        | CSS Modules                        | 레거시 런타임과 무관, 자유롭게 스코프 가능 |
 
 ### 왜 마케팅은 전역으로 두는가 (측정 결과)
 
 전체를 CSS Modules로 바꿔봤다가 되돌렸다. Turbopack이 루트 레이아웃을 공유하는 라우트의
 CSS 모듈을 **한 청크로 합쳐서**, `/about`이 contact·projects CSS까지 받는다.
 
-| 라우트 | 전역 CSS (현재) | 전체 모듈화 시 |
-|---|---|---|
-| `/` | 7.1KB gzip | 14.2KB (**+101%**) |
-| `/about` | 9.1KB | 14.2KB (+56%) |
-| `/contact` | 10.4KB | 14.2KB (+36%) |
-| `/admin/login` | 10.3KB | 8.4KB (**−19%**) |
+| 라우트         | 전역 CSS (현재) | 전체 모듈화 시     |
+| -------------- | --------------- | ------------------ |
+| `/`            | 7.1KB gzip      | 14.2KB (**+101%**) |
+| `/about`       | 9.1KB           | 14.2KB (+56%)      |
+| `/contact`     | 10.4KB          | 14.2KB (+36%)      |
+| `/admin/login` | 10.3KB          | 8.4KB (**−19%**)   |
 
 시도했지만 **효과 없었던 것**: `experimental.cssChunking`(webpack 전용이라 Turbopack에서 무시됨),
 라우트별 얇은 `layout.tsx`로 청크 경계 만들기. 다시 시도하지 말 것.
@@ -84,14 +84,14 @@ contact.css 1,020줄 → 5개 분할 같은 결과물이 필요해지면 거기�
 `src/components/{button,badge,avatar,icon,text,layouts}` 의 공용 컴포넌트로 어드민 전 화면을
 교체했다. **어드민에서 버튼·배지·아바타·아이콘·타이포·flex 를 CSS 클래스로 새로 만들지 말 것.**
 
-| 쓸 것 | 대신 지운 것 |
-|---|---|
-| `<Button>` | `kit.btn` `btnPrimary` `btnGhost` `btnSm`, `login.module.css` 의 `.submit` composes |
-| `<Badge>` | `ui.tsx` 의 `Badge`/`BadgeTone`, `ui.module.css` 의 `.badge*`, `kit.brandTag` |
-| `<Avatar>` | `kit.avatar` |
-| `<Icon>` | `ui.tsx` 안에 손으로 그려 넣었던 인라인 SVG |
-| `<Text>` `<Heading>` | `.title` `.desc` `.statLabel` `.emptyTitle` … 폰트 크기/굵기 전용 클래스 |
-| `<Flex>` | `.pageHead` `.pageActions` `.actions` `.inline` 같은 flex 전용 클래스 |
+| 쓸 것                | 대신 지운 것                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `<Button>`           | `kit.btn` `btnPrimary` `btnGhost` `btnSm`, `login.module.css` 의 `.submit` composes |
+| `<Badge>`            | `ui.tsx` 의 `Badge`/`BadgeTone`, `ui.module.css` 의 `.badge*`, `kit.brandTag`       |
+| `<Avatar>`           | `kit.avatar`                                                                        |
+| `<Icon>`             | `ui.tsx` 안에 손으로 그려 넣었던 인라인 SVG                                         |
+| `<Text>` `<Heading>` | `.title` `.desc` `.statLabel` `.emptyTitle` … 폰트 크기/굵기 전용 클래스            |
+| `<Flex>`             | `.pageHead` `.pageActions` `.actions` `.inline` 같은 flex 전용 클래스               |
 
 색 규칙 — **primary(등록·저장·수정·로그인) = `color="BLUE" variant="solid"`**,
 secondary(목록·취소·조회·파일찾기) = `color="GRAY" variant="outline"`, 삭제 = `color="RED" variant="outline"`.
@@ -118,9 +118,10 @@ secondary(목록·취소·조회·파일찾기) = `color="GRAY" variant="outline
 **1. `Flex` 의 `p` `px` `py` `m` `mx` `my` 가 전부 무시됐다 (측정값 `padding: 0px`)**
 
 ```css
-padding-inline: var(--layout-px);   /* 18px 설정 */
-padding-left:   var(--layout-pl);   /* 미정의 → 선언 무효 → 0 으로 리셋 */
+padding-inline: var(--layout-px); /* 18px 설정 */
+padding-left: var(--layout-pl); /* 미정의 → 선언 무효 → 0 으로 리셋 */
 ```
+
 미정의 커스텀 프로퍼티를 참조하는 선언은 무효(IACVT)가 되면서 그 속성이 **초기값으로
 리셋**된다. shorthand 뒤에 longhand 를 나열해 두면 longhand 가 매번 앞을 지운다.
 → 여백·크기는 CSS 변수를 버리고 `Flex.tsx` 가 인라인 스타일로 직접 넣도록 바꿨다.
@@ -149,11 +150,13 @@ padding-left:   var(--layout-pl);   /* 미정의 → 선언 무효 → 0 으로 
 ## 지금까지 한 일
 
 ### 1. GitHub 등록 (`main`)
+
 - 저장소: `https://github.com/Insplanet-Corp/new_official` (**private**)
 - `.gitignore` 확장 — `.env.*` 전체 차단(`.env.example`만 예외), 인증서/키, 빌드 산출물
 - `.env.example` 추가 + README에 환경변수 설정 가이드와 담당자 문의 안내
 
 ### 2. 어드민 CSS Modules 전환 (`706e913`)
+
 `admin.css` 272줄 → 모듈 5개. 동작은 그대로 보존했다.
 
 > 이 커밋에는 **사용자가 직접 한 작업도 섞여 있다** — `portfolio/completed`, `portfolio/ongoing`
@@ -161,6 +164,7 @@ padding-left:   var(--layout-pl);   /* 미정의 → 선언 무효 → 0 으로 
 > 커밋 메시지에는 CSS 전환만 적혀 있으니 이력을 볼 때 유의.
 
 ### 3. 기획서 기반 어드민 화면 틀 (`b44320b`)
+
 `관리자시스템_화면설계서20260703.pptx` (45p) 기준. 5개 메뉴 × 목록/등록/조회/수정 라우트 17개.
 당시엔 **화면 골격만** 만들었다 — 데이터 연동·저장·삭제·얼랏 없음.
 
@@ -358,6 +362,7 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 확장돼 있다) 두 개뿐이다.
 
 **가져온 것**
+
 - **About 04 섹션 전면 교체** — 「금융×모빌리티」→ **Experience**. 카드 4개의 문구·아이콘이
   전부 바뀌었고(`Mobility & Enterprise Insight` → `Cross-Industry Insight`), `core-value-head`
   래퍼가 사라졌다. 갤러리는 3+1 그리드 → **8장 마퀴 밴드**(4장 + `aria-hidden` 복제 4장)로
@@ -375,6 +380,7 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 - **썸네일 20장** `public/images/projects/thumb-01~20.png` (27MB) + `009` 마이그레이션
 
 **의도적으로 안 가져온 것**
+
 - **어댑티브 경계 767 → 1023.** 정적 사이트는 아이패드 세로까지 모바일로 보내지만,
   그건 mobile-about/contact/projects 3페이지가 **있다는 전제**다. Next 에는 없다.
   `/mobile` 은 히어로만 있는 WIP 작업장이므로 경계를 올리면 태블릿이 미완성 화면을 받는다.
@@ -395,6 +401,7 @@ RLS 하나에만 기대지 않는다 — 같은 사고를 두 번 겪었고, 나
 `localStorage` 의 Supabase 세션 토큰을 읽을 수 있다. `DetailFrame` 이 `sandbox`
 (`allow-same-origin` 없이)를 쓰는 이유가 그것이다. 그래서 시트 안에도 **iframe 을 그대로
 넣는다.** 파급 효과 두 가지:
+
 - 진행률을 이미지 개수로 못 센다 → iframe 의 `load` 하나로 만든다
 - 상세의 자체 컨트롤(`.pd-btn` 의 Copy URL 등)에 손이 닿지 않는다 — 상세 문서가 자기
   인라인 스크립트로 처리한다 (`window.ProjectSheet` 가 없으면 스스로 동작하게 짜여 있다)
@@ -433,12 +440,12 @@ ESC → `history.back()` → 주소 복귀 · `inert` 복원 · 슬라이드 후
 옮기면서 경로가 어긋났다. **HTML 의 `src`/`href` 만 봐서는 절반밖에 안 보인다** —
 나머지 절반이 CSS 의 `url()` 안에 있었다.
 
-| 깨진 것 | 원인 | 고친 값 |
-|---|---|---|
-| **`css/fonts.css` 안의 웹폰트 7개** | `url("../assets/fonts/…")` 가 `/portfolio/assets/fonts/…` 로 풀린다. **HTML 스캔으로는 안 잡힌다** | `url("/assets/fonts/…")` |
-| `/ci_logo_white.svg` | 정적 사이트는 루트에 에셋이 있었다 | `/assets/ci_logo_white.svg` |
-| `img/kb-app/sec-0N.*` (6장) | 옮기면서 `kb-app/` 한 단계가 평평해졌다 | `./img/sec-0N.*` |
-| `./projects.html` (닫기) | 404 는 아니었지만 Next 목록이 아니라 딸려 온 정적 더미 목록으로 갔다 | `/projects` |
+| 깨진 것                             | 원인                                                                                               | 고친 값                     |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------- |
+| **`css/fonts.css` 안의 웹폰트 7개** | `url("../assets/fonts/…")` 가 `/portfolio/assets/fonts/…` 로 풀린다. **HTML 스캔으로는 안 잡힌다** | `url("/assets/fonts/…")`    |
+| `/ci_logo_white.svg`                | 정적 사이트는 루트에 에셋이 있었다                                                                 | `/assets/ci_logo_white.svg` |
+| `img/kb-app/sec-0N.*` (6장)         | 옮기면서 `kb-app/` 한 단계가 평평해졌다                                                            | `./img/sec-0N.*`            |
+| `./projects.html` (닫기)            | 404 는 아니었지만 Next 목록이 아니라 딸려 온 정적 더미 목록으로 갔다                               | `/projects`                 |
 
 스타일시트 링크(`../css/*.css`) **자체는 안 깨져 있었다** — 옮길 때
 `public/portfolio/css/` 에 사본이 같이 들어와서 200 으로 떴다. 진짜 문제는 그 안의
@@ -475,12 +482,12 @@ ESC → `history.back()` → 주소 복귀 · `inert` 복원 · 슬라이드 후
 상세를 iframe 에 넣으면서 **부모와 끊긴 것들**이 한꺼번에 증상으로 나왔다.
 넷 다 원인이 같아서 다리 스크립트 하나로 푼다.
 
-| 증상 | 원인 | 해결 |
-|---|---|---|
-| 아래 화살표를 누르면 **CSS 없는 목록 페이지**가 뜬다 | `.pd-close` 의 `href="/projects"` 가 **iframe 안에서** 열린다. sandbox 라 상위 이동(`allow-top-navigation`)이 없어 스스로 나갈 수도 없다 | 다리가 클릭을 가로채 `pdClose` 를 부모에게 넘긴다 |
-| **X 버튼이 같이 보인다** | 부모는 상세가 자기 닫기를 가졌는지 알 방법이 없다 | 다리가 `pdReady{ownClose}` 를 알리고 부모가 `.ps-sheet.is-own-close` 를 붙인다 (CSS 는 style.css 에 이미 있었다) |
-| 다시 열면 **더 느리고 흰 배경** | 닫을 때 `setSrc(null)` 로 iframe 을 버렸다. ① 다시 받아 와야 해서 느리고 ② **1.4초 타이머가 도는 동안 다시 열면 그 타이머가 방금 띄운 iframe 을 지워** 시트의 흰 바탕만 남는다 | iframe 을 버리지 않는다. `ready` 로 기억해 같은 상세면 진행 바 없이 즉시 올린다 |
-| 상세 위에서 **커서가 멈춘다** | `mousemove` 가 부모 문서에 도달하지 않는다 | 다리가 좌표를 넘기고 `Cursor.tsx` 가 받는다. iframe 이 화면 전체를 덮으므로 **좌표가 1:1** 이라 보정이 필요 없다 |
+| 증상                                                 | 원인                                                                                                                                                                           | 해결                                                                                                             |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| 아래 화살표를 누르면 **CSS 없는 목록 페이지**가 뜬다 | `.pd-close` 의 `href="/projects"` 가 **iframe 안에서** 열린다. sandbox 라 상위 이동(`allow-top-navigation`)이 없어 스스로 나갈 수도 없다                                       | 다리가 클릭을 가로채 `pdClose` 를 부모에게 넘긴다                                                                |
+| **X 버튼이 같이 보인다**                             | 부모는 상세가 자기 닫기를 가졌는지 알 방법이 없다                                                                                                                              | 다리가 `pdReady{ownClose}` 를 알리고 부모가 `.ps-sheet.is-own-close` 를 붙인다 (CSS 는 style.css 에 이미 있었다) |
+| 다시 열면 **더 느리고 흰 배경**                      | 닫을 때 `setSrc(null)` 로 iframe 을 버렸다. ① 다시 받아 와야 해서 느리고 ② **1.4초 타이머가 도는 동안 다시 열면 그 타이머가 방금 띄운 iframe 을 지워** 시트의 흰 바탕만 남는다 | iframe 을 버리지 않는다. `ready` 로 기억해 같은 상세면 진행 바 없이 즉시 올린다                                  |
+| 상세 위에서 **커서가 멈춘다**                        | `mousemove` 가 부모 문서에 도달하지 않는다                                                                                                                                     | 다리가 좌표를 넘기고 `Cursor.tsx` 가 받는다. iframe 이 화면 전체를 덮으므로 **좌표가 1:1** 이라 보정이 필요 없다 |
 
 **⚠️ 새 상세 산출물에 `bridge.js` 를 빠뜨리면 위 네 개가 그대로 재현된다.**
 `public/portfolio/README.md` 에 추가 절차를 적어 뒀다.
@@ -524,12 +531,12 @@ public/portfolio/
 
 고친 것 — **전부 "파일만 떼어 와서 원래 얹혀 있던 스타일시트가 안 온" 문제다.**
 
-| 문서 | 증상 | 원인 / 고친 것 |
-|---|---|---|
-| onNuri | 문서 폭이 **3072px** (뷰포트의 2배) | `img { max-width: 100% }` 가 없다. section06 이미지가 원본 크기로 펼쳐졌다. **문서가 `max-width: unset` 을 5군데서 쓰는 게 그 규칙을 전제한다는 증거다.** → `.onnuri img{max-width:100%}` 복원 |
-| dap | 커버 이미지 2장 **404** | `cover_pc.png`/`cover_mobile.png` 를 부르는데 폴더에는 `cover.jpg`/`cover_m.jpg` → 실제 파일명으로 |
-| dap | 다리 스크립트 없음 | `bridge.js` 추가 (onNuri·shinhan 은 사용자가 이미 넣어 뒀다) |
-| 3건 전부 | 가로로 **120px** 밀린다 (dap) | 스크롤 인 연출이 `.works-content-item` 을 `.show` 전까지 `translate(+200px)` 로 대기시킨다. **`body{overflow-x:hidden}` 으로는 안 막힌다** — `html{overflow-x:clip}` 를 넣었다 |
+| 문서     | 증상                                | 원인 / 고친 것                                                                                                                                                                                 |
+| -------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onNuri   | 문서 폭이 **3072px** (뷰포트의 2배) | `img { max-width: 100% }` 가 없다. section06 이미지가 원본 크기로 펼쳐졌다. **문서가 `max-width: unset` 을 5군데서 쓰는 게 그 규칙을 전제한다는 증거다.** → `.onnuri img{max-width:100%}` 복원 |
+| dap      | 커버 이미지 2장 **404**             | `cover_pc.png`/`cover_mobile.png` 를 부르는데 폴더에는 `cover.jpg`/`cover_m.jpg` → 실제 파일명으로                                                                                             |
+| dap      | 다리 스크립트 없음                  | `bridge.js` 추가 (onNuri·shinhan 은 사용자가 이미 넣어 뒀다)                                                                                                                                   |
+| 3건 전부 | 가로로 **120px** 밀린다 (dap)       | 스크롤 인 연출이 `.works-content-item` 을 `.show` 전까지 `translate(+200px)` 로 대기시킨다. **`body{overflow-x:hidden}` 으로는 안 막힌다** — `html{overflow-x:clip}` 를 넣었다                 |
 
 **⚠️ `body` 의 `overflow-x:hidden` 은 문서가 옆으로 스크롤되는 것을 못 막는다.**
 세 문서 다 그 한 줄을 갖고 있었는데 dap 은 그대로 120px 밀렸다. `clip` 을 쓸 것 —
@@ -563,6 +570,7 @@ X 가 그대로 보인다 — 의도한 대로다(18번).
 **② 화면이 깨진 이유 — `_shared/project-detail.css` 가 낡았다.**
 가져온 HTML 은 정적 사이트의 **최신** 마크업이라 `.pd-sec--pc` `.pd-sec--m`
 `.pd-m-only` 를 쓰는데, 우리 사본에는 그 규칙이 없었다. 결과:
+
 - `.pd-sec--pc` / `--m` 이 둘 다 보여 **섹션 이미지가 12장** 쌓였다 (PC 6 + 모바일 6)
 - `.pd-m-only` 의 `<br>` 이 PC 에서도 먹어 영문 제목이 2줄로 깨졌다
 
@@ -615,6 +623,7 @@ Claude 가 못 고친다 — 8번 RLS 참고.)
 kb-app 을 모바일 폭으로 보면 **히어로만 나오고 아래가 전혀 안 나왔다.**
 
 원인 — 섹션 이미지 12장이 전부 `loading="lazy"` 인데 **`width`/`height` 속성이 없다.**
+
 1. 로드 전 `<img>` 높이는 0 → `.pd-sec` 6개가 전부 0 높이로 쌓인다
 2. 문서 높이가 1472px (히어로 812 + 나머지 조금) 밖에 안 된다
 3. 이미지들은 y≈1488 에 있다 — **문서 끝보다 아래라 스크롤로 도달할 수 없다**
@@ -627,11 +636,11 @@ kb-app 을 모바일 폭으로 보면 **히어로만 나오고 아래가 전혀 
 → **`<img>` 에 원본 픽셀 크기를 적었다.** `.pd-sec img{width:100%;height:auto}` 라
 속성이 종횡비만 주고, 브라우저가 **로드 전에 자리를 예약**한다.
 
-| | 고치기 전 | 고친 뒤 |
-|---|---|---|
-| 모바일 375 문서 높이 | 1472 | **7554** |
-| PC 1440 문서 높이 | 1649 | **7090** |
-| 섹션 높이 (로드 전) | 0 | 실제 값 (824·714·1016…) |
+|                      | 고치기 전 | 고친 뒤                 |
+| -------------------- | --------- | ----------------------- |
+| 모바일 375 문서 높이 | 1472      | **7554**                |
+| PC 1440 문서 높이    | 1649      | **7090**                |
+| 섹션 높이 (로드 전)  | 0         | 실제 값 (824·714·1016…) |
 
 **PC 도 같은 버그였다** — 첫 섹션만 어쩌다 로드돼서 덜 티가 났을 뿐이다.
 
@@ -662,6 +671,7 @@ dap       635줄 -> 190줄  (+ style.css  444줄)
 opacity 지문**을 비교 — 해시가 정확히 같았다(`-1218488085`).
 
 **아직 안 한 통일 작업 (사용자 결정 대기)**
+
 - **공통 CSS 승격** — 세 `style.css` 의 앞부분(리셋·MICEGothic·`only-pc`/`only-mobile`·
   `works-*`)이 거의 같다. `_shared/works.css` 로 올리면 중복이 사라진다.
   ⚠️ **기계적 추출이 안 된다** — 연속 공통 접두가 2줄뿐이다(주석 문구가 다르고 shinhan 은
@@ -681,12 +691,21 @@ sandbox iframe 안에서 자기 문서로 돈다 — **빌드 단계가 없으�
 엘리먼트가 유일한 수단**이다.
 
 ```html
-<project-detail ko="…" en="Onnuri digital|gift card" client="…" launch="Oct, 2022"
-  hero="img/hero-bg.jpg" hero-mobile="img/m-hero-bg.png"
-  overview-title="…" overview-text="…" platform="https://…">
+<project-detail
+  ko="…"
+  en="Onnuri digital|gift card"
+  client="…"
+  launch="Oct, 2022"
+  hero="img/hero-bg.jpg"
+  hero-mobile="img/m-hero-bg.png"
+  overview-title="…"
+  overview-text="…"
+  platform="https://…"
+>
   <div class="work-container onnuri">…본문 전체…</div>
 </project-detail>
 ```
+
 태그 하나가 히어로(배경·CI·닫기·KO/EN 제목·Client/Launch·SCROLL)와 Overview 카드
 (제목·본문·View Platform·Copy URL)를 그리고, **자식으로 받은 본문을 `.pd-secs` 밴드
 안으로 옮긴다.**
@@ -735,6 +754,7 @@ clipboard API 가 막히므로 `execCommand` 폴백이 실제 경로다.
 Overview 카드 1346 폭 · 버튼 2개 · 본문 패딩 64/20 · 가로 스크롤 0 · 깨진 이미지 0.
 
 **문구 출처와 미해결**
+
 - shinhan·onNuri 는 사용자가 준 시안에서 그대로 옮겼다. **단, onNuri 시안의 모바일 컷에는
   Overview 문구가 shinhan 것으로 들어가 있다**(시안 복붙 흔적) — PC 컷의 온누리 문구를 썼다.
 - shinhan 의 KO 제목은 시안에서 휴대폰 이미지에 가려 안 보여 `신한투자증권 모바일 웹 개편`
@@ -769,6 +789,7 @@ Overview 카드 1346 폭 · 버튼 2개 · 본문 패딩 64/20 · 가로 스크�
 대조**했다 — 워드마크 10개·행성 1개 전부 일치.
 
 **⚠️ 원본과 두 가지 다르게 갔다.**
+
 1. `.footer{background:transparent}` → **흰색**. 원본은 흰 페이지 위에 얹히는 전제인데
    상세는 그 위가 어두운 밴드(`#0C0C0C`)다.
 2. **모바일(≤1023) 규칙을 새로 넣었다.** PC 푸터는 로고 448px + 좌우 절대배치라 375 에서
@@ -807,33 +828,88 @@ width 343 · 간격 16 · 푸터 넘침 0.
 `_shared/style.css` 는 kb-app 만 계속 쓴다 — 그 문서에는 자기 `style.css` 가 없어 리셋을
 거기서 받는다. `footer.css` 를 뒤에 두어 푸터 배경(#fff)과 모바일 규칙이 이긴다.
 
-### 29. ⚠️ 리빌은 **숨기는 대상 전부**를 관찰해야 한다 (kb-app Overview 아래가 통째로 안 보임)
+### 29. 썸네일을 누른 횟수만큼 시트가 다시 열리던 문제 (`ProjectSheet`)
 
-kb-app 을 컴포넌트로 바꾼 뒤 **Overview 아래가 아무것도 안 보였다.**
+사용자 신고: "`.ps-bar` 가 누를 때마다 반복 실행되고 `project-sheet` 도 누른 횟수만큼 실행된다".
 
-`project-detail.css` 는 이렇게 숨긴다:
+**DOM 이 늘어나는 게 아니다** — 몇 번을 눌러도 `.ps-bar`·`#project-sheet`·iframe 은 각 1개다
+(portal 이 재마운트되지 않는다). 늘어난 건 **history 항목**이고, 되짚어 나올 때마다
+`onPop` 이 상세를 다시 올린 것이다. dev 서버에 붙어 실측:
+
+|                            | 고치기 전                               | 고친 뒤          |
+| -------------------------- | --------------------------------------- | ---------------- |
+| 썸네일 3연타 → `pushState` | **3회** (`history.length` 30→33)        | **1회** (순증 0) |
+| 목록으로 나가는 뒤로가기   | **3번** (앞의 2번은 시트가 다시 올라옴) | **1번**          |
+
+**왜 여러 번 누르게 되는가 — "안 보이는데 눌리는" 구간이 두 개 있었다.**
+① 로딩 중에는 `open===false` 라 `.ps-sheet` 가 `translateY(100%)` 로 화면 밖이다. 목록이
+그대로 보이고 그대로 눌린다. 피드백은 뷰포트 최상단 6px 바 하나뿐인데 카드는 한참 스크롤된
+아래에 있어 **아무 반응이 없어 보인다.** 이 구간은 짧지도 않다 — `BAR_RATE=1.65` 때문에
+즉시 로드돼도 최소 ~0.6초, 상한은 `LOAD_GUARD_MS=8000`.
+② 닫을 때 `inert` 는 즉시 붙는데 슬라이드는 1.2초다. **inert 요소는 클릭을 아래로
+통과시키므로**, 시트가 아직 화면을 덮고 있는 동안 안 보이는 카드가 눌린다
+(`elementFromPoint` 로 `.pj-title` 이 잡히는 것 확인).
+
+**고친 것 4가지** — `openSheet` 재진입 가드(`showing` ref) · 이미 상세 주소면 `pushState`
+대신 `replaceState` · `html.ps-busy` 로 목록 링크 차단 · `onPop` 에서 같은 상세면 무시.
+
+- **`showing` 은 `ready` 와 다르다.** `ready` = "받아 온 적이 있다"(닫아도 남는다, iframe 재사용용),
+  `showing` = "지금 이걸 붙들고 있다"(닫으면 비운다). 둘을 합치면 재오픈 캐시가 죽는다.
+- **`ps-busy` 는 `.pj-grid a` 만 끈다.** `.pj-card` 자체를 끄면 `useMagneticCards` 가
+  `mouseleave` 를 못 받아 **카드가 밀린 자리에 굳는다.**
+- **`SLIDE_MS = 1200` 은 `style.css` 의 `.ps-sheet` transition 과 같아야 한다.** 어긋나면
+  목록이 너무 일찍 살아나거나 계속 죽어 있다.
+- `requestClose` 의 가드를 `src` → `showing.current` 로 바꿨다. **`src` 는 닫아도 남으므로**
+  목록만 보다가 누른 ESC 가 `replaceState` 까지 하고 갔다. 덤으로 `requestClose` 가 안정돼
+  `message` 리스너가 매번 재등록되지 않는다.
+
+### 29-b. ⚠️ iframe 은 부모와 **세션 히스토리를 공유한다** — 닫기를 두 번 눌러야 했던 이유
+
+27번을 고친 뒤 사용자가 "마우스로 닫기를 한 번 누르면 안 닫히고 두 번 눌러야 한다"고
+보고했다. **살아 있는 iframe 의 `src` 를 바꾸면 그게 히스토리 항목으로 쌓인다.** 실측:
+
 ```
-.pd.rv .pd-summary, .pd.rv .pd-sec { opacity:0; transform:translateY(160px) }
-.pd.rv .pd-summary.in, .pd.rv .pd-sec.in { opacity:1; transform:none }
+카드 A (iframe 첫 로드)   PUSH → history.length 34 → 35     back 1번에 /projects ✓
+카드 B (iframe src 교체)  PUSH → history.length 35 → 36     ← +1 이 iframe 네비게이션 항목
+   back 1번 → iframe 만 되돌아간다. 부모 주소도 시트도 그대로 (open=true)
+   back 2번 → 그제서야 닫힌다
 ```
-**둘 다 숨기는데** `works.js` 의 `arm()` 은 `.pd-summary` **하나만** 관찰했다. 그래서
-섹션 12장은 armed(`opacity:0`) 상태로 남고 `.in` 이 영영 안 붙었다. kb-app 의 원래 인라인
-스크립트는 `querySelectorAll('.pd-summary,.pd-sec')` 로 전부 관찰했는데 그걸 옮기며 놓쳤다.
 
-다른 세 문서는 본문이 `.pd-sec` 이 아니라 이 규칙에 안 걸려서 드러나지 않았다.
+**첫 프로젝트만 정상이라 놓치기 쉽다** — 새 iframe 요소의 첫 로드는 항목을 만들지 않는다
+(replace 취급). 두 번째로 여는 상세부터 어긋난다. ESC 도 같은 `history.back()` 을 타므로
+증상은 동일한데, ESC 테스트를 첫 프로젝트로만 하면 정상으로 보인다.
 
-**⚠️ 내가 검증할 때 이 버그를 스스로 가렸다.** 지문을 뜨기 전에
-`opacity='1'; transform='none'` 을 강제로 넣고 쟀기 때문에 변환 전후가 똑같이 나왔다.
-**리빌이 걸린 화면은 강제 해제하고 재면 "안 보이는 상태"를 못 잡는다.**
+→ **`<iframe key={src}>`.** src 를 갈아끼우지 않고 요소를 새로 만든다. 같은 src 면 key 도
+같아 재마운트되지 않으므로 **같은 상세 재오픈 캐시(18번)는 그대로다** — 재오픈 800ms 만에
+`is-open`, 진행 바 `opacity:0` 확인.
 
-→ `REVEAL_SEL = '.pd-summary,.pd-sec'` 하나로 모아 armed 대상과 관찰 대상을 같게 했다.
-**숨기는 선택자를 늘리면 관찰 목록도 같이 늘릴 것.**
+→ 그래도 **`requestClose` 에 안전망을 남겼다.** 상세 문서가 자기 안에서 이동하면(앵커·
+스크립트 네비게이션) 우리가 못 막고 같은 증상이 재발한다. `history.back()` 후 600ms 안에
+안 닫혔으면 `replaceState('/projects')` + 직접 닫는다. `history.back` 을 no-op 으로 만들어
+폴백이 실제로 도는 것 확인(+300ms 열린 채 → +900ms 닫힘).
 
-**검증** — 브라우저 패널은 IO 가 스로틀돼 리빌을 볼 수 없어서 jsdom 으로 `IntersectionObserver`
-를 가로채 관찰 목록을 직접 확인했다. 9건 통과, 그중 핵심은 "armed 4개가 전부 관찰됨".
-**고치기 전 버전으로 같은 테스트를 돌려 FAIL 하는 것도 확인**했다 (관찰 안 된 것:
-`pd-sec--pc` ×2, `pd-sec--m` ×1). 나머지 8건: main.pd 렌더 · 히어로 구성 · Overview+버튼2 ·
-본문이 밴드로 이동 · 푸터가 마지막 · `|` 줄바꿈 두 종류 · Client/Launch.
+**검증**: A→B→C 연속 + 재오픈까지 전부 back **1번**에 닫힘, `history.length` 35 고정.
+
+### 29-c. ESC 중계 (`_shared/bridge.js` 의 다섯 번째 항목)
+
+**키 이벤트는 프레임 경계를 넘지 않는다.** 부모의 keydown 리스너는 부모 문서에 달려 있어서,
+상세 본문을 한 번이라도 클릭해 포커스가 iframe 으로 넘어가면 그 뒤로 ESC 가 부모에 아예
+도달하지 않는다 — "아까는 되던 ESC 가 안 된다"가 된다. 다리가 `pdEsc` 로 넘긴다
+(부모는 `pdClose` 와 같은 `requestClose`).
+
+**⚠️ 글을 쓰는 중이면 가로채지 않는다** — `input`/`textarea`/`select`/`contenteditable`,
+그리고 **한글 입력 조합 중**(`isComposing` · `keyCode === 229`). 조합 중의 ESC 는 조합을
+취소하는 키지 화면을 닫는 키가 아니다. 지금 상세 문서에 입력 요소는 없지만 생길 수 있다.
+
+**검증** — bridge 를 same-origin 테스트 프레임에 실제로 물려 6건 (sandbox 라 시트의
+iframe 에는 키를 못 넣는다): 본문 ESC → `pdEsc` · 다른 키 무시 · input 안 무시 ·
+IME 조합 중 무시 · `.pd-close` 클릭 `pdClose` 유지 · 로드 시 `pdReady{ownClose}` 유지.
+부모 쪽은 시트를 열고 `pdEsc` 를 쏴서 한 번에 닫히는 것, 닫힌 뒤 다시 와도 무시되는 것 확인.
+
+**확인 못 한 것**: 실제 마우스 클릭이 `pointer-events:none` 에 막히는지 — 브라우저 패널이
+백그라운드라 트러스티드 입력이 자주 유실돼 프로그램 클릭으로 검증했고, **프로그램 클릭은
+히트테스트를 우회한다.** computed style 이 `none` 인 것까지만 확인했다.
+진행 바가 rAF 경로로 차서 열리는 모습도 여전히 못 봤다(8초 가드로만 열린다 — 15번과 같은 한계).
 
 ---
 
@@ -857,17 +933,17 @@ kb-app 을 컴포넌트로 바꾼 뒤 **Overview 아래가 아무것도 안 보�
 
 ### Supabase 마이그레이션 실행 상태
 
-| 파일 | 실행됨? |
-|---|---|
-| `001_admin_users.sql` | ✅ 테이블 컬럼 대조 |
-| `002_admin_users_sync.sql` | ⚠️ **미확인** — 9번 시점엔 미실행이었다 |
-| `003_fix_admin_users_rls_recursion.sql` | ✅ `pg_policies` 확인 |
-| `004_portfolios.sql` | ✅ 컬럼·정책 확인 |
-| `005_portfolios_seed.sql` | ✅ 15건(종료 11 · 진행 4) 렌더 확인 |
-| `006_portfolio_storage.sql` | ✅ 버킷·정책 확인 (사용자 보고) |
-| `007_drop_legacy_portfolio_policies.sql` | ⚠️ **미확인** — 작성 후 실행 여부 확인 못 함 |
-| `008_portfolio_detail_html.sql` | ✅ 실행됨 (html_file 에 값이 들어간 행 확인) |
-| `009_portfolio_seed_thumbs.sql` | ❌ **미실행** — 작성만 했다 (14번, 아래 참고) |
+| 파일                                     | 실행됨?                                       |
+| ---------------------------------------- | --------------------------------------------- |
+| `001_admin_users.sql`                    | ✅ 테이블 컬럼 대조                           |
+| `002_admin_users_sync.sql`               | ⚠️ **미확인** — 9번 시점엔 미실행이었다       |
+| `003_fix_admin_users_rls_recursion.sql`  | ✅ `pg_policies` 확인                         |
+| `004_portfolios.sql`                     | ✅ 컬럼·정책 확인                             |
+| `005_portfolios_seed.sql`                | ✅ 15건(종료 11 · 진행 4) 렌더 확인           |
+| `006_portfolio_storage.sql`              | ✅ 버킷·정책 확인 (사용자 보고)               |
+| `007_drop_legacy_portfolio_policies.sql` | ⚠️ **미확인** — 작성 후 실행 여부 확인 못 함  |
+| `008_portfolio_detail_html.sql`          | ✅ 실행됨 (html_file 에 값이 들어간 행 확인)  |
+| `009_portfolio_seed_thumbs.sql`          | ❌ **미실행** — 작성만 했다 (14번, 아래 참고) |
 
 anon 키로는 `admin_users` 를 못 읽어(RLS 가 `to authenticated`) 프로필 수를 확인할 수 없다.
 **002 와 007 실행 여부부터 확인할 것.** 002 를 빠뜨리면 새 계정마다 9번을 반복하고,
@@ -883,6 +959,7 @@ anon 키로는 `admin_users` 를 못 읽어(RLS 가 `to authenticated`) 프로�
 사용자가 브라우저에서 확인한 것은 로그인·프로필 차단 화면·계정 등록 성공까지다.
 
 아무도 확인하지 않은 것:
+
 - **메뉴권한 차단(11번)** — 권한 뺀 계정으로 미확인. 경로→권한 매핑 로직만 9건 통과.
 - **Storage 업로드 왕복(12번)** — 세션이 없어 쓰기 정책을 통과할 수 없다.
   버킷·정책 존재는 확인했지만 **파일을 실제로 올려본 적이 없다.**
@@ -898,13 +975,13 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
 
 ### 기능 붙이기
 
-| 메뉴 | 테이블 | 상태 |
-|---|---|---|
-| 포트폴리오관리 | `portfolios` ✅ | **연동 완료** — CRUD + Storage 업로드 + `/projects` 공개 |
-| 사용자관리 | `admin_users` ✅ | **연동 완료** — 목록·상세·수정·등록·메뉴권한 |
-| 견적문의관리 | `quotes` ✅ | **연동 완료** — 목록·필터·상태변경·상세 (데이터 0건) |
-| 리크루트관리 | `recruits` | 테이블 없음 |
-| 메인관리 | 없음 | 스키마 설계부터. 폼은 스켈레톤(업로드만 동작, 저장 안 됨) |
+| 메뉴           | 테이블           | 상태                                                      |
+| -------------- | ---------------- | --------------------------------------------------------- |
+| 포트폴리오관리 | `portfolios` ✅  | **연동 완료** — CRUD + Storage 업로드 + `/projects` 공개  |
+| 사용자관리     | `admin_users` ✅ | **연동 완료** — 목록·상세·수정·등록·메뉴권한              |
+| 견적문의관리   | `quotes` ✅      | **연동 완료** — 목록·필터·상태변경·상세 (데이터 0건)      |
+| 리크루트관리   | `recruits`       | 테이블 없음                                               |
+| 메인관리       | 없음             | 스키마 설계부터. 폼은 스켈레톤(업로드만 동작, 저장 안 됨) |
 
 **⚠️ `pageviews` 는 이 저장소와 무관한 고아 테이블이다.**
 컬럼은 `id · created_at · path · referrer · visitor_id · utm_source/medium/campaign`.
@@ -919,6 +996,7 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
 모으고 화면은 그걸 쓰는 구조를 따라가면 된다.
 
 ### 바로 이어서 할 만한 것
+
 - **`009` 실행** — 안 돌리면 `/projects` 가 계속 옛 `proj-*.png` 를 가리킨다.
   그때까지 `public/assets/projects/proj-01~11.png` 를 지우면 안 된다(정적 사이트는 지웠다).
   돌린 뒤에 지울 것.
@@ -934,6 +1012,7 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
   게이트에 가려 못 쓰이는 문제(9번) 해소
 
 ### 기획서에 물음표로 남은 것 (담당자 확인 필요)
+
 - 메인관리 목록에 삭제 기능이 필요한가 (10p) — 현재는 조회 화면에만 삭제 배치
 - 사용자 데이터 삭제 기능이 필요한가 (42p) — 현재는 수정/취소만
 - 상세화면 HTML 업로드 실제 경로 (25p) — 지금은 `/com/resource/content/portfolio/detail/` 임시값
@@ -965,4 +1044,4 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
 9. **`for all` 정책은 SELECT 까지 포함한다** — 쓰기 권한만 의도했는데 읽기가 같이
    열리거나, 정책이 자기 테이블을 참조하면 `42P17` 무한재귀가 난다 (8번·13번).
 10. **Next dev 서버는 같은 디렉터리에서 두 개 못 띄운다** — 두 번째가 조용히 죽는다.
-   다른 포트로 검증이 필요하면 `next build && next start -p <포트>` 를 쓸 것.
+    다른 포트로 검증이 필요하면 `next build && next start -p <포트>` 를 쓸 것.

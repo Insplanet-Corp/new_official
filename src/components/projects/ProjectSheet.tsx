@@ -43,6 +43,12 @@ type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; d
    DRAWN bar has arrived at 1. */
 const BAR_RATE = 1.65; // bar-widths per second → a full bar takes ≥ ~0.6s
 const LOAD_GUARD_MS = 8000; // never hang the open on one stuck document
+/** 내려가는 슬라이드 길이. ⚠️ .ps-sheet 의 transform transition(1.2s)과 같아야 한다 — style.css */
+const SLIDE_MS = 1200;
+/** history.back() 이 우리 항목으로 돌아왔는지 확인하고 직접 닫기까지 기다리는 시간 */
+const CLOSE_FALLBACK_MS = 600;
+/** /projects/<id> — 목록 주소와 상세 주소를 가르는 유일한 기준 (popstate 판정·엔트리 판정이 같이 쓴다) */
+const DETAIL_PATH = /^\/projects\/([^/]+)\/?$/;
 
 export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   const [mounted, setMounted] = useState(false);
@@ -64,6 +70,14 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   /* 이미 다 불러서 띄운 적이 있는 상세. 닫아도 iframe 을 버리지 않으므로
      같은 프로젝트를 다시 열면 로딩 없이 바로 올라온다. */
   const ready = useRef<string | null>(null);
+  /* 지금 이 시트가 붙들고 있는 상세 — 불러오는 중이든 올라와 있든. ready 와 다르다:
+     ready 는 "받아 온 적이 있다"(닫아도 남는다), 이쪽은 "지금 이걸 보여주고 있다"(닫으면 비운다).
+     같은 상세를 다시 열라는 요청을 여기서 걸러 낸다. */
+  const showing = useRef<string | null>(null);
+  /* 내려가는 슬라이드가 끝나는 시점 — 그때까지 뒤쪽 목록의 클릭을 막아 둔다 */
+  const slideOut = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* history.back() 이 시트를 못 닫았을 때 직접 닫는 안전망 (requestClose 참고) */
+  const closeFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -179,15 +193,39 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
 
   const openSheet = useCallback(
     (detail: string, push: string | null) => {
+      /* ⚠️ 재진입 가드 — 같은 상세를 이미 붙들고 있으면 아무것도 하지 않는다.
+         이게 없으면 썸네일을 누른 횟수만큼 열기 시퀀스가 통째로 다시 돈다:
+         history 항목이 매번 하나씩 쌓이고, barReset() 이 진행 바를 0 으로 되돌려
+         눈에 보이게 처음부터 다시 차며, 같은 src 를 다시 넣어 봐야 iframe 은
+         재로드되지 않으므로 load 이벤트가 안 와서 공개가 8초 보호 타이머로 밀린다.
+         목록으로 돌아가려면 누른 횟수만큼 뒤로가기를 해야 했다.
+         뒤로 나오는 길에 popstate 가 같은 주소를 물고 오는 경우도 여기서 걸린다. */
+      if (showing.current === detail) return;
+      showing.current = detail;
       seq.current += 1;
       const mine = seq.current;
       if (push) {
-        history.pushState({ psDetail: detail }, '', push);
-        pushed.current = true;
+        /* 이미 상세 주소에 서 있으면(로딩 중에 다른 카드를 누른 경우) 항목을 새로
+           쌓지 않고 갈아끼운다 — 목록으로 나가는 뒤로가기는 언제나 한 번이어야 한다. */
+        if (DETAIL_PATH.test(location.pathname)) {
+          history.replaceState({ psDetail: detail }, '', push);
+        } else {
+          history.pushState({ psDetail: detail }, '', push);
+          pushed.current = true;
+        }
       }
       // 시트가 아직 올라오지 않은 동안에도 html 의 스크롤바 자리를 미리 없앤다 —
       // 슬라이드 첫 프레임에 리플로우가 겹치지 않도록
       document.documentElement.classList.add('ps-open');
+      /* 뒤쪽 목록의 카드 링크를 죽인다 (style.css 의 html.ps-busy).
+         ⚠️ inert 도 translateY(100%) 도 "안 보이는데 눌리는" 구간을 못 막는다 —
+         로딩 중에는 시트가 화면 밖이라 목록이 멀쩡히 눌리고, 닫는 중에는 시트가
+         아직 화면을 덮고 있는데 inert 라 클릭이 그 아래로 지나간다. */
+      if (slideOut.current) clearTimeout(slideOut.current);
+      slideOut.current = null;
+      document.documentElement.classList.add('ps-busy');
+      if (closeFallback.current) clearTimeout(closeFallback.current);
+      closeFallback.current = null;
 
       /* 같은 상세를 다시 여는 경우: iframe 이 그대로 살아 있으므로 진행 바 없이 바로 올린다.
          닫을 때 iframe 을 버리면 다시 열 때마다 처음부터 받아 와 오히려 더 느려지고,
@@ -226,10 +264,21 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
 
   const closeSheet = useCallback(() => {
     seq.current += 1;
+    showing.current = null;
     if (guard.current) clearTimeout(guard.current);
+    if (closeFallback.current) clearTimeout(closeFallback.current);
+    closeFallback.current = null;
     barReset();
     setBarOn(false);
     document.documentElement.classList.remove('ps-open');
+    /* ps-busy 는 슬라이드가 끝난 뒤에 뗀다 — inert 는 이 자리에서 바로 붙는데
+       시트는 1.2초에 걸쳐 내려간다. 그 사이에 목록을 열어 두면 화면에 보이지도 않는
+       카드가 눌린다. */
+    if (slideOut.current) clearTimeout(slideOut.current);
+    slideOut.current = setTimeout(() => {
+      slideOut.current = null;
+      document.documentElement.classList.remove('ps-busy');
+    }, SLIDE_MS);
     pushed.current = false;
     setOpen(false);
     /* ⚠️ iframe 을 버리지 않는다(setSrc(null) 하지 않는다).
@@ -244,20 +293,42 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
      closeSheet 를 부른다). 아니면 — /projects/<id> 로 바로 들어와 시트가 열린 경우 —
      항목을 하나 더 쌓지 않고 주소만 목록으로 되돌린 뒤 직접 닫는다. */
   const requestClose = useCallback(() => {
-    if (!src) return;
-    if (pushed.current) history.back();
-    else {
+    /* ⚠️ src 로 판정하면 안 된다 — 닫아도 iframe 을 버리지 않으므로 src 는 계속 남는다.
+       목록만 보고 있을 때 누른 ESC 가 replaceState 까지 하고 가는 일이 없도록,
+       "지금 붙들고 있는 상세"로 판정한다. */
+    if (!showing.current) return;
+    if (!pushed.current) {
       history.replaceState(null, '', '/projects');
       closeSheet();
+      return;
     }
-  }, [closeSheet, src]);
+    history.back();
+    /* ⚠️ back() 한 번이 우리 항목으로 돌아간다는 보장이 없다.
+       iframe 은 부모와 **세션 히스토리를 공유한다** — 상세를 바꿔 끼우거나 상세 문서가
+       자기 안에서 이동하면 그 항목이 우리 항목 위에 쌓인다. 그러면 back() 은 iframe 만
+       되돌리고 부모 주소·시트는 그대로다: 닫기를 눌러도 아무 일이 안 일어나 보이고
+       두 번 눌러야 닫혔다. iframe 을 src 마다 새로 만들어(key) 항목이 쌓이지 않게
+       했지만, 상세 문서 안의 이동까지는 우리가 못 막으므로 안전망을 남긴다. */
+    if (closeFallback.current) clearTimeout(closeFallback.current);
+    closeFallback.current = setTimeout(() => {
+      closeFallback.current = null;
+      if (!showing.current) return; // popstate 가 이미 제대로 닫았다
+      history.replaceState(null, '', '/projects');
+      closeSheet();
+    }, CLOSE_FALLBACK_MS);
+  }, [closeSheet]);
 
   /* 상세(iframe)가 보내오는 신호 — public/portfolio/_shared/bridge.js.
      sandbox iframe 의 origin 은 'null' 이라 origin 으로 못 거른다. 우리가 아는 모양의
      메시지만 받고, 좌표 같은 값은 커서 위치에만 쓰므로 위험한 입력이 아니다. */
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
-      const d = e.data as { pdReady?: boolean; ownClose?: boolean; pdClose?: boolean } | null;
+      const d = e.data as {
+        pdReady?: boolean;
+        ownClose?: boolean;
+        pdClose?: boolean;
+        pdEsc?: boolean;
+      } | null;
       if (!d || typeof d !== 'object') return;
       // 상세가 자기 닫기 버튼을 갖고 있으면 우리 X 를 숨긴다 (닫기가 두 개로 보이지 않게)
       if (d.pdReady) {
@@ -270,6 +341,9 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
       // 상세의 닫기를 눌렀다. sandbox 라 iframe 이 스스로 상위 이동을 못 한다 —
       // 가로채지 않으면 iframe 안에서 목록 페이지가 열려 버린다.
       if (d.pdClose) requestClose();
+      /* 상세 안에서 누른 ESC. 키 이벤트는 프레임 경계를 넘지 않으므로, 본문을 한 번이라도
+         클릭해 포커스가 iframe 으로 넘어가면 아래 keydown 리스너에는 영영 안 온다. */
+      if (d.pdEsc) requestClose();
     };
     addEventListener('message', onMessage);
     return () => removeEventListener('message', onMessage);
@@ -302,10 +376,16 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   /* 뒤로/앞으로: 주소가 /projects/<id> 면 열고, 아니면 닫는다 */
   useEffect(() => {
     const onPop = () => {
-      const m = /^\/projects\/([^/]+)\/?$/.exec(location.pathname);
+      const m = DETAIL_PATH.exec(location.pathname);
       const detail = m ? cards.find((c) => c.id === decodeURIComponent(m[1]))?.detail ?? null : null;
-      if (detail) openSheet(detail, null);
-      else closeSheet();
+      if (!detail) {
+        closeSheet();
+        return;
+      }
+      /* 되짚어 나오는 길에 이미 띄워 둔 상세를 다시 만났다 — 다시 올리지 않는다.
+         (openSheet 의 가드가 어차피 막지만, 여기가 그 상황이 실제로 생기는 자리다) */
+      if (showing.current === detail) return;
+      openSheet(detail, null);
     };
     addEventListener('popstate', onPop);
     return () => removeEventListener('popstate', onPop);
@@ -323,6 +403,10 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
   useEffect(() => () => {
     stopTrickle();
     if (guard.current) clearTimeout(guard.current);
+    if (slideOut.current) clearTimeout(slideOut.current);
+    if (closeFallback.current) clearTimeout(closeFallback.current);
+    // 언마운트되는데 클래스가 남으면 목록이 영영 안 눌린다
+    document.documentElement.classList.remove('ps-open', 'ps-busy');
   }, [stopTrickle]);
 
   if (!mounted) return null;
@@ -360,7 +444,15 @@ export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
             style={{ height: '100%' }}
           >
             {src ? (
+              /* ⚠️ key={src} — src 를 갈아끼우지 않고 iframe 요소를 새로 만든다.
+                 iframe 은 부모와 세션 히스토리를 공유해서, 살아 있는 iframe 의 src 를
+                 바꾸면 그게 히스토리 항목으로 쌓인다(실측: history.length +1). 그러면
+                 닫기의 back() 이 iframe 만 되돌리고 시트는 안 닫힌다 — 두 번 눌러야 했다.
+                 새로 만든 iframe 의 첫 로드는 항목을 만들지 않는다(replace 취급).
+                 같은 src 면 key 도 같아 재마운트되지 않으므로, 같은 상세를 다시 열 때
+                 로딩 없이 바로 올라오는 캐시는 그대로다. */
               <iframe
+                key={src}
                 src={src}
                 title="프로젝트 상세"
                 sandbox="allow-scripts"
