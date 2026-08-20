@@ -4,12 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Work Container - 프로젝트명</title>
-    <!-- 공용 4줄 — 순서를 지킬 것. 문서 고유 style.css 가 마지막이어야 이긴다. -->
     <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
     <link rel="stylesheet" href="../_shared/project-detail.css" />
     <link rel="stylesheet" href="../_shared/works.css" />
     <link rel="stylesheet" href="../_shared/footer.css" />
-    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
@@ -26,12 +25,13 @@
       overview-text="프로젝트 설명 첫 줄|둘째 줄"
       platform=""
     >
-      <!-- ⚠️ 본문은 반드시 이 안에. 밖에 두면 Overview 만 정렬되고 아래가 따로 논다. -->
-      <div class="work-container 슬러그">
-        <section class="works-content section01">
-          <!-- 섹션 하나 = 밴드 안의 카드 하나. 좌우 여백과 세로 간격은 밴드가 준다. -->
-        </section>
-      </div>
+      <figure class="pd-sec pd-sec--pc">
+        <img loading="lazy" src="" alt="" decoding="async" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img loading="lazy" src="" alt="" decoding="async" />
+      </figure>
     </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
