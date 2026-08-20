@@ -9,331 +9,152 @@
       content="telephone=no, email=no, address=no, date=no"
     />
     <title>Insplanet — 헤이영 캠퍼스 고도화</title>
-    <!-- Project detail — Figma official_05_projects_03_detail_01_2560 (1785:22992) + _1920 (2074:35563).
-     Paths are relative to /projects/ so this file works BOTH standalone (opened directly) and under any
-     subpath (js/project-sheet.js rewrites these same relative paths against the fetched URL when it
-     injects main.pd into the sheet on the list page).
-     HERO = live HTML/CSS (css/project-detail.css). Below the hero = one Figma export per section. -->
-    <!-- 상세는 sandbox iframe 안의 별개 문서라 Next 번들 CSS(src/styles)를 쓸 수 없다.
-         public 에 둔 사본을 절대경로로 부른다 — 폴더 깊이가 달라져도 안 깨진다. -->
+    <!-- 공용 5줄 — 순서를 지킬 것 (_template/index.html 과 동일) -->
     <link rel="stylesheet" href="../_shared/fonts.css" />
     <link rel="stylesheet" href="../_shared/style.css" />
     <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/works.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
   </head>
   <body class="pd-page">
-    <!-- main.pd = the region js/project-sheet.js fetches + injects into the sheet on the list page. -->
-    <main class="pd">
-      <!-- ===== HERO (Main Container 2560×1440) ===== -->
-      <section class="pd-hero">
-        <!-- hero bg: PC 4096×2286 landscape / mobile (≤1023) 720×1600 portrait — the browser fetches ONLY the matching source -->
-        <picture>
-          <source media="(max-width:1023px)" srcset="img/m-hero-bg.jpg" />
-          <img
-            class="pd-hero-bg"
-            src="img/hero-bg.jpg"
-            alt=""
-            loading="eager"
-            decoding="async"
-          />
-        </picture>
-        <div class="pd-hero-ci" aria-hidden="true">
-          <img src="/assets/ci_logo_white.svg" alt="" />
-        </div>
-        <!-- designed close (Figma `close`): fixed; js/project-sheet.js wires it to close the sheet. Standalone: back to the list -->
-        <a class="pd-close" href="/projects" aria-label="닫기">
-          <svg viewBox="0 0 44.3077 44.3077" fill="none" aria-hidden="true">
-            <path
-              d="M14.7695 19.3066L22.1553 26.0709L29.5387 19.3066"
-              stroke="currentColor"
-              stroke-width="2.2154"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </a>
-        <h1 class="pd-hero-title">
-          <span class="ko">헤이영 캠퍼스 고도화</span>
-          <span class="en pd-title-en"
-            >HeyYoung <br class="pd-m-only" />Campus</span
-          >
-        </h1>
-        <dl class="pd-hero-info">
-          <div>
-            <dt>Client</dt>
-            <dd>신한은행</dd>
-          </div>
-          <div>
-            <dt>Launch</dt>
-            <dd>Oct, 2022</dd>
-          </div>
-        </dl>
-        <div class="pd-hero-scroll" aria-hidden="true">
-          <span class="bar"></span><span class="label">SCROLL</span>
-        </div>
-      </section>
-
-      <!-- ===== BELOW HERO: Figma section exports (container 1785:23004, 7 cards) ===== -->
-      <div class="pd-secs">
-        <!-- Summary / Overview card (Figma 2149:85332, 2432×488 r16 white) — real HTML because of the two buttons.
-         View Platform: no URL in the design yet -> href="#" (publisher fills). Copy URL: data-copy empty -> copies the
-         shareable deep link (projects.html?p=kb-app in the sheet / this page's URL standalone; see js/project-sheet.js). -->
-        <section class="pd-summary">
-          <h2 class="pd-summary-head">Overview</h2>
-          <div class="pd-summary-body">
-            <h3 class="pd-summary-title">
-              스마트한 <br class="pd-m-only" />대학생활 필수 통합앱
-            </h3>
-            <p class="pd-summary-text">
-              학생증부터 학사 일정관리 등을 하나의 앱에서 모두 할 수 있는 헤이영
-              캠퍼스는 <br />신한은행이 금융권 최초로 추진한 대학생 전용 모바일
-              서비스입니다. 인스플래닛은 2차 고도화 사업에 참여하여,
-              <br />다크테마를 포함한 컬러 테마와 모바일 학생증 커스텀 기능 등
-              디자인 구성요소의 고도화 및 차별화를 구현하고 <br />게시판, 소모임
-              등의 프로세스 개선 등 서비스를 업그레이드 하였습니다.
-            </p>
-            <div class="pd-summary-actions">
-              <a
-                class="pd-btn pd-btn--primary"
-                href=""
-                target="_blank"
-                rel="noopener"
-              >
-                <span class="pd-btn-label">View Platform</span>
-                <svg
-                  class="pd-btn-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 8H16V15M16 8L8 16"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  />
-                </svg>
-              </a>
-              <button type="button" class="pd-btn pd-btn--copy" data-copy="">
-                <span class="pd-btn-label">Copy URL</span
-                ><svg
-                  class="pd-btn-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M11.437 8.059L12.563 6.933C13.807 5.689 15.823 5.689 17.067 6.933C18.311 8.177 18.311 10.193 17.067 11.437L15.941 12.563M12.563 15.941L11.437 17.067C10.193 18.311 8.177 18.311 6.933 17.067C5.689 15.823 5.689 13.807 6.933 12.563L8.059 11.437M9.185 14.815L14.815 9.185"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </section>
-        <!-- PC set (≥1024): the 1920 exports. Mobile set (≤1023): exported from the 360 frame (2456:39735 Contents, 328 wide @2×).
-         Only the active set is display'd (css). Both sets are loading="lazy": a lazy image inside a display:none figure is never
-         fetched, and js/project-sheet.js only force-eagers / counts images whose figure is actually displayed, so the inactive
-         set neither downloads nor gates the loading bar. -->
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-02.png"
-            width="4864"
-            height="2978"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-03.png"
-            width="4864"
-            height="2579"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-04.png"
-            width="4864"
-            height="3670"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-05.png"
-            width="4864"
-            height="3931"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-06.jpg"
-            width="4864"
-            height="3160"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--pc">
-          <img
-            loading="lazy"
-            src="img/sec-07.png"
-            width="4864"
-            height="3154"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-01.png"
-            width="656"
-            height="2538"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-02.png"
-            width="656"
-            height="1330"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-03.png"
-            width="656"
-            height="1832"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-04.png"
-            width="656"
-            height="1546"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-05.jpg"
-            width="656"
-            height="2106"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-        <figure class="pd-sec pd-sec--m">
-          <img
-            loading="lazy"
-            src="img/m-sec-06.png"
-            width="656"
-            height="2096"
-            alt=""
-            decoding="async"
-          />
-        </figure>
-      </div>
-    </main>
-
-    <!-- standalone only: Copy URL + magnetic buttons when NOT inside the list page's sheet (js/project-sheet.js
-     handles both there via delegation and skips when window.ProjectSheet exists). -->
-    <script>
-      (function () {
-        if (window.ProjectSheet) return;
-        // scroll reveal (viewport root here; in the sheet js/project-sheet.js roots it on .ps-scroll)
-        var main = document.querySelector("main.pd");
-        if (
-          main &&
-          !matchMedia("(prefers-reduced-motion:reduce)").matches &&
-          "IntersectionObserver" in window
-        ) {
-          var els = main.querySelectorAll(".pd-summary,.pd-sec");
-          if (els.length) {
-            main.classList.add("rv");
-            var io = new IntersectionObserver(
-              function (es, o) {
-                es.forEach(function (e) {
-                  if (e.isIntersecting) {
-                    e.target.classList.add("in");
-                    o.unobserve(e.target);
-                  }
-                });
-              },
-              { threshold: 0, rootMargin: "0px 0px -10% 0px" },
-            );
-            for (var i = 0; i < els.length; i++) io.observe(els[i]);
-          }
-        }
-        document.addEventListener("click", function (e) {
-          var vp = e.target.closest
-            ? e.target.closest(".pd-btn--primary")
-            : null;
-          if (vp && !vp.getAttribute("href")) {
-            e.preventDefault();
-            return;
-          } // no URL yet → inert
-          var b = e.target.closest ? e.target.closest(".pd-btn--copy") : null;
-          if (!b) return;
-          var url = b.getAttribute("data-copy");
-          if (!url || url === "#") url = location.href;
-          function done() {
-            var h = b.querySelector(".pd-copy-hint");
-            if (!h) {
-              h = document.createElement("span");
-              h.className = "pd-copy-hint";
-              h.setAttribute("role", "status");
-              h.textContent = "URL이 복사되었습니다";
-              b.appendChild(h);
-            }
-            h.classList.add("is-on");
-            clearTimeout(b._t);
-            b._t = setTimeout(function () {
-              h.classList.remove("is-on");
-            }, 1600);
-          }
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(done, function () {
-              fb();
-            });
-          } else fb();
-          function fb() {
-            var t = document.createElement("textarea");
-            t.value = url;
-            t.style.cssText = "position:fixed;opacity:0";
-            document.body.appendChild(t);
-            t.select();
-            try {
-              document.execCommand("copy");
-            } catch (err) {}
-            document.body.removeChild(t);
-            done();
-          }
-        });
-      })();
-    </script>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 그린다.
+         본문은 Figma export 한 장 = 섹션 하나이고, PC(.pd-sec--pc)/모바일(.pd-sec--m) 세트가
+         1024 를 경계로 갈린다. img 의 width/height 는 반드시 유지할 것 —
+         빠지면 lazy 가 자리를 못 잡아 히어로 아래가 통째로 안 보인다(CLAUDE.md 23번). -->
+    <project-detail
+      ko="헤이영 캠퍼스 고도화"
+      en="HeyYoung|Campus"
+      client="신한은행"
+      launch="Oct, 2022"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="스마트한|대학생활 필수 통합앱"
+      overview-text="학생증부터 학사 일정관리 등을 하나의 앱에서 모두 할 수 있는 헤이영 캠퍼스는|신한은행이 금융권 최초로 추진한 대학생 전용 모바일 서비스입니다. 인스플래닛은 2차 고도화 사업에 참여하여,|다크테마를 포함한 컬러 테마와 모바일 학생증 커스텀 기능 등 디자인 구성요소의 고도화 및 차별화를 구현하고|게시판, 소모임 등의 프로세스 개선 등 서비스를 업그레이드 하였습니다."
+      platform=""
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-02.png"
+          width="4864"
+          height="2978"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-03.png"
+          width="4864"
+          height="2579"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-04.png"
+          width="4864"
+          height="3670"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-05.png"
+          width="4864"
+          height="3931"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-06.jpg"
+          width="4864"
+          height="3160"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--pc">
+        <img
+          loading="lazy"
+          src="img/sec-07.png"
+          width="4864"
+          height="3154"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-01.png"
+          width="656"
+          height="2538"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-02.png"
+          width="656"
+          height="1330"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-03.png"
+          width="656"
+          height="1832"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-04.png"
+          width="656"
+          height="1546"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-05.jpg"
+          width="656"
+          height="2106"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+      <figure class="pd-sec pd-sec--m">
+        <img
+          loading="lazy"
+          src="img/m-sec-06.png"
+          width="656"
+          height="2096"
+          alt=""
+          decoding="async"
+        />
+      </figure>
+    </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
   </body>
 </html>
