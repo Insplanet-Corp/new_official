@@ -50,19 +50,19 @@
      실제로 kb-app 모바일에서 히어로 아래가 통째로 안 보였다.
      제대로 된 해법은 문서에 width/height 를 적는 것이고(그래야 자리도 미리 잡힌다),
      이건 빠뜨린 문서를 위한 보험이다. */
-  function unlockLazyImages() {
-    var imgs = document.querySelectorAll('img[loading="lazy"]');
-    for (var i = 0; i < imgs.length; i++) {
-      if (!imgs[i].hasAttribute('width') || !imgs[i].hasAttribute('height')) {
-        imgs[i].setAttribute('loading', 'eager');
-      }
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', unlockLazyImages);
-  } else {
-    unlockLazyImages();
-  }
+  // function unlockLazyImages() {
+  //   var imgs = document.querySelectorAll('img[loading="lazy"]');
+  //   for (var i = 0; i < imgs.length; i++) {
+  //     if (!imgs[i].hasAttribute('width') || !imgs[i].hasAttribute('height')) {
+  //       imgs[i].setAttribute('loading', 'eager');
+  //     }
+  //   }
+  // }
+  // if (document.readyState === 'loading') {
+  //   document.addEventListener('DOMContentLoaded', unlockLazyImages);
+  // } else {
+  //   unlockLazyImages();
+  // }
 
   document.addEventListener('click', function (e) {
     var close = e.target.closest ? e.target.closest('.pd-close') : null;

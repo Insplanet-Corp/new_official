@@ -89,6 +89,9 @@ public/portfolio/
 
 > 가장 빠른 길은 `onNuri/index.html` 을 복사해 문구만 바꾸는 것입니다.
 
+6. ** 기존에 img 태그안에 loading="lazy" width="", height="", decoding="async"는 임시 삭제 한다. 추후 필요시 반영한다.
+    bridge.js에서도 lazy 처리 관련은 주석처리 해둔다.
+
 ## 지킬 것
 
 - **사이트 공용 에셋은 절대경로로** — 로고·심볼 등은 `/assets/…` 입니다.
