@@ -807,6 +807,89 @@ width 343 · 간격 16 · 푸터 넘침 0.
 `_shared/style.css` 는 kb-app 만 계속 쓴다 — 그 문서에는 자기 `style.css` 가 없어 리셋을
 거기서 받는다. `footer.css` 를 뒤에 두어 푸터 배경(#fff)과 모바일 규칙이 이긴다.
 
+### 29. 썸네일을 누른 횟수만큼 시트가 다시 열리던 문제 (`ProjectSheet`)
+
+사용자 신고: "`.ps-bar` 가 누를 때마다 반복 실행되고 `project-sheet` 도 누른 횟수만큼 실행된다".
+
+**DOM 이 늘어나는 게 아니다** — 몇 번을 눌러도 `.ps-bar`·`#project-sheet`·iframe 은 각 1개다
+(portal 이 재마운트되지 않는다). 늘어난 건 **history 항목**이고, 되짚어 나올 때마다
+`onPop` 이 상세를 다시 올린 것이다. dev 서버에 붙어 실측:
+
+| | 고치기 전 | 고친 뒤 |
+|---|---|---|
+| 썸네일 3연타 → `pushState` | **3회** (`history.length` 30→33) | **1회** (순증 0) |
+| 목록으로 나가는 뒤로가기 | **3번** (앞의 2번은 시트가 다시 올라옴) | **1번** |
+
+**왜 여러 번 누르게 되는가 — "안 보이는데 눌리는" 구간이 두 개 있었다.**
+① 로딩 중에는 `open===false` 라 `.ps-sheet` 가 `translateY(100%)` 로 화면 밖이다. 목록이
+그대로 보이고 그대로 눌린다. 피드백은 뷰포트 최상단 6px 바 하나뿐인데 카드는 한참 스크롤된
+아래에 있어 **아무 반응이 없어 보인다.** 이 구간은 짧지도 않다 — `BAR_RATE=1.65` 때문에
+즉시 로드돼도 최소 ~0.6초, 상한은 `LOAD_GUARD_MS=8000`.
+② 닫을 때 `inert` 는 즉시 붙는데 슬라이드는 1.2초다. **inert 요소는 클릭을 아래로
+통과시키므로**, 시트가 아직 화면을 덮고 있는 동안 안 보이는 카드가 눌린다
+(`elementFromPoint` 로 `.pj-title` 이 잡히는 것 확인).
+
+**고친 것 4가지** — `openSheet` 재진입 가드(`showing` ref) · 이미 상세 주소면 `pushState`
+대신 `replaceState` · `html.ps-busy` 로 목록 링크 차단 · `onPop` 에서 같은 상세면 무시.
+
+- **`showing` 은 `ready` 와 다르다.** `ready` = "받아 온 적이 있다"(닫아도 남는다, iframe 재사용용),
+  `showing` = "지금 이걸 붙들고 있다"(닫으면 비운다). 둘을 합치면 재오픈 캐시가 죽는다.
+- **`ps-busy` 는 `.pj-grid a` 만 끈다.** `.pj-card` 자체를 끄면 `useMagneticCards` 가
+  `mouseleave` 를 못 받아 **카드가 밀린 자리에 굳는다.**
+- **`SLIDE_MS = 1200` 은 `style.css` 의 `.ps-sheet` transition 과 같아야 한다.** 어긋나면
+  목록이 너무 일찍 살아나거나 계속 죽어 있다.
+- `requestClose` 의 가드를 `src` → `showing.current` 로 바꿨다. **`src` 는 닫아도 남으므로**
+  목록만 보다가 누른 ESC 가 `replaceState` 까지 하고 갔다. 덤으로 `requestClose` 가 안정돼
+  `message` 리스너가 매번 재등록되지 않는다.
+
+### 29-b. ⚠️ iframe 은 부모와 **세션 히스토리를 공유한다** — 닫기를 두 번 눌러야 했던 이유
+
+27번을 고친 뒤 사용자가 "마우스로 닫기를 한 번 누르면 안 닫히고 두 번 눌러야 한다"고
+보고했다. **살아 있는 iframe 의 `src` 를 바꾸면 그게 히스토리 항목으로 쌓인다.** 실측:
+
+```
+카드 A (iframe 첫 로드)   PUSH → history.length 34 → 35     back 1번에 /projects ✓
+카드 B (iframe src 교체)  PUSH → history.length 35 → 36     ← +1 이 iframe 네비게이션 항목
+   back 1번 → iframe 만 되돌아간다. 부모 주소도 시트도 그대로 (open=true)
+   back 2번 → 그제서야 닫힌다
+```
+
+**첫 프로젝트만 정상이라 놓치기 쉽다** — 새 iframe 요소의 첫 로드는 항목을 만들지 않는다
+(replace 취급). 두 번째로 여는 상세부터 어긋난다. ESC 도 같은 `history.back()` 을 타므로
+증상은 동일한데, ESC 테스트를 첫 프로젝트로만 하면 정상으로 보인다.
+
+→ **`<iframe key={src}>`.** src 를 갈아끼우지 않고 요소를 새로 만든다. 같은 src 면 key 도
+같아 재마운트되지 않으므로 **같은 상세 재오픈 캐시(18번)는 그대로다** — 재오픈 800ms 만에
+`is-open`, 진행 바 `opacity:0` 확인.
+
+→ 그래도 **`requestClose` 에 안전망을 남겼다.** 상세 문서가 자기 안에서 이동하면(앵커·
+스크립트 네비게이션) 우리가 못 막고 같은 증상이 재발한다. `history.back()` 후 600ms 안에
+안 닫혔으면 `replaceState('/projects')` + 직접 닫는다. `history.back` 을 no-op 으로 만들어
+폴백이 실제로 도는 것 확인(+300ms 열린 채 → +900ms 닫힘).
+
+**검증**: A→B→C 연속 + 재오픈까지 전부 back **1번**에 닫힘, `history.length` 35 고정.
+
+### 29-c. ESC 중계 (`_shared/bridge.js` 의 다섯 번째 항목)
+
+**키 이벤트는 프레임 경계를 넘지 않는다.** 부모의 keydown 리스너는 부모 문서에 달려 있어서,
+상세 본문을 한 번이라도 클릭해 포커스가 iframe 으로 넘어가면 그 뒤로 ESC 가 부모에 아예
+도달하지 않는다 — "아까는 되던 ESC 가 안 된다"가 된다. 다리가 `pdEsc` 로 넘긴다
+(부모는 `pdClose` 와 같은 `requestClose`).
+
+**⚠️ 글을 쓰는 중이면 가로채지 않는다** — `input`/`textarea`/`select`/`contenteditable`,
+그리고 **한글 입력 조합 중**(`isComposing` · `keyCode === 229`). 조합 중의 ESC 는 조합을
+취소하는 키지 화면을 닫는 키가 아니다. 지금 상세 문서에 입력 요소는 없지만 생길 수 있다.
+
+**검증** — bridge 를 same-origin 테스트 프레임에 실제로 물려 6건 (sandbox 라 시트의
+iframe 에는 키를 못 넣는다): 본문 ESC → `pdEsc` · 다른 키 무시 · input 안 무시 ·
+IME 조합 중 무시 · `.pd-close` 클릭 `pdClose` 유지 · 로드 시 `pdReady{ownClose}` 유지.
+부모 쪽은 시트를 열고 `pdEsc` 를 쏴서 한 번에 닫히는 것, 닫힌 뒤 다시 와도 무시되는 것 확인.
+
+**확인 못 한 것**: 실제 마우스 클릭이 `pointer-events:none` 에 막히는지 — 브라우저 패널이
+백그라운드라 트러스티드 입력이 자주 유실돼 프로그램 클릭으로 검증했고, **프로그램 클릭은
+히트테스트를 우회한다.** computed style 이 `none` 인 것까지만 확인했다.
+진행 바가 rAF 경로로 차서 열리는 모습도 여전히 못 봤다(8초 가드로만 열린다 — 15번과 같은 한계).
+
 ---
 
 ## 현재 상태

@@ -14,7 +14,11 @@
      2. pdClose             — 닫기를 눌렀다. sandbox 라 iframe 이 스스로 상위 이동을
                    못 하므로(allow-top-navigation 없음) 부모가 대신 닫는다.
                    ⚠️ 이게 없으면 닫기가 iframe 안에서 목록 페이지를 열어 버린다.
-     3. pdMouse  { x, y, grow } — 마우스 좌표. 부모의 커스텀 커서는 부모 문서의
+     3. pdEsc               — ESC 를 눌렀다. 부모의 keydown 리스너는 부모 문서에 달려
+                   있어서, 상세 본문을 한 번이라도 클릭해 포커스가 iframe 으로 넘어가면
+                   그 뒤로는 ESC 가 부모에 아예 도달하지 않는다(키 이벤트는 프레임
+                   경계를 넘지 않는다). 그대로 두면 "아까는 되던 ESC 가 안 된다"가 된다.
+     4. pdMouse  { x, y, grow } — 마우스 좌표. 부모의 커스텀 커서는 부모 문서의
                    mousemove 로 움직이는데, 포인터가 iframe 위에 올라가면 그 이벤트가
                    부모에 도달하지 않아 커서가 그 자리에 멈춘다.
                    iframe 이 시트(=뷰포트) 전체를 덮으므로 좌표는 1:1 로 맞는다. */
@@ -65,6 +69,16 @@
     if (!close) return;
     e.preventDefault();
     post({ pdClose: true });
+  });
+
+  /* ESC 중계. 부모의 닫기와 같은 동작을 하도록 넘기기만 한다.
+     ⚠️ 글을 쓰는 중이면 가로채지 않는다 — 상세 문서에 입력 요소가 생길 수 있고,
+     한글 입력 조합 중의 ESC 는 조합을 취소하는 키지 화면을 닫는 키가 아니다. */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || e.isComposing || e.keyCode === 229) return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    post({ pdEsc: true });
   });
 
   /* 부모가 알려 주는 공유용 주소 — /projects/<id>.
