@@ -913,6 +913,70 @@ IME 조합 중 무시 · `.pd-close` 클릭 `pdClose` 유지 · 로드 시 `pdRe
 히트테스트를 우회한다.** computed style 이 `none` 인 것까지만 확인했다.
 진행 바가 rAF 경로로 차서 열리는 모습도 여전히 못 봤다(8초 가드로만 열린다 — 15번과 같은 한계).
 
+### 30. ⚠️ sandbox iframe 안에서는 **폰트만** 못 받는다 (CORS)
+
+상세 화면들에서 웹폰트가 전부 시스템 폰트로 폴백돼 있었다. 경로 문제가 아니다 —
+`_shared/fonts.css` 의 `/assets/fonts/*.woff2` 7개는 전부 실재하고 200 이다.
+
+원인은 **누가 요청하는가**다. 상세는 `sandbox="allow-scripts"` iframe 안에서 도는데
+(`allow-same-origin` 을 일부러 뺐다 — 15번), 그 문서의 origin 은 **`null`(불투명 출처)** 이다.
+그런데 `@font-face` 의 폰트 요청만은 **항상 CORS 모드**로 나간다. 이미지·CSS·JS 는 no-cors 라
+그냥 뜨므로 **폰트만 조용히 죽는다.** 실제로 불투명 출처 프레임에서 확인한 증상:
+
+```
+document.styleSheets[0].href   → .../fonts.css  (링크는 정상)
+document.styleSheets[0].cssRules → SecurityError  ← 이제 cross-origin 취급이라는 증거
+```
+
+→ `next.config.ts` 에 `headers()` 로 `/assets/fonts/:path*` 에만
+`Access-Control-Allow-Origin: *` 를 붙였다. 폰트는 자격증명 없이(anonymous) 요청되므로
+`*` 로 충분하다. **`allow-same-origin` 을 되돌리는 쪽으로 풀지 말 것 — 세션 토큰이 열린다.**
+
+**검증**: 7개 파일 전부 `Origin: null` 요청에 ACAO 응답 · 브라우저에서 **실제 cross-origin**
+(127.0.0.1↔localhost) CORS fetch 200 `type=cors` 765,892바이트 · `FontFace.load()` cross-origin
+`status=loaded` · 대조군 `/assets/ci_logo_white.svg`(헤더 없음)는 그대로 차단 → 스코프가
+폰트에만 걸린 것 확인.
+
+**확인 못 한 것**: 실제 시트 iframe 안에서 폰트가 그려지는 모습. **브라우저 패널이 sandbox
+프레임의 서브리소스를 아예 차단한다**(네트워크 로그에도 안 남고 CORS 에러도 안 뜬다 —
+15번의 `ERR_BLOCKED_BY_CLIENT` 와 같은 한계). 사람이 실제 브라우저에서 봐야 한다.
+
+**정적 사이트(`../insplanet`)에서는 안 터진다** — 거기선 상세를 시트 DOM 에 주입하므로
+그냥 same-origin 문서다. 우리만 겪는 문제다.
+
+### 31. 전체메뉴 Projects 배지를 DB 건수로 (`lib/projectCount.ts`)
+
+`.menu-badge` 가 `site.ts` 에 `badge: '42'` 로 박혀 있었다. **어떤 실제 숫자와도 안 맞았다** —
+현재 공개 데이터는 40건(완료 36 · 진행중 4)이다. 세는 기준은 **완료 카드 36** 으로 정했다
+(사용자 결정). 진행중 표는 토글 뒤라 첫 화면에 안 보이고, 카테고리 칩은 카드를 지우지 않고
+`hidden` 만 토글하므로 배지를 거기 맞추면 메뉴를 열 때마다 숫자가 흔들린다.
+
+**⚠️ 배지가 필요한 곳은 `/projects` 가 아니다.** 메뉴는 `PageShell` 이 그리므로 `/` `/about`
+`/contact` 에도 같이 붙는데, 그 셋은 DB 를 안 읽는 **정적 렌더 대상**이었다. 매 요청 조회로
+두면 세 페이지가 통째로 동적 렌더가 된다. → `unstable_cache`(300초)로 감쌌다.
+**빌드 출력으로 확인함** — 셋 다 여전히 `○ (Static)` 이고 `Revalidate 5m` 이 붙었다.
+
+- **`PageShell` 이 async 서버 컴포넌트가 됐다.** 클라이언트 컴포넌트에서 렌더하면 깨진다
+  (지금은 전부 서버 페이지에서만 쓴다).
+- **`lib/projectCount.ts` 를 클라이언트에서 import 하지 말 것** — `next/cache` 를 쓴다.
+- **`/projects` 만 자기 `cards.length` 를 넘긴다.** 그 페이지는 `force-dynamic` 이라 그리드는
+  항상 최신인데 배지가 캐시 값이면 눈앞의 카드 수와 어긋나 보인다.
+- 조회 실패는 `null` 이고 **배지를 아예 안 그린다** — 틀린 숫자를 남겨 두는 것보다 낫다.
+  0건일 때도 안 그린다.
+- 어드민 저장 즉시 반영이 필요해지면 `revalidateTag(PROJECT_COUNT_TAG)`. 지금은 최대 5분 지연.
+- `select('id', { count: 'exact', head: true })` — 행은 한 건도 안 받는다.
+- **모바일 `.m-menu-badge` 는 CSS 만 있고 마크업이 없다**(14번, 모바일 미착수).
+  만들 때 같은 prop 을 받아 쓸 것 — 숫자를 다시 손으로 적지 말 것.
+
+**검증**: `/` `/about` `/contact` `/projects` 네 곳의 **SSR HTML** 에 `36` 이 들어 있는 것
+(하이드레이션 전에도 값이 있다) · `/projects` 는 배지 36 = `.pj-card` 36 개로 **일치** ·
+메뉴를 실제로 열어(`#menu-overlay.open`) 배지가 라벨 오른쪽 66×45 알약으로 렌더 ·
+빌드·타입체크 통과. **스크린샷은 못 찍었다** — 브라우저 패널이 백그라운드라 컴포지팅이 멈춘다.
+
+**⚠️ 12번의 "시드 11건" 은 옛 상태다** — 지금 `portfolios` 는 40건이고 `public/portfolio/`
+아래 상세 폴더도 17개가 미커밋으로 늘어 있다(사용자가 추가). 20·21번이 다루는 네 문서
+기준으로 적힌 설명들은 그 사이 늘어난 분량을 반영하지 못한다.
+
 ---
 
 ## 현재 상태
@@ -1047,3 +1111,5 @@ Web 필터 5장·진행중 토글·`use_yn='N'` 제외(11→10). 전부 프로�
    열리거나, 정책이 자기 테이블을 참조하면 `42P17` 무한재귀가 난다 (8번·13번).
 10. **Next dev 서버는 같은 디렉터리에서 두 개 못 띄운다** — 두 번째가 조용히 죽는다.
     다른 포트로 검증이 필요하면 `next build && next start -p <포트>` 를 쓸 것.
+11. **불투명 출처(sandbox) iframe 에서는 폰트만 CORS 를 탄다** — 이미지·CSS·JS 는 멀쩡한데
+    `@font-face` 만 조용히 폴백된다. 정적 에셋에 `Access-Control-Allow-Origin` 이 필요하다 (30번).
