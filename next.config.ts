@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   // Nothing here needs the image optimizer: every asset is a hand-tuned SVG/PNG
   // served straight from /public via plain <img>.
   images: { unoptimized: true },
+  devIndicators: false,
 };
 
 export default nextConfig;
