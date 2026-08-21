@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko="책 읽을 시간이 없는 당신을 위한 오디오북"
+      en="BUDIO Audio Book"
+      client="-"
+      launch="Oct, 2019"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="해외주재 한국인 대상 북큐레이션 서비스"
+      overview-text="BUDIO는 책 읽을 시간이 충분하지 않은 사용자를 위한 맞춤 북 큐레이션 서비스입니다. 오디오북 서비스가 급부상하는 트렌드 속에서, 책을 좋아하지만 시간이 부족하고 자신에게 맞는 책을 고르기 어려운 니즈에서 기획되었습니다. 사용자 유형을 분석해  최적의 책을 추천하고, 긴 호흡의 콘텐츠를 쉽게 읽을 수 있도록 UI/UX를 구성하였습니다. 쉽고 명확한 인터랙션으로 Seamless한 사용자 경험을 제공하여 BUDIO의 서비스 가치를 긍정적으로 전달합니다."
+      platform=""
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-03.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-03.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>

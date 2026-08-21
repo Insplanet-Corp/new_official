@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/works.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko=""
+      en=""
+      client="바스 홀딩스"
+      launch="Mar, 2019"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="블록체인 기반의 보안 인증 시스템"
+      overview-text="BasSid는 블록체인 기술이 결합된 통합 보안 인증 시스템입니다.|인스플래닛은 블록체인을 통한 데이터 분리 분산으로 유출 걱정없는 통합인증 시스템을 간편하게 이용할 수 있도록 쉽고 명확한 UI/UX에 집중하였습니다.|마이크로 인터랙션으로 즉각적인 시각적 피드백을 제공함으로써 사용자에게 시스템과의 상호작용을 자연스럽게 인식시키고, 일관된 비주얼과 톤앤매너로 BaaSid의 브랜드 아이덴티티와 서비스 가치를 높일 수 있도록 디자인하였습니다."
+      platform=""
+      class="color-type-black"  
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>

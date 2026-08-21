@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko=""
+      en=""
+      client="YB Holdings"
+      launch="Jul, 2020"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="믿을 수 있는 여행지식공유 플랫폼, 트래멘토"
+      overview-text="자유여행 지식공유 커뮤니티 플랫폼 트래멘토의 신규 구축을 진행하였습니다. 회원 및 수익금 배분 정책을 수립하고, 사용자·관리자 등급별 서비스 차등 제공 기반의 서비스 기획을 진행하였습니다.|여행지식 공유라는 컨셉을 효과적으로 브랜드 포지셔닝하기 위해 BI 제작을 포함한 전반적인 디자인 방향을 수립하였습니다."
+      platform=""
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-03.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-03.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>

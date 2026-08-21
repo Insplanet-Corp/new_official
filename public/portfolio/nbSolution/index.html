@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko="워드프레스 기반 기업 오피셜 사이트"
+      en="NB solution"
+      client="남부솔루션"
+      launch="Aug, 2019"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="남부솔루션의 기술 역량"
+      overview-text="인스플래닛은 워드프레스를 활용하여 남부솔루션의 오피셜 사이트를 구축하였습니다.|남부솔루션의 핵심사업인 열차제어장치 'IRU'의 개발성과를 중심으로 기업연구소의 기술력을 표현할 수 있는 이미지와 심플한 UI/UX로 남부솔루션의 아이덴티티를 구축하였습니다."
+      platform=""
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>

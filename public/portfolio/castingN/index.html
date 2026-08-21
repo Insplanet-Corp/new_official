@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko=""
+      en=""
+      client="캐스팅엔"
+      launch="May, 2020"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="온라인 소싱 중개 플랫폼 CastingN"
+      overview-text="소싱이 필요한 기업고객에게 검증된 전문 업체를 연결하여, 아웃소싱/외주 업무의 완성까지 책임지는 신개념의 B2B 온라인 소싱 중개 플랫폼인 CastingN의 연간 유지운영 및 고도화를 진행하였습니다.|소규모 거래에서 중/대형 거래로의 확장된 사업의 규모를 표현하고, 안정적이며 신뢰를 주는 시각적인 메시지를 전달하는 디자인이 적용되었습니다."
+      platform=""
+      class="color-type-black"
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-03.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-03.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>

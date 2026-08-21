@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work Container - 프로젝트명</title>
+    <link rel="stylesheet" href="../_shared/fonts.css" />
+    <link rel="stylesheet" href="../_shared/style.css" />
+    <link rel="stylesheet" href="../_shared/project-detail.css" />
+    <link rel="stylesheet" href="../_shared/footer.css" />
+  </head>
+  <body>
+    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
+         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
+         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. -->
+    <project-detail
+      ko="복지로 차세대 UI/UX"
+      en="Bokjiro Next-Gen Welfare"
+      client="보건복지부"
+      launch="Oct, 2020"
+      hero="img/hero-bg.jpg"
+      hero-mobile="img/m-hero-bg.jpg"
+      overview-title="국민이 기뻐하고 신뢰하는 서비스, 복지로"
+      overview-text="인스플래닛은 보건복지부의 복지서비스 포털 ‘복지로’ 차세대 프로젝트의 UI/UX 컨설팅 및 구현방안을 전담하였습니다. 모든 국민이 차별없이 누리는 맞춤형 복지플랫폼을 목표로 국민이 기뻐하고 신뢰하는 서비스를 만들기 위해 고민하였습니다. 쉽고 명확한 정보구조와 배려깊고 친절한 디자인으로 누구나 쉽게 복지혜택을 누릴 수 있는 복지플랫폼으로 나아갈 수 있도록 UI/UX를 진행하였습니다."
+      platform=""
+    >
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-02.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-02.png" alt="" />
+      </figure>
+    </project-detail>
+
+    <script src="/portfolio/_shared/bridge.js"></script>
+    <script src="/portfolio/_shared/works.js"></script>
+  </body>
+</html>
