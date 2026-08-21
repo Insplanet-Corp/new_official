@@ -20,6 +20,7 @@ import {
   USE_YN,
 } from "@/data/adminOptions";
 import { describeError } from "@/lib/pgError";
+import { refreshProjectCount } from "@/lib/projectCountActions";
 import {
   EMPTY_DRAFT,
   type PortfolioDraft,
@@ -78,6 +79,11 @@ export default function PortfolioForm({
       setError(describeError(err));
       return;
     }
+    /* 전체메뉴 Projects 배지의 캐시를 턴다 — 안 털면 최대 5분간 옛 숫자가 남는다.
+       실패해도 저장은 이미 끝났으므로 화면 흐름을 막지 않는다(최대 5분 뒤 자연 갱신). */
+    await refreshProjectCount().catch((e) =>
+      console.error("[portfolio] 메뉴 배지 캐시 무효화 실패:", e),
+    );
     router.push("/admin/portfolio");
     router.refresh();
   };

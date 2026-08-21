@@ -8,6 +8,7 @@ import kit from "@/components/admin/kit.module.css";
 import { labelOf } from "@/data/adminOptions";
 import { PORTFOLIO_STATUS_FILTER } from "@/data/adminOptions";
 import { describeError, isMissingTable } from "@/lib/pgError";
+import { refreshProjectCount } from "@/lib/projectCountActions";
 import {
   type Portfolio,
   formatPeriod,
@@ -76,6 +77,10 @@ export default function PortfolioDetailPage({
       setError(describeError(err));
       return;
     }
+    /* 등록·수정과 같은 이유로 메뉴 배지 캐시를 턴다 (lib/projectCountActions.ts) */
+    await refreshProjectCount().catch((e) =>
+      console.error("[portfolio] 메뉴 배지 캐시 무효화 실패:", e),
+    );
     router.push("/admin/portfolio");
     router.refresh();
   };
