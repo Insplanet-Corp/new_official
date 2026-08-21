@@ -47,6 +47,7 @@
 
 /* ---- hero: font-color type ---- */
 .color-type-black .pd-hero {color: #3E3F44;}
+.color-type-black .pd-hero-ci img {filter: brightness(0) invert(24%) sepia(5%) saturate(757%) hue-rotate(192deg) brightness(91%) contrast(92%);}
 
 .pd-hero-title{position:absolute;left:var(--gx);right:var(--gx);top:50%;transform:translateY(-50%);margin:0;
   display:flex;flex-direction:column;align-items:center;text-align:center;word-break:keep-all}
