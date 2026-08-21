@@ -10,7 +10,6 @@ public/portfolio/
 │  ├─ fonts.css
 │  ├─ style.css
 │  ├─ project-detail.css    .pd-* 디자인 시스템 (kb-app 계열)
-│  ├─ works.css             본문을 밴드의 카드 규격에 맞추는 보정
 │  ├─ footer.css            푸터 (사이트 .footer 와 같은 모양 + 모바일 대응)
 │  ├─ footer-wordmark.svg   푸터 CI — 워드마크
 │  ├─ footer-planet.svg     푸터 CI — 행성
@@ -23,8 +22,8 @@ public/portfolio/
 │  ├─ index.html
 │  ├─ style.css             ← 문서 전용 (인라인 <style> 을 빼낸 것)
 │  └─ img/
-├─ shinhan/
-├─ dap/
+├─ shinhan/                 자기 CSS 를 갖는 문서
+├─ dap/                     자기 CSS 를 갖는 문서
 └─ <다음-프로젝트>/
 ```
 
@@ -60,7 +59,6 @@ public/portfolio/
      overview-title="언제 어디서나 편리하게|혜택을 받으세요"
      overview-text="첫 줄|둘째 줄"
      platform="https://…"
-     class="color-type-black"
    >
      <div class="work-container">…본문 전체…</div>
    </project-detail>
@@ -87,9 +85,9 @@ public/portfolio/
    ⚠️ `bridge.js` 를 빠뜨리면 닫기가 시트를 못 닫고 **iframe 안에서 목록 페이지가 열립니다.**
    커스텀 커서도 상세 위에서 멈춥니다.
 
-5. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에 `<슬러그>/index.html`.
+5. **어드민에 등록한다** — 포트폴리오관리 > 상세화면 HTML 에 `/<슬러그>/index.html`.
 
-> 가장 빠른 길은 `onNuri/index.html` 을 복사해 문구만 바꾸는 것입니다.
+> 가장 빠른 길은 `_template/index.html` 을 복사해 문구만 바꾸는 것입니다.
 
 6. ** 기존에 img 태그안에 loading="lazy" width="", height="", decoding="async"는 임시 삭제 한다. 추후 필요시 반영한다.
     bridge.js에서도 lazy 처리 관련은 주석처리 해둔다.
