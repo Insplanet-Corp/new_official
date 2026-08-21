@@ -13,48 +13,48 @@ export type Service = {
   titleMobile?: string;
 };
 
-const SERVICE_TAGS = ['UI/UX Design', 'Online Promotion', 'SNS Event', 'Total Campaign'];
+const SERVICE_TAGS = ['UI/UX Design', 'Platform Operation', 'Service Renewal', 'QA & Publishing'];
+const SERVICE_TAGS2 = ['UX Consulting', 'Service Strategy', 'UX Research', 'Information Architecture'];
+const SERVICE_TAGS3 = ['SI Collaboration', 'Agile Delivery', 'System Integration', 'Project Management'];
+const SERVICE_TAGS4 = ['Design System', 'AX Solution', 'Front-end Dev', 'R&D'];
 
 export const SERVICES: Service[] = [
   {
-    title: 'Mega Finance',
+    title: 'Mega Finance DNA',
     tags: SERVICE_TAGS,
     desc: [
-      '신한 ‘슈퍼SOL’ 6년 전담 운영 및 차세대 통합 기획 등',
-      '제1금융권 핵심 플랫폼의 혁신을 주도해왔습니다.',
+      '신한 ‘슈퍼SOL’ 6년 전담 운영을 비롯해 KB·IBK·우리카드 등 제1금융권 핵심 플랫폼의 혁신을 주도해왔습니다. 가장 엄격한 금융의 기준 위에서 쌓아온 경험이, 어떤 프로젝트에서도 흔들리지 않는 완성도의 근거가 됩니다.',
     ],
-    descMobile: '신한 ‘슈퍼SOL’ 6년 전담 운영 및 차세대 통합 기획 등 제1금융권 핵심 플랫폼의 혁신을 주도해왔습니다.',
+    descMobile: '신한 ‘슈퍼SOL’ 6년 전담 운영을 비롯해 KB·IBK·우리카드 등 제1금융권 핵심 플랫폼의 혁신을 주도해왔습니다. 가장 엄격한 금융의 기준 위에서 쌓아온 경험이, 어떤 프로젝트에서도 흔들리지 않는 완성도의 근거가 됩니다.',
     image: '/images/service-mega-finance.png',
-    alt: 'Mega Finance',
+    alt: 'Mega Finance DNA',
   },
   {
-    title: 'Mobility & Enterprise',
-    tags: SERVICE_TAGS,
-    desc: ['대규모 모빌리티 플랫폼 구축 및 기술 시각화 노하우로', '차세대 비즈니스를 지원합니다.'],
-    descMobile: '대규모 모빌리티 플랫폼 구축 및 기술 시각화 노하우로 차세대 비즈니스를 지원합니다.',
-    image: '/images/service-mobility.png',
-    alt: 'Mobility & Enterprise',
+    title: 'Cross-Industry Insight',
+    tags: SERVICE_TAGS2,
+    desc: ['금융의 정밀함부터 공공의 신뢰, 항공과 유통의 속도, 엔터프라이즈의 복잡함까지 — 산업마다 다른 본질을 이해하는 것에서 출발합니다. 경계를 넘어 축적한 인사이트로 어떤 비즈니스에도 최적의 답을 제시합니다.'],
+    descMobile: '금융의 정밀함부터 공공의 신뢰, 항공과 유통의 속도, 엔터프라이즈의 복잡함까지 — 산업마다 다른 본질을 이해하는 것에서 출발합니다. 경계를 넘어 축적한 인사이트로 어떤 비즈니스에도 최적의 답을 제시합니다.',
+    image: '/images/service-cross-industry.png',
+    alt: 'Cross-Industry Insight',
   },
   {
     title: 'SI Synergy & Partnership',
-    tags: SERVICE_TAGS,
+    tags: SERVICE_TAGS3,
     desc: [
-      'LG CNS, 신한DS의 공식 협력사로서 대형 SI 주사업자와의',
-      '완벽한 시너지로 프로젝트의 성공을 이끕니다.',
+      'LG CNS, 신한DS의 공식 협력사로서 대형 SI 프로젝트의 복잡한 협업 구조를 누구보다 잘 이해합니다. 주사업자와의 완벽한 시너지로 일정과 품질을 지키며, 규모가 큰 프로젝트일수록 인스플래닛의 진가가 드러납니다.',
     ],
-    descMobile: 'LG CNS, 신한DS의 공식 협력사로서 대형 SI 주사업자와의 완벽한 시너지로 프로젝트의 성공을 이끕니다.',
+    descMobile: 'LG CNS, 신한DS의 공식 협력사로서 대형 SI 프로젝트의 복잡한 협업 구조를 누구보다 잘 이해합니다. 주사업자와의 완벽한 시너지로 일정과 품질을 지키며, 규모가 큰 프로젝트일수록 인스플래닛의 진가가 드러납니다.',
     image: '/images/service-si-synergy.png',
     alt: 'SI Synergy & Partnership',
   },
   {
     title: 'AX Tech & Design System',
     titleMobile: 'AX Tech & Design Sys.',
-    tags: SERVICE_TAGS,
+    tags: SERVICE_TAGS4,
     desc: [
-      '고유 디자인 시스템과 자체 AX 솔루션 R&D를 통해',
-      '프로젝트 생산성과 기술 경쟁력을 극대화합니다.',
+      '고유 디자인 시스템으로 일관된 품질을, 자체 AX 솔루션 R&D로 압도적인 생산성을 만듭니다. 기술과 디자인이 서로를 가속하는 구조가 프로젝트의 속도와 완성도를 동시에 끌어올립니다.',
     ],
-    descMobile: '고유 디자인 시스템과 자체 AX 솔루션 R&D를 통해 프로젝트 생산성과 기술 경쟁력을 극대화합니다.',
+    descMobile: '고유 디자인 시스템으로 일관된 품질을, 자체 AX 솔루션 R&D로 압도적인 생산성을 만듭니다. 기술과 디자인이 서로를 가속하는 구조가 프로젝트의 속도와 완성도를 동시에 끌어올립니다.',
     image: '/images/service-ax-tech.png',
     alt: 'AX Tech & Design System',
   },
