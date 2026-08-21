@@ -28,7 +28,14 @@
        overview-text="첫 문단|둘째 줄"      ← | 는 <br>
        platform="https://…"                 ← 없으면 버튼이 눌리지 않는다
      >
-       <div class="work-container onnuri">…본문 전체…</div>   ← 이 안에 넣는다
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
+      </figure>    ← pc 컨텐츠
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>   ← mobile 컨텐츠
+      
      </project-detail>
      ...
      <script src="/portfolio/_shared/bridge.js"></script>
