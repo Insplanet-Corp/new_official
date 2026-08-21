@@ -7,7 +7,16 @@ import { CONTACT, MENU_NAV, MENU_PRODUCTS } from '@/data/site';
    Open/close, the halftone reveal and the close-then-navigate behaviour all live in
    public/js/main.js — this component only owns the markup and the `is-current` marking.
    On the main page nothing is marked (you haven't gone anywhere, so the menu stays all white). */
-export default function MenuOverlay() {
+/** 배지가 붙는 유일한 메뉴 항목 */
+const BADGE_HREF = '/projects';
+
+type Props = {
+  /** 공개된 완료 프로젝트 수 — PageShell 이 서버에서 세어 넘긴다(lib/projectCount.ts).
+      조회가 실패하면 null 로 오고, 그때는 배지를 아예 안 그린다 (틀린 숫자보다 낫다). */
+  projectCount?: number | null;
+};
+
+export default function MenuOverlay({ projectCount }: Props) {
   const pathname = usePathname();
   const onSubPage = pathname !== '/';
 
@@ -28,7 +37,9 @@ export default function MenuOverlay() {
                   href={item.href}
                 >
                   <span className="menu-label">{item.label}</span>
-                  {item.badge ? <span className="menu-badge">{item.badge}</span> : null}
+                  {item.href === BADGE_HREF && projectCount ? (
+                    <span className="menu-badge">{projectCount}</span>
+                  ) : null}
                 </a>
               ))}
             </nav>

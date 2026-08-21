@@ -8,10 +8,13 @@ export const CONTACT = {
   copyright: 'Ⓒ 2026. Insplanet all right reserved.',
 } as const;
 
-export type NavItem = { href: string; label: string; badge?: string };
+export type NavItem = { href: string; label: string };
 
+/* Projects 옆 배지 숫자는 여기 있지 않다 — 공개된 완료 프로젝트 수를 DB 에서 세어
+   PageShell 이 MenuOverlay 에 내려준다(lib/projectCount.ts). 하드코딩된 '42' 가
+   실제 건수와 오래 어긋나 있었다. */
 export const MENU_NAV: NavItem[] = [
-  { href: '/projects', label: 'Projects', badge: '42' },
+  { href: '/projects', label: 'Projects' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];

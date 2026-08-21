@@ -50,15 +50,18 @@ async function loadPortfolios(): Promise<Portfolio[]> {
 
 export default async function ProjectsPage() {
   const rows = await loadPortfolios();
+  const cards = toCards(rows);
 
   return (
     <>
       <BodyClass name="projects-page" />
-      <PageShell>
+      {/* 메뉴 배지는 다른 페이지에서 캐시된 값을 쓰지만(lib/projectCount.ts), 여기서는
+          방금 그린 카드 수를 그대로 넘긴다 — 눈앞의 그리드와 숫자가 어긋나면 안 된다 */}
+      <PageShell projectCount={cards.length}>
         <main className="pj">
           <ProjectsHero />
           <ProjectsExplorer
-            cards={toCards(rows)}
+            cards={cards}
             ongoingRows={toOngoingRows(rows)}
           />
         </main>
