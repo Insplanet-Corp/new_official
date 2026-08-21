@@ -14,7 +14,6 @@
 
      <link rel="stylesheet" href="../_shared/fonts.css" />
      <link rel="stylesheet" href="../_shared/project-detail.css" />
-     <link rel="stylesheet" href="../_shared/works.css" />
      <link rel="stylesheet" href="../_shared/footer.css" />
      <link rel="stylesheet" href="./style.css" />
      ...
