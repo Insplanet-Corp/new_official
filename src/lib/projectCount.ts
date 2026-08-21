@@ -20,19 +20,22 @@ export const PROJECT_COUNT_TAG = 'project-count';
 
 const REVALIDATE_SEC = 300;
 
-/* /projects 의 카드 그리드와 같은 조건이어야 한다 (data/projectsPage.ts 의 toCards).
-   진행중(ongoing)은 토글 뒤의 표라 배지에 세지 않는다.
+/* 공개된(use_yn='Y') 포트폴리오 전체를 센다 — 완료(done) + 진행중(ongoing).
+
+   ⚠️ 한동안 완료만 셌다(36). 지금 기준은 "공개된 전체"(40)이고, /projects 가
+   넘기는 수와 같아야 하므로 status 로 거르지 않는다. 기준을 다시 바꿀 때는
+   app/projects/page.tsx 의 projectCount 도 반드시 같이 고칠 것 — 한쪽만 고치면
+   /projects 와 나머지 세 페이지의 배지가 어긋난다.
 
    ⚠️ use_yn 은 RLS 가 이미 걸러 주지만 쿼리에서도 명시한다 — permissive 정책은
    OR 로 합쳐져서 느슨한 정책이 하나만 남아도 조용히 뚫린다(CLAUDE.md 13번).
 
    head: true 라 행은 한 건도 받지 않고 개수만 온다. */
-async function fetchDoneCount(): Promise<number | null> {
+async function fetchPublishedCount(): Promise<number | null> {
   const { count, error } = await supabase
     .from('portfolios')
     .select('id', { count: 'exact', head: true })
-    .eq('use_yn', 'Y')
-    .eq('status', 'done');
+    .eq('use_yn', 'Y');
 
   if (error) {
     // 배지 하나 때문에 페이지를 500 으로 만들지 않는다 — null 이면 배지가 안 그려진다
@@ -42,7 +45,13 @@ async function fetchDoneCount(): Promise<number | null> {
   return count ?? 0;
 }
 
-export const getDoneProjectCount = unstable_cache(fetchDoneCount, ['done-project-count'], {
-  revalidate: REVALIDATE_SEC,
-  tags: [PROJECT_COUNT_TAG],
-});
+/* ⚠️ 캐시 키를 옛 'done-project-count' 에서 바꿨다 — 그대로 뒀으면 기준을 바꾼 뒤에도
+   만료(최대 5분) 전까지 옛 완료-only 숫자가 계속 나온다. */
+export const getPublishedProjectCount = unstable_cache(
+  fetchPublishedCount,
+  ['published-project-count'],
+  {
+    revalidate: REVALIDATE_SEC,
+    tags: [PROJECT_COUNT_TAG],
+  },
+);

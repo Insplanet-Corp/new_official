@@ -947,9 +947,17 @@ document.styleSheets[0].cssRules → SecurityError  ← 이제 cross-origin 취�
 ### 31. 전체메뉴 Projects 배지를 DB 건수로 (`lib/projectCount.ts`)
 
 `.menu-badge` 가 `site.ts` 에 `badge: '42'` 로 박혀 있었다. **어떤 실제 숫자와도 안 맞았다** —
-현재 공개 데이터는 40건(완료 36 · 진행중 4)이다. 세는 기준은 **완료 카드 36** 으로 정했다
-(사용자 결정). 진행중 표는 토글 뒤라 첫 화면에 안 보이고, 카테고리 칩은 카드를 지우지 않고
-`hidden` 만 토글하므로 배지를 거기 맞추면 메뉴를 열 때마다 숫자가 흔들린다.
+현재 공개 데이터는 40건(완료 36 · 진행중 4)이다.
+
+**세는 기준은 두 번 바뀌었다.** 처음엔 **완료 카드 36**(진행중 표는 토글 뒤라 첫 화면에
+안 보인다)이었고, 2026-08-21 사용자 요청으로 **공개된 전체 40**(완료 + 진행중)으로 바꿨다.
+카테고리 칩은 카드를 지우지 않고 `hidden` 만 토글하므로 **거기에는 맞추지 말 것** — 메뉴를
+열 때마다 숫자가 흔들린다.
+
+**⚠️ 기준을 다시 바꿀 때는 두 곳을 같이 고쳐야 한다** — `lib/projectCount.ts` 의 쿼리와
+`app/projects/page.tsx` 가 `PageShell` 에 넘기는 값. 한쪽만 고치면 `/projects` 와 나머지
+세 페이지의 배지가 서로 다른 숫자를 낸다(그 페이지만 캐시를 안 타기 때문 — 아래 참고).
+캐시 키(`['published-project-count']`)도 같이 바꿔야 옛 값이 최대 5분간 남지 않는다.
 
 **⚠️ 배지가 필요한 곳은 `/projects` 가 아니다.** 메뉴는 `PageShell` 이 그리므로 `/` `/about`
 `/contact` 에도 같이 붙는데, 그 셋은 DB 를 안 읽는 **정적 렌더 대상**이었다. 매 요청 조회로
@@ -959,8 +967,9 @@ document.styleSheets[0].cssRules → SecurityError  ← 이제 cross-origin 취�
 - **`PageShell` 이 async 서버 컴포넌트가 됐다.** 클라이언트 컴포넌트에서 렌더하면 깨진다
   (지금은 전부 서버 페이지에서만 쓴다).
 - **`lib/projectCount.ts` 를 클라이언트에서 import 하지 말 것** — `next/cache` 를 쓴다.
-- **`/projects` 만 자기 `cards.length` 를 넘긴다.** 그 페이지는 `force-dynamic` 이라 그리드는
+- **`/projects` 만 자기 `rows.length` 를 넘긴다.** 그 페이지는 `force-dynamic` 이라 그리드는
   항상 최신인데 배지가 캐시 값이면 눈앞의 카드 수와 어긋나 보인다.
+  ⚠️ `cards.length` 가 아니다 — 그건 `toCards()` 가 완료만 거른 36 이라 기준(40)과 어긋난다.
 - 조회 실패는 `null` 이고 **배지를 아예 안 그린다** — 틀린 숫자를 남겨 두는 것보다 낫다.
   0건일 때도 안 그린다.
 - `select('id', { count: 'exact', head: true })` — 행은 한 건도 안 받는다.
@@ -982,8 +991,10 @@ document.styleSheets[0].cssRules → SecurityError  ← 이제 cross-origin 취�
   태그 무효화뿐이라 최악이라도 count 쿼리가 한 번 더 돈다. 데이터를 읽지도 쓰지도 않는다.
 - 실패해도 저장 흐름을 막지 않는다(`.catch` 로 로그만) — 최대 5분 뒤 자연 갱신된다.
 
-**검증**: `/` `/about` `/contact` `/projects` 네 곳의 **SSR HTML** 에 `36` 이 들어 있는 것
-(하이드레이션 전에도 값이 있다) · `/projects` 는 배지 36 = `.pj-card` 36 개로 **일치** ·
+**검증**(기준 40 으로 바꾼 뒤 다시 실측): `/` `/about` `/contact` `/projects` 네 곳의
+**SSR HTML** 에 `menu-badge>40` 이 들어 있는 것(하이드레이션 전에도 값이 있다) ·
+`/projects` 의 40 = `.pj-card` 36 + `.pj-tr` 4 로 **일치** · 빌드 출력에서 `/` `/about`
+`/contact` 가 여전히 `○ (Static)` `Revalidate 5m` · 앞선 36 기준 때 확인한 것들 —
 메뉴를 실제로 열어(`#menu-overlay.open`) 배지가 라벨 오른쪽 66×45 알약으로 렌더 ·
 서버 액션을 클라이언트 번들에서 캔 id 로 **직접 호출해 200 + `x-action-revalidated: 1`**
 (= `updateTag` 가 이 컨텍스트에서 안 던지고 실제로 무효화한다) · 빌드·타입체크 통과.

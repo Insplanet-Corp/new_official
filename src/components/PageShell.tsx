@@ -3,14 +3,14 @@ import LegacyRuntime, { type DeferredScript } from '@/components/LegacyRuntime';
 import MenuOverlay from '@/components/chrome/MenuOverlay';
 import SiteChrome from '@/components/chrome/SiteChrome';
 import SiteFooter from '@/components/chrome/SiteFooter';
-import { getDoneProjectCount } from '@/lib/projectCount';
+import { getPublishedProjectCount } from '@/lib/projectCount';
 
 type Props = {
   children: ReactNode;
   deferred?: DeferredScript[];
   scripts?: string[];
   /* 메뉴의 Projects 배지 숫자. 안 주면 여기서 캐시된 값을 센다.
-     /projects 만 자기가 그린 카드 수를 넘긴다 — 그 페이지는 force-dynamic 이라
+     /projects 만 자기가 읽어 온 공개 건수를 넘긴다 — 그 페이지는 force-dynamic 이라
      항상 최신인데 배지가 캐시된 값이면 눈앞의 카드 수와 어긋나 보인다. */
   projectCount?: number;
 };
@@ -22,7 +22,7 @@ type Props = {
    서버 페이지에서만 쓴다). 배지 조회는 캐시를 타므로 /, /about, /contact 의 정적
    렌더는 그대로다 — lib/projectCount.ts 참고. */
 export default async function PageShell({ children, deferred, scripts, projectCount }: Props) {
-  const badgeCount = projectCount ?? (await getDoneProjectCount());
+  const badgeCount = projectCount ?? (await getPublishedProjectCount());
 
   return (
     <>

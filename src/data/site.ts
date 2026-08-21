@@ -10,9 +10,9 @@ export const CONTACT = {
 
 export type NavItem = { href: string; label: string };
 
-/* Projects 옆 배지 숫자는 여기 있지 않다 — 공개된 완료 프로젝트 수를 DB 에서 세어
-   PageShell 이 MenuOverlay 에 내려준다(lib/projectCount.ts). 하드코딩된 '42' 가
-   실제 건수와 오래 어긋나 있었다. */
+/* Projects 옆 배지 숫자는 여기 있지 않다 — 공개된 프로젝트 수(완료 + 진행중)를
+   DB 에서 세어 PageShell 이 MenuOverlay 에 내려준다(lib/projectCount.ts).
+   하드코딩된 '42' 가 실제 건수와 오래 어긋나 있었다. */
 export const MENU_NAV: NavItem[] = [
   { href: '/projects', label: 'Projects' },
   { href: '/about', label: 'About' },
