@@ -126,6 +126,16 @@ export default function PortfolioDetailPage({
         <Row label="수상">
           <ReadOnly>{row ? (row.award ? "수상작" : "해당 없음") : null}</ReadOnly>
         </Row>
+        <Row label="메인">
+          <ReadOnly>
+            {row ? (row.is_main ? "메인 노출" : "해당 없음") : null}
+          </ReadOnly>
+        </Row>
+        {row?.is_main ? (
+          <Row label="썸네일 – 메인">
+            <ThumbView src={row.thumb_main ?? undefined} />
+          </Row>
+        ) : null}
         <Row label="썸네일 – PC">
           <ThumbView src={row?.thumb_pc ?? undefined} />
         </Row>

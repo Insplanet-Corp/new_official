@@ -27,13 +27,14 @@
       overview-text="프로젝트 설명 첫 줄|둘째 줄"
       platform=""
     >
-      <figure class="pd-sec pd-sec--pc">
-        <img src="img/" alt="" />
+      <figure class="pd-sec">
+        <picture>
+          <source media="(max-width: 1023px)" srcset="img/">
+          <img src="img/" alt="" />
+        </picture>
       </figure>
-
-      <figure class="pd-sec pd-sec--m">
-        <img src="img/" alt="" />
-      </figure>
+      
+      
     </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>

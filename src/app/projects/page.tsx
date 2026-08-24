@@ -3,10 +3,12 @@ import BodyClass from '@/components/BodyClass';
 import PageShell from '@/components/PageShell';
 import ProjectsExplorer from '@/components/projects/ProjectsExplorer';
 import ProjectsHero from '@/components/projects/ProjectsHero';
+import MobileProjectsPage from '@/components/mobile/MobileProjectsPage';
 import { toCards, toOngoingRows } from '@/data/projectsPage';
 import type { Portfolio } from '@/lib/portfolios';
 import { supabase } from '@/lib/supabase';
 import '@/styles/projects.css';
+import '@/styles/mobile-pages.css';
 
 export const metadata: Metadata = { title: 'Insplanet — Projects' };
 
@@ -51,6 +53,7 @@ async function loadPortfolios(): Promise<Portfolio[]> {
 export default async function ProjectsPage() {
   const rows = await loadPortfolios();
   const cards = toCards(rows);
+  const ongoingRows = toOngoingRows(rows);
 
   return (
     <>
@@ -60,11 +63,11 @@ export default async function ProjectsPage() {
       <PageShell projectCount={cards.length}>
         <main className="pj">
           <ProjectsHero />
-          <ProjectsExplorer
-            cards={cards}
-            ongoingRows={toOngoingRows(rows)}
-          />
+          <ProjectsExplorer cards={cards} ongoingRows={ongoingRows} />
         </main>
+        {/* ≤1023 모바일 화면. styles/mobile-pages.css 가 폭으로 가른다.
+            PC 그리드와 같은 cards 를 넘긴다 — 두 트리가 같은 데이터를 그린다. */}
+        <MobileProjectsPage cards={cards} ongoingRows={ongoingRows} />
       </PageShell>
     </>
   );

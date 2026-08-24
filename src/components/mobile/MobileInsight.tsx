@@ -74,9 +74,10 @@ export default function MobileInsight() {
   return (
     <section className="m-insight-pin" ref={ref}>
       <div className="m-insight-stage">
-        <div className="m-insight-frame">
-          <div id="insight-shader" />
-        </div>
+        {/* ⚠️ #insight-shader 는 여기에 두지 않는다 — 데스크톱 Insight 와 id 가 겹치고,
+            셰이더 번들은 getElementById 로 **첫 번째 하나**에만 마운트한다.
+            노드는 데스크톱 쪽에 한 번만 두고 InsightShaderSlot 이 폭에 따라 옮겨 준다. */}
+        <div className="m-insight-frame" />
         {INSIGHT_STEPS.map((step, i) => (
           <div className="m-insight-step" key={step.eyebrow}>
             <p className="m-insight-eyebrow">{step.eyebrow}</p>

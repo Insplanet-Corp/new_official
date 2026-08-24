@@ -1,0 +1,3 @@
+module.exports=[14908,a=>{"use strict";var b=a.i(87924),c=a.i(50944),d=a.i(72131);a.s(["default",0,function({src:a,title:e}){let f=(0,c.useRouter)();return(0,d.useEffect)(()=>{let a=a=>{a.data?.pdClose&&f.push("/projects")};return addEventListener("message",a),()=>removeEventListener("message",a)},[f]),(0,b.jsx)("iframe",{src:a,title:e,sandbox:"allow-scripts",style:{display:"block",width:"100%",height:"100svh",border:0}})}])}];
+
+//# sourceMappingURL=src_components_projects_DetailFrame_tsx_1tk0t56._.js.map

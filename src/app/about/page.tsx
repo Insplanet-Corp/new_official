@@ -1,21 +1,21 @@
 import type { Metadata } from 'next';
 import BodyClass from '@/components/BodyClass';
 import PageShell from '@/components/PageShell';
+import ResponsiveSlot from '@/components/ResponsiveSlot';
 import AboutAxCreator from '@/components/about/AboutAxCreator';
 import AboutFusion from '@/components/about/AboutFusion';
 import AboutHero from '@/components/about/AboutHero';
 import AboutMission from '@/components/about/AboutMission';
 import AboutReveals from '@/components/about/AboutReveals';
+import MobileAbout from '@/components/mobile/MobileAbout';
 import '@/styles/about.css';
+import '@/styles/mobile-pages.css';
 
 export const metadata: Metadata = { title: 'Insplanet — Who We Are' };
 
 export default function AboutPage() {
   return (
     <>
-      {/* ⚠️ 정적 사이트는 여기서 ≤1023 을 mobile-about.html 로 보낸다.
-          Next 에는 아직 모바일 About 라우트가 없어 분기를 달지 않았다 —
-          /mobile(홈)으로 보내면 About 을 요청한 사람이 홈을 받는다. */}
       <BodyClass name="about-page" />
       <PageShell
         // black-hole shader + the hero/closing pinned-expansion scrubs: NOT deferred, they run from the start
@@ -40,6 +40,10 @@ export default function AboutPage() {
             </div>
           </section>
         </main>
+        {/* ≤1023 모바일 화면. styles/mobile-pages.css 가 폭으로 가른다 */}
+        <MobileAbout />
+        {/* 블랙홀 캔버스 하나를 지금 보이는 히어로로 옮긴다 */}
+        <ResponsiveSlot id="about-blackhole" desktop=".about-banner" mobile=".ma-banner" />
         <AboutReveals />
       </PageShell>
     </>

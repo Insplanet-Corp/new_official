@@ -175,6 +175,64 @@ export default function PortfolioForm({
           />
         </Row>
 
+        <Row label="메인" hint="체크하면 메인 화면에 노출됩니다. 전용 썸네일이 필요합니다.">
+          <Check
+            label="메인 노출"
+            checked={v.is_main}
+            onChange={(x) => set("is_main", x)}
+          />
+        </Row>
+
+        {/* 메인을 체크했을 때만 나타난다 — 첨부해야 저장된다.
+
+            ⚠️ 체크를 풀어도 이미 올린 URL 은 지우지 않는다. 다시 체크하면 그대로
+            돌아오고, 저장할 때 is_main=false 와 함께 남는다. 다른 필드도 같은
+            방침이다(진행/종료를 오가며 올려 둔 이미지가 사라지지 않게 — 12번). */}
+        {v.is_main ? (
+          <Row
+            label="썸네일 - 메인"
+            required
+            hint="메인 화면에 노출됩니다. 카드용 PC 썸네일과 비율이 달라 따로 올립니다."
+          >
+            <FilePick
+              value={v.thumb_main}
+              onChange={(url) => set("thumb_main", url)}
+              folder="thumb-main"
+            />
+          </Row>
+        ) : null}
+
+        {/* 메인 슬라이드의 Client / Launch 칸.
+
+            고객사는 client_ci 이미지가 아니라 **텍스트**다 — 진행중 표의 CI 칸과
+            다른 자리다(011). Launch 도 프로젝트 기간에서 만들지 않는다:
+            진행 프로젝트는 종료일이 없고 표기가 'Jan, 2024' 한 덩어리다. */}
+        {v.is_main ? (
+          <Row
+            label="메인 - Client"
+            hint="메인 슬라이드의 Client 칸. 비우면 그 줄이 나오지 않습니다."
+          >
+            <Input
+              value={v.client}
+              onChange={(x) => set("client", x)}
+              placeholder="신한투자증권"
+            />
+          </Row>
+        ) : null}
+
+        {v.is_main ? (
+          <Row
+            label="메인 - Launch"
+            hint="메인 슬라이드의 Launch 칸. 비우면 그 줄이 나오지 않습니다."
+          >
+            <Input
+              value={v.launch}
+              onChange={(x) => set("launch", x)}
+              placeholder="Jan, 2024"
+            />
+          </Row>
+        ) : null}
+
         <Row
           label="썸네일 - PC"
           required={isDone}

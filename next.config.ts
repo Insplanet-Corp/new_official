@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  distDir: process.env.BUILD_DIR || '.next',
   // The legacy WebGL / scroll runtime in /public/js drives the DOM imperatively.
   // Nothing here needs the image optimizer: every asset is a hand-tuned SVG/PNG
   // served straight from /public via plain <img>.

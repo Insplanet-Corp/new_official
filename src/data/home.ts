@@ -1,3 +1,6 @@
+import { storageRender } from '@/lib/images';
+import { type Portfolio, titleLines } from '@/lib/portfolios';
+
 /* Content for the main page (and reused by the mobile page). */
 
 export type Service = {
@@ -96,7 +99,25 @@ export const PARTNERS_DESC = [
 ];
 
 /** The three cross-fading slides of the "Our Projects" showcase. */
-export const SHOWCASE = [
+/* 홈 "Our Projects" 슬라이드 한 장.
+
+   개수는 어드민에서 [메인] 을 체크한 수를 따른다 — **최대 5장**.
+   ⚠️ 예전엔 3장 고정이었다. public/js/main.js 가 `for(i<3)` · `Math.min(2,…)` ·
+      `MAXSTEP=3` 으로 3 을 박아 놨기 때문이다. 지금은 그 런타임이 DOM 에서 레이어
+      수를 세도록 고쳤다(`COUNT`/`LAST`). 5를 넘겨 늘리려면 CSS 의
+      `.proj-vis:nth-child(n)` z-index 도 같이 늘려야 한다. */
+export type ShowcaseItem = {
+  name: readonly string[];
+  client: string;
+  launch: string;
+  image: string;
+  background: string;
+};
+
+/** 슬라이드 상한. 늘리려면 style.css 의 .proj-vis:nth-child z-index 도 같이 늘릴 것 */
+export const MAX_SHOWCASE = 5;
+
+export const SHOWCASE: readonly ShowcaseItem[] = [
   {
     name: ['신한 SoL증권', '모바일 웹 리뉴얼 1'],
     client: '신한투자증권',
@@ -118,8 +139,27 @@ export const SHOWCASE = [
     image: '/images/projects/dm3.png',
     background: '#F5B400',
   },
-] as const;
+];
 
+/* 어드민의 "메인" 포트폴리오 -> 슬라이드.
+
+   ⚠️ 조회는 서버에서 한다. main.js 가 로드 시점에 .proj-vis / .proj-slide 를 세어
+      레이어와 스텝 수를 정하므로, 클라이언트에서 뒤늦게 채우면 슬라이드가 움직이지 않는다.
+   ⚠️ 배경색은 DB 에 없다. 이미지가 object-fit:cover 로 판을 다 덮어서 로딩 중에만
+      보이는 값이라, 자리 번호에 맞는 기본 팔레트를 돌려 쓴다.
+   ⚠️ 한 건도 없으면 기본 슬라이드로 돌아간다 — 0장이면 패널이 빈 채로 남는다. */
+export const toShowcase = (rows: Portfolio[]): ShowcaseItem[] => {
+  if (!rows.length) return [...SHOWCASE];
+  return rows.slice(0, MAX_SHOWCASE).map((r, i) => ({
+    name: titleLines(r.title),
+    client: (r.client ?? '').trim(),
+    launch: (r.launch ?? '').trim(),
+    /* 업로드 원본은 5120px 짜리가 그대로 올라온다. 패널은 뷰포트의 절반이라
+       2배 밀도로도 1440x1800 이면 충분하다 — 높이를 같이 줘야 잘라서 온다(30번). */
+    image: storageRender(r.thumb_main ?? '', { width: 1440, height: 1800 }),
+    background: SHOWCASE[i % SHOWCASE.length].background,
+  }));
+};
 /** The 3 pinned Insight steps (shared by the desktop and mobile chapters). */
 export const INSIGHT_STEPS = [
   {

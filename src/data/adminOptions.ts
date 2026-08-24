@@ -30,6 +30,13 @@ export const PORTFOLIO_STATUS: Option[] = [
 ];
 export const PORTFOLIO_STATUS_FILTER = withAll(PORTFOLIO_STATUS);
 
+/* 메인 노출 필터. is_main 은 boolean 이라 Y/N 문자열로 받고 목록에서 변환한다
+   (Select 가 문자열만 다룬다 — use_yn 과 같은 모양으로 맞췄다). */
+export const PORTFOLIO_MAIN_FILTER = withAll([
+  { value: 'Y', label: '메인' },
+  { value: 'N', label: '해당 없음' },
+]);
+
 /* ---- 견적문의관리 (기획서 31p) -------------------------------------------
    ⚠️ 값을 여기서 새로 정의하면 안 된다. Contact 폼이 칩에 적힌 한글 문자열을
    그대로 quotes.project_fields 에 넣기 때문에("웹사이트", "신규" …), 어드민 필터도

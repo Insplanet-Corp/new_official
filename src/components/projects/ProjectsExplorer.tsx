@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import useMagneticCards from '@/lib/hooks/useMagneticCards';
+import { CARD_SIZES, cardSrc, cardSrcSet, storageRender } from '@/lib/images';
 import ProjectSheet from '@/components/projects/ProjectSheet';
 import {
   CATEGORIES,
@@ -145,7 +146,9 @@ export default function ProjectsExplorer({
               {card.image ? (
                 <img
                   className="pj-card-img"
-                  src={card.image}
+                  src={cardSrc(card.image)}
+                  srcSet={cardSrcSet(card.image)}
+                  sizes={CARD_SIZES}
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -209,7 +212,11 @@ export default function ProjectsExplorer({
                   <span className="pj-logo">
                     {/* 고객사명 텍스트 필드는 기획서에 없다 — alt 는 프로젝트명으로 채운다 */}
                     {row.logo ? (
-                      <img src={row.logo} alt={row.project} loading="lazy" />
+                      <img
+                        src={storageRender(row.logo, { width: 240 })}
+                        alt={row.project}
+                        loading="lazy"
+                      />
                     ) : null}
                   </span>
                 </div>

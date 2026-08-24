@@ -1,0 +1,17 @@
+{
+  "node": {
+    "007ee38a808c20e257182660254c46d94ff531993a": {
+      "workers": {
+        "app/admin/portfolio/new/page": {
+          "moduleId": 44628,
+          "async": false,
+          "exportedName": "refreshProjectCount",
+          "filename": "src/lib/projectCountActions.ts"
+        }
+      },
+      "exportedName": "refreshProjectCount",
+      "filename": "src/lib/projectCountActions.ts"
+    }
+  },
+  "edge": {}
+}

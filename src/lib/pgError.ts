@@ -13,6 +13,14 @@ import type { PostgrestError } from '@supabase/supabase-js';
 export const isMissingTable = (e: PostgrestError | null): boolean =>
   !!e && (e.code === 'PGRST205' || e.code === '42P01');
 
+/** 컬럼이 없다 — 코드는 새 컬럼을 쓰는데 DB 에 아직 없다.
+
+    테이블 없음(isMissingTable)과 반드시 구분한다. 위 주석의 사고가 그것이었다:
+    둘을 같은 정규식으로 잡아서 멀쩡한 테이블에 엉뚱한 안내를 띄웠다.
+    여기서는 "최신 마이그레이션을 안 돌렸다" 쪽으로 안내한다. */
+export const isMissingColumn = (e: PostgrestError | null): boolean =>
+  !!e && (e.code === 'PGRST204' || e.code === '42703');
+
 /** RLS 정책이 자기 테이블을 참조해 무한 재귀한다 */
 export const isPolicyRecursion = (e: PostgrestError | null): boolean =>
   !!e && e.code === '42P17';
@@ -23,6 +31,12 @@ export const describeError = (e: PostgrestError): string => {
     return (
       'RLS 정책이 무한 재귀하고 있습니다(42P17). 정책이 자기 테이블을 조회하고 있지 않은지 ' +
       '확인해 주세요 — supabase/migrations/003 의 security definer 패턴을 참고하면 됩니다.'
+    );
+  }
+  if (isMissingColumn(e)) {
+    return (
+      `${e.message} — DB 에 아직 없는 컬럼입니다. ` +
+      `supabase/migrations 의 최신 SQL 을 SQL Editor 에서 실행했는지 확인해 주세요 (${e.code}).`
     );
   }
   // 코드가 없으면 원인 추적이 어려우므로 있으면 같이 보여준다

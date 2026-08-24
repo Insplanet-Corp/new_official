@@ -33,6 +33,14 @@ export type Portfolio = {
   award: boolean;
   thumb_pc: string | null;
   thumb_mobile: string | null;
+  /** 메인 화면 노출 여부. true 면 thumb_main 이 반드시 있다 (010 의 check 제약) */
+  is_main: boolean;
+  /** 메인 화면용 썸네일. 카드용 thumb_pc 와 비율이 달라 따로 둔다 */
+  thumb_main: string | null;
+  /** 고객사명 텍스트 — 메인 슬라이드의 Client 칸 (011). client_ci 이미지와 다른 자리다 */
+  client: string | null;
+  /** 메인 슬라이드의 Launch 표기 (예: 'Jan, 2024') */
+  launch: string | null;
   client_ci: string | null;
   /** 'YYYY-MM-DD' */
   started_on: string | null;
@@ -49,6 +57,10 @@ export type PortfolioDraft = {
   award: boolean;
   thumb_pc: string;
   thumb_mobile: string;
+  is_main: boolean;
+  thumb_main: string;
+  client: string;
+  launch: string;
   client_ci: string;
   /** YYYYMMDD (기획서 폼 형식) */
   startedAt: string;
@@ -64,6 +76,10 @@ export const EMPTY_DRAFT: PortfolioDraft = {
   award: false,
   thumb_pc: "",
   thumb_mobile: "",
+  is_main: false,
+  thumb_main: "",
+  client: "",
+  launch: "",
   client_ci: "",
   startedAt: "",
   endedAt: "",
@@ -149,6 +165,10 @@ export const toDraft = (p: Portfolio): PortfolioDraft => ({
   award: p.award,
   thumb_pc: p.thumb_pc ?? "",
   thumb_mobile: p.thumb_mobile ?? "",
+  is_main: p.is_main ?? false,
+  thumb_main: p.thumb_main ?? "",
+  client: p.client ?? "",
+  launch: p.launch ?? "",
   client_ci: p.client_ci ?? "",
   startedAt: toFormDate(p.started_on),
   endedAt: toFormDate(p.ended_on),
@@ -174,6 +194,10 @@ export const toRow = (d: PortfolioDraft) => {
        표=진행) 데이터를 지울 이유가 없다. */
     thumb_pc: nz(d.thumb_pc),
     thumb_mobile: nz(d.thumb_mobile),
+    is_main: d.is_main,
+    thumb_main: nz(d.thumb_main),
+    client: nz(d.client),
+    launch: nz(d.launch),
     html_file: nz(d.html_file),
     client_ci: nz(d.client_ci),
     started_on: toIsoDate(d.startedAt),
@@ -189,6 +213,12 @@ export const validate = (d: PortfolioDraft): string | null => {
     return "분류를 선택해 주세요.";
   if (!STATUS_VALUES.includes(d.status as PortfolioStatus))
     return "진행 상태를 선택해 주세요.";
+
+  /* 메인 노출은 전용 썸네일이 있어야 한다. DB 에도 같은 규칙이 걸려 있지만
+     (010 의 portfolios_main_thumb_chk), 여기서 먼저 막아야 사용자가 23514
+     제약 위반 대신 읽을 수 있는 안내를 본다. */
+  if (d.is_main && !d.thumb_main.trim())
+    return "메인으로 노출하려면 썸네일 – 메인을 첨부해 주세요.";
 
   if (d.status === "done") {
     if (!d.thumb_pc.trim()) return "종료 프로젝트는 썸네일 – PC 가 필요합니다.";

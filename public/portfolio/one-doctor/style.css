@@ -1,0 +1,529 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overflow-x: clip;
+}
+
+ul,
+li {
+  list-style: none;
+}
+body {
+  font-family: "MICEGothic", sans-serif;
+  word-break: keep-all;
+  /* 장식선(.keyword-box 의 ::before/::after 가 width:100000%)이 새어 나가지 않게.
+     shinhan·dap 도 같은 한 줄을 갖고 있다. */
+  overflow-x: hidden;
+}
+
+@font-face {
+  font-family: "MICEGothic";
+  src: url("https://cdn.jsdelivr.net/gh/fontbee/font@main/Micecontents/MICEGothic.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* 공통 PC/Mobile 분기 클래스 */
+.only-pc {
+  display: block;
+}
+.only-mobile {
+  display: none !important;
+}
+
+@media (max-width: 1023px) {
+  .only-pc {
+    display: none !important;
+  }
+  .only-mobile {
+    display: block !important;
+  }
+  span.only-mobile,
+  br.only-mobile,
+  i.only-mobile {
+    display: inline-block !important;
+  }
+}
+
+/* =========================================================
+   원닥터(OneDoctor) 본문 CSS (SCSS 완벽 변환)
+   ========================================================= */
+.onedoctor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.onedoctor .works-content {
+  width: 100%;
+  margin: 0;
+}
+.onedoctor .works-content > img {
+  width: 100%;
+  display: block;
+}
+
+.onedoctor .section01,
+.onedoctor .section02,
+.onedoctor .section03 {
+  background-color: #fff;
+}
+.onedoctor .section-inner {
+  display: flex;
+  align-items: center;
+  gap: 196px;
+  max-width: 1096px;
+  margin: 0 auto;
+  padding: 120px 0;
+  position: relative;
+}
+
+.onedoctor .section-icon {
+  border-radius: 0 !important;
+  opacity: 0;
+  transform: translateY(200px);
+  transition: all ease-out 0.8s;
+}
+.onedoctor .section-title {
+  font-size: 50px;
+  line-height: 60px;
+  font-weight: bold;
+  color: #000;
+  word-break: keep-all;
+  opacity: 0;
+  transform: scale(1) translateY(200px);
+  transition: all ease-out 0.8s;
+}
+.onedoctor .section-description {
+  font-size: 16px;
+  line-height: 24px;
+  color: #000;
+  opacity: 0;
+  transform: scale(1) translateY(200px);
+  transition: all ease-out 0.8s;
+}
+.onedoctor .section-images img {
+  opacity: 0;
+  transform: translateY(200px);
+  transition: all ease-out 0.8s;
+}
+
+/* SECTION 01 */
+.onedoctor .section01 {
+  border-radius: 16px !important;
+}
+.onedoctor .section01 .section-texts {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  gap: 24px;
+}
+.onedoctor .section01 .section-texts img.section-icon {
+  width: 54px;
+}
+.onedoctor .section01 .section-images {
+  display: flex;
+  justify-content: center;
+  max-width: 480px;
+  position: relative;
+  width: 100%;
+}
+.onedoctor .section01 .section-images .img-1 {
+  max-width: 384px;
+  width: 100%;
+}
+.onedoctor .section01 .section-images .img-2 {
+  max-width: 132px;
+  position: absolute;
+  bottom: 188px;
+  right: 90px;
+}
+.onedoctor .section01 .section-images .img-3 {
+  max-width: 280px;
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+}
+.onedoctor .section01 .section-images .img-4 {
+  max-width: 280px;
+  position: absolute;
+  bottom: -36px;
+  left: 0;
+}
+
+/* SECTION 02 */
+.onedoctor .section02 {
+  margin-top: 0 !important;
+  border-radius: 16px !important;
+}
+.onedoctor .section02 .section-inner {
+  flex-direction: row-reverse;
+}
+.onedoctor .section02 .section-texts {
+  display: flex;
+  flex-direction: column;
+  max-width: 420px;
+  gap: 24px;
+}
+.onedoctor .section02 .section-texts img.section-icon {
+  width: 39px;
+}
+.onedoctor .section02 .section-images {
+  display: flex;
+  justify-content: center;
+  max-width: 480px;
+  position: relative;
+  width: 100%;
+}
+.onedoctor .section02 .section-images .img-1 {
+  max-width: 360px;
+  text-align: center;
+  width: 100%;
+}
+.onedoctor .section02 .section-images .img-2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  width: 100%;
+}
+
+/* SECTION 03 */
+.onedoctor .section03 {
+  margin-top: 0 !important;
+  padding-bottom: 120px;
+  border-radius: 16px !important;
+}
+.onedoctor .section03 .section-inner {
+  align-items: flex-start;
+  max-width: 1200px;
+  gap: 0;
+}
+.onedoctor .section03 .section-texts {
+  display: flex;
+  flex-direction: column;
+  min-width: 420px;
+  gap: 24px;
+  z-index: 2;
+}
+.onedoctor .section03 .section-texts img.section-icon {
+  width: 50px;
+}
+.onedoctor .section03 .section-images {
+  display: flex;
+  justify-content: center;
+  min-width: 938px;
+  height: 938px;
+  position: relative;
+  z-index: 1;
+}
+.onedoctor .section03 .section-images img {
+  width: auto;
+  height: 113.7px;
+}
+.onedoctor .section03 .section-images .img-1 {
+  max-width: 360px;
+  height: fit-content;
+  margin-top: 103px;
+}
+.onedoctor .section03 .section-images .img-2 {
+  position: absolute;
+  top: 228px;
+  right: 50.45px;
+}
+.onedoctor .section03 .section-images .img-3 {
+  position: absolute;
+  top: 467px;
+  left: -64px;
+}
+.onedoctor .section03 .section-images .img-4 {
+  position: absolute;
+  bottom: 77.35px;
+  right: 58px;
+}
+.onedoctor .section03 .section-images .img-5 {
+  position: absolute;
+  bottom: -14px;
+  left: 39px;
+}
+
+.onedoctor .section03 .section-circles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 0;
+}
+.onedoctor .section03 .section-circles div {
+  border-radius: 50%;
+  box-sizing: border-box;
+  position: absolute;
+  transition: all 0.4s ease;
+  transform: scale(0);
+}
+.onedoctor .section03 .section-circles .circle-1 {
+  width: 56%;
+  padding-top: 56%;
+  background-color: rgba(34, 185, 159, 0.07);
+}
+.onedoctor .section03 .section-circles .circle-2 {
+  width: 78%;
+  padding-top: 78%;
+  background-color: rgba(34, 185, 159, 0.07);
+}
+.onedoctor .section03 .section-circles .circle-3 {
+  width: 100%;
+  padding-top: 100%;
+  border: 1px solid rgba(34, 185, 159, 0.3);
+}
+
+/* 스크롤 애니메이션 상태 클래스(.show) */
+.onedoctor .works-content.show .section-texts .section-icon {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.25s;
+}
+.onedoctor .works-content.show .section-texts .section-title {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.5s;
+}
+.onedoctor .works-content.show .section-texts .section-description {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.75s;
+}
+.onedoctor .works-content.show .section-images img {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 1.25s;
+}
+.onedoctor .works-content.show .section-images .img-2 {
+  transition-delay: 1.5s;
+}
+.onedoctor .works-content.show .section-images .img-3 {
+  transition-delay: 1.75s;
+}
+.onedoctor .works-content.show .section-images .img-4 {
+  transition-delay: 2s;
+}
+
+.onedoctor .works-content.section03.show .section-images .img-2 {
+  transition-delay: 2.75s;
+}
+.onedoctor .works-content.section03.show .section-images .img-3 {
+  transition-delay: 3s;
+}
+.onedoctor .works-content.section03.show .section-images .img-4 {
+  transition-delay: 3.25s;
+}
+.onedoctor .works-content.section03.show .section-images .img-5 {
+  transition-delay: 3.5s;
+}
+
+.onedoctor .works-content.section03.show .section-circles div {
+  transform: scale(1);
+}
+.onedoctor .works-content.section03.show .section-circles .circle-1 {
+  transition-delay: 1.5s;
+}
+.onedoctor .works-content.section03.show .section-circles .circle-2 {
+  transition-delay: 2s;
+}
+.onedoctor .works-content.section03.show .section-circles .circle-3 {
+  transition-delay: 2.5s;
+}
+
+/* =========================================================
+   반응형 - 태블릿 (max-width: 1599px)
+   ========================================================= */
+@media (max-width: 1599px) {
+  .onedoctor .section-title {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  .onedoctor .section-description {
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .onedoctor .section-inner {
+    flex-direction: column !important;
+    gap: 32px;
+  }
+  .onedoctor .section-texts {
+    padding-inline: 32px;
+  }
+
+  .onedoctor .section01 .section-inner .section-images {
+    margin: 0 20px;
+  }
+  .onedoctor .section02 .section-inner .section-images {
+    margin: 0 20px;
+  }
+  .onedoctor .section02 .section-inner .section-images .img-2 {
+    width: calc(100% + 10px);
+    max-width: calc(100% + 10px);
+    left: -7px;
+    right: -5px;
+    bottom: 12px;
+  }
+
+  .onedoctor .section03 .section-inner {
+    align-items: center;
+    gap: 32px;
+  }
+  .onedoctor .section03 .section-texts {
+    max-width: 420px;
+    min-width: auto;
+  }
+  .onedoctor .section03 .section-images {
+    margin: 0 20px;
+    height: auto;
+    min-width: unset;
+    width: 100%;
+  }
+  .onedoctor .section03 .section-images img {
+    height: 80px;
+  }
+  .onedoctor .section03 .section-images .img-1 {
+    width: 100%;
+  }
+  .onedoctor .section03 .section-images .img-2 {
+    top: 45%;
+    right: -4%;
+  }
+  .onedoctor .section03 .section-images .img-3 {
+    top: 50%;
+    left: -5%;
+  }
+  .onedoctor .section03 .section-images .img-4 {
+    bottom: 10%;
+    right: -5%;
+  }
+  .onedoctor .section03 .section-images .img-5 {
+    bottom: 5%;
+    left: -2%;
+  }
+}
+
+/* =========================================================
+   반응형 - 모바일 (max-width: 767px)
+   ========================================================= */
+@media (max-width: 767px) {
+  .onedoctor .section-inner {
+    padding: 60px 0;
+  }
+
+  .onedoctor .section01 .section-inner .section-images {
+    max-width: 73.333vw;
+    margin: 0;
+    padding-inline: 8.889vw;
+  }
+  .onedoctor .section01 .section-inner .section-images .img-1 {
+    max-width: 100%;
+  }
+  .onedoctor .section01 .section-inner .section-images .img-2 {
+    max-width: 22.527vw;
+    position: absolute;
+    bottom: 28.667vw;
+    right: 11.111vw;
+  }
+  .onedoctor .section01 .section-inner .section-images .img-3 {
+    max-width: 46.97vw;
+    position: absolute;
+    bottom: 4.333vw;
+    left: 0;
+  }
+  .onedoctor .section01 .section-inner .section-images .img-4 {
+    max-width: 43.94vw;
+    position: absolute;
+    bottom: -6vw;
+    left: 0;
+  }
+
+  .onedoctor .section02 .section-inner .section-images {
+    max-width: 73.333vw;
+    margin: 0;
+    padding-inline: 8.889vw;
+  }
+  .onedoctor .section02 .section-inner .section-images .img-1 {
+    width: 100%;
+    height: auto;
+    text-align: center;
+  }
+  .onedoctor .section02 .section-inner .section-images .img-2 {
+    left: 0;
+    right: 0;
+    max-width: unset;
+    width: calc(100% - 2.222vw);
+    bottom: 6.667vw;
+  }
+
+  .onedoctor .section03 {
+    padding: 0;
+  }
+  .onedoctor .section03 .section-inner {
+    padding-bottom: 24.444vw;
+  }
+  .onedoctor .section03 .section-images {
+    max-width: 73.333vw;
+    margin: 0;
+    padding-inline: 8.889vw;
+    height: auto;
+    min-width: unset;
+  }
+  .onedoctor .section03 .section-images img {
+    height: 22.222dvw;
+  }
+  .onedoctor .section03 .section-images .img-1 {
+    margin-top: 10.556vw;
+    height: auto;
+  }
+  .onedoctor .section03 .section-images .img-2 {
+    top: 44.167vw;
+    right: auto;
+    margin-left: 59.556vw;
+  }
+  .onedoctor .section03 .section-images .img-3 {
+    top: -1vw;
+    left: auto;
+    margin-right: 43.611vw;
+  }
+  .onedoctor .section03 .section-images .img-5 {
+    bottom: -10.6vw;
+    left: auto;
+    margin-right: 50.389vw;
+  }
+
+  .onedoctor .section03 .section-circles {
+    top: auto;
+    left: -5.55vw;
+    right: -5.55vw;
+    bottom: 15.556vw;
+    margin: auto;
+    width: 102.222vw;
+    height: 102.222vw;
+  }
+  .onedoctor .section03 .section-circles .circle-1 {
+    width: 74.444dvw;
+    height: 74.444dvw;
+    padding-top: 0;
+  }
+  .onedoctor .section03 .section-circles .circle-2 {
+    width: 102.222vw;
+    height: 102.222vw;
+    padding-top: 0;
+  }
+  .onedoctor .section03 .section-circles .circle-3 {
+    display: none;
+  }
+}

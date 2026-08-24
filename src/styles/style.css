@@ -1442,7 +1442,8 @@ html.lenis body {
   right: clamp(48px, calc(1.7857vw + 29.71px), 64px);
   top: 50%;
   transform: translateY(-50%);
-  z-index: 5;
+  /* 레이어가 최대 5장(z-index 5)이라 그보다 위에 둔다 */
+  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1487,6 +1488,13 @@ html.lenis body {
 }
 .proj-vis:nth-child(3) {
   z-index: 3;
+}
+/* 메인 슬라이드는 어드민 등록 수에 따라 최대 5장이다 (main.js 가 DOM 에서 센다) */
+.proj-vis:nth-child(4) {
+  z-index: 4;
+}
+.proj-vis:nth-child(5) {
+  z-index: 5;
 }
 .proj-img {
   width: 100%;
@@ -2078,7 +2086,8 @@ html.ps-open {
    덮고 있는데 inert 라 클릭이 그 아래 카드로 지나간다.
    링크만 끈다 — .pj-card 자체를 끄면 마그네틱 호버(useMagneticCards)가 mouseleave 를
    못 받고 카드가 밀린 자리에 굳는다. */
-html.ps-busy .pj-grid a {
+html.ps-busy .pj-grid a,
+html.ps-busy .mp-card a {
   pointer-events: none;
 }
 /* a detail file that ships its own designed close (.pd-close inside main.pd) → hide the generic X (js adds is-own-close) */

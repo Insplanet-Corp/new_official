@@ -694,13 +694,19 @@
   if(!sec||!title)return;
   const vises=[...sec.querySelectorAll('.proj-vis')];
   const slides=[...sec.querySelectorAll('.proj-slide')];
+  // slide count comes from the DOM (was hard-coded 3). The Next app feeds this section from the
+  // admin "main" flag, so it can be 1..5. Everything below derives from COUNT/LAST — do not
+  // re-introduce a literal 3 or 2 here.
+  const COUNT=Math.max(1,vises.length), LAST=COUNT-1;
   // adaptive header UI: sample each project image's luminance where the fixed controls sit (top-right
   // for Let's Talk/menu, bottom-right for SCROLL) -> flip them to white over dark images.
   const ui={lt:document.getElementById('lets-talk'),fm:document.getElementById('full-menu'),sh:document.getElementById('scroll-hint'),ci:document.getElementById('ci-logo')};
   const cta=document.querySelector('.contact-cta');   // solid-dark CTA after projects -> also flips UI white
   const footer=document.querySelector('.footer');     // logo reveal when scrolled into view (one-shot)
-  const imgEls=[...sec.querySelectorAll('.proj-img')];
-  const lum=imgEls.map(()=>({top:false,bot:false}));
+  // luminance is indexed BY LAYER, not by image: a slide can have no <img> (admin row without a
+  // main thumbnail), and indexing by image would shift every later entry — then lum[hi] is
+  // undefined and renderAf throws, killing the whole chapter.
+  const lum=vises.map(()=>({top:false,bot:false}));
   const projInd=document.querySelector('.proj-indicator');   // right-centre step dots, recoloured per image
   function sampleImg(img,idx){
     try{
@@ -711,7 +717,8 @@
       lum[idx]={top:at(0.86,0.06)<110, bot:at(0.86,0.94)<110};
     }catch(e){}
   }
-  imgEls.forEach((img,i)=>{ if(img.complete&&img.naturalWidth)sampleImg(img,i); else img.addEventListener('load',()=>sampleImg(img,i),{once:true}); });
+  vises.forEach((v,i)=>{ const img=v.querySelector('.proj-img'); if(!img)return;
+    if(img.complete&&img.naturalWidth)sampleImg(img,i); else img.addEventListener('load',()=>sampleImg(img,i),{once:true}); });
   const clamp=v=>Math.min(1,Math.max(0,v));
   const lerp=(a,b,t)=>a+(b-a)*t;
   const smooth=x=>x*x*x*(x*(x*6.0-15.0)+10.0);           // smootherstep (C2) — gentler ease in/out than smoothstep
@@ -749,9 +756,9 @@
   // apply the visual layers + text slides + adaptive header contrast for the current `afAnim`
   function renderAf(){
     const vh=innerHeight, af=afAnim;
-    const active=Math.max(0,Math.min(2,Math.round(af)));   // step indicator: nearest project
+    const active=Math.max(0,Math.min(LAST,Math.round(af)));   // step indicator: nearest project
     for(let i=0;i<projDots.length;i++) projDots[i].classList.toggle('is-active', i===active);
-    for(let i=0;i<3;i++){
+    for(let i=0;i<COUNT;i++){
       const d=af-i;
       // visual: full while active; shrinks to a card + crosses (out up / in from below) on swap
       if(vises[i]){ const v=visState(d);
@@ -772,8 +779,9 @@
     const r=sec.getBoundingClientRect();
     let tTop=0, tBot=0, tLogo=0;   // tLogo only from a fully-dark section (logo isn't over the image)
     if(r.top<=2 && r.bottom>=vh-4 && lastRev>0.5){          // <=2 (not <=0): when locked, r.top can be a sub-pixel positive on iOS-Chrome, which used to fail this and never apply the contrast
-      const hi=Math.max(0,Math.min(2,Math.round(af)));     // nearest project's luminance — no settle factor, so
-      tTop=(lum[hi].top?1:0); tBot=(lum[hi].bot?1:0);       // it doesn't drop (and flip the controls) when af isn't exactly settled (iOS-Chrome rAF) or mid-swap
+      const hi=Math.max(0,Math.min(LAST,Math.round(af)));  // nearest project's luminance — no settle factor, so
+      const hl=lum[hi]||{top:false,bot:false};
+      tTop=(hl.top?1:0); tBot=(hl.bot?1:0);       // it doesn't drop (and flip the controls) when af isn't exactly settled (iOS-Chrome rAF) or mid-swap
     }
     if(cta){
       const cr=cta.getBoundingClientRect();
@@ -798,9 +806,9 @@
   // ====== INPUT-DRIVEN SNAP STEPS (itddaa-style) ======
   // The section LOCKS when it fills the screen; then each scroll INPUT (one wheel tick / one swipe)
   // plays ONE full transition to the next step and re-locks — no scrubbing, no resting mid-transition.
-  //   step 0 = intro ("Our Projects")   1/2/3 = project 1/2/3   (down@3 or up@0 -> release the lock)
+  //   step 0 = intro ("Our Projects")   1..COUNT = project 1..COUNT   (down@last or up@0 -> release)
   const pin=document.querySelector('.projects-pin');
-  const MAXSTEP=3;
+  const MAXSTEP=COUNT;
   let step=0, posAnim=0, posFrom=0, posTo=0, posT0=0, animating=false, locked=false, cool=false, released=-1e9, prevTop=null, prevCovering=false, lastLockedStep=0, exitArmed=false;
   const L=()=>window.__lenis;
   const pageY=()=>window.scrollY||window.pageYOffset||0;
@@ -818,7 +826,7 @@
     if(info){info.style.opacity=rev.toFixed(3); info.style.transform='translateY('+(24*(1-rev)).toFixed(1)+'px)';}
     lastRev=rev;
   }
-  function renderPos(pos){ renderIntro(pos); afAnim=Math.max(0,Math.min(2,pos-1)); renderAf(); }
+  function renderPos(pos){ renderIntro(pos); afAnim=Math.max(0,Math.min(LAST,pos-1)); renderAf(); }
   function stepLoop(now){
     const k=clamp((now-posT0)/T.dur);
     posAnim=posFrom+(posTo-posFrom)*smooth(k);

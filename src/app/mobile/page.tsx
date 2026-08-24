@@ -1,31 +1,13 @@
-import type { Metadata } from 'next';
-import AdaptiveRedirect from '@/components/AdaptiveRedirect';
-import Hero from '@/components/home/Hero';
-import SiteChrome from '@/components/chrome/SiteChrome';
-import MobileBeyond from '@/components/mobile/MobileBeyond';
-import MobileInsight from '@/components/mobile/MobileInsight';
-import MobilePartners from '@/components/mobile/MobilePartners';
-import MobileRuntime from '@/components/mobile/MobileRuntime';
-import MobileServices from '@/components/mobile/MobileServices';
-import '@/styles/mobile.css';
+import { permanentRedirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Insplanet — Mobile (hero WIP)' };
+/* /mobile 은 더 이상 별도 화면이 아니다.
 
+   예전에는 폰 전용 라우트였고 `/` 와 서로 튕겨 보냈다(어댑티브). 그 구조 때문에
+   경계를 넘을 때 페이지가 다시 뜨고, 잘못된 폭에 갇히면 모바일 CSS 가 통째로 꺼져
+   화면이 깨졌다(CLAUDE.md 33번). 지금은 `/` 하나가 두 디자인을 모두 그린다 —
+   styles/home-responsive.css 가 폭으로 가르므로 리다이렉트가 아예 필요 없다.
+
+   북마크·외부 링크가 남아 있을 수 있어 308 로 넘긴다. */
 export default function MobilePage() {
-  return (
-    <>
-      {/* desktop/tablet (≥768) bounce to the PC page */}
-      <AdaptiveRedirect query="(min-width:768px)" to="/" />
-      <div id="page-root">
-        <Hero />
-        <MobileBeyond />
-        <MobileInsight />
-        <MobileServices />
-        <MobilePartners />
-        {/* shared header chrome — inlined for the isolated workspace (no footer / full menu yet) */}
-        <SiteChrome />
-      </div>
-      <MobileRuntime />
-    </>
-  );
+  permanentRedirect('/');
 }

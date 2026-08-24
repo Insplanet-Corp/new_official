@@ -1,0 +1,30 @@
+{
+  "node": {
+    "007ee38a808c20e257182660254c46d94ff531993a": {
+      "workers": {
+        "app/admin/portfolio/[id]/edit/page": {
+          "moduleId": 72321,
+          "async": false,
+          "exportedName": "refreshProjectCount",
+          "filename": "src/lib/projectCountActions.ts"
+        },
+        "app/admin/portfolio/[id]/page": {
+          "moduleId": 11553,
+          "async": false,
+          "exportedName": "refreshProjectCount",
+          "filename": "src/lib/projectCountActions.ts"
+        },
+        "app/admin/portfolio/new/page": {
+          "moduleId": 44628,
+          "async": false,
+          "exportedName": "refreshProjectCount",
+          "filename": "src/lib/projectCountActions.ts"
+        }
+      },
+      "filename": "src/lib/projectCountActions.ts",
+      "exportedName": "refreshProjectCount"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "2EsxkAFrYAnl+rYBURp6mVNYJHyd9gZvDINJNtmRJ+E="
+}

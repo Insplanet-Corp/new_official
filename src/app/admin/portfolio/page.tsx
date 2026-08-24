@@ -6,6 +6,7 @@ import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import {
   PORTFOLIO_CATEGORY_FILTER,
+  PORTFOLIO_MAIN_FILTER,
   PORTFOLIO_STATUS_FILTER,
   USE_YN_FILTER,
   labelOf,
@@ -39,6 +40,7 @@ export default function PortfolioListPage() {
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
   const [use, setUse] = useState("all");
+  const [main, setMain] = useState("all");
 
   useEffect(() => {
     let alive = true;
@@ -67,11 +69,13 @@ export default function PortfolioListPage() {
       if (category !== "all" && r.category !== category) return false;
       if (status !== "all" && r.status !== status) return false;
       if (use !== "all" && r.use_yn !== use) return false;
+      // is_main 은 boolean, 필터 값은 'Y'/'N' 문자열이다
+      if (main !== "all" && (r.is_main ? "Y" : "N") !== main) return false;
       if (needle && !titleOneLine(r.title).toLowerCase().includes(needle))
         return false;
       return true;
     });
-  }, [rows, q, category, status, use]);
+  }, [rows, q, category, status, use, main]);
 
   return (
     <>
@@ -142,6 +146,18 @@ export default function PortfolioListPage() {
                 options={USE_YN_FILTER}
               />
             </Flex>
+
+            <Flex gap={8} row align="center">
+              <Text size="2" color={Color.GRAY_500}>
+                메인
+              </Text>
+              <Select
+                label="메인"
+                value={main}
+                onChange={setMain}
+                options={PORTFOLIO_MAIN_FILTER}
+              />
+            </Flex>
           </Flex>
 
           <span className={kit.toolbarSpacer} />
@@ -168,6 +184,7 @@ export default function PortfolioListPage() {
                   <th style={{ width: 120 }}>분류</th>
                   <th style={{ width: 110 }}>진행 상태</th>
                   <th style={{ width: 220 }}>HTML 파일명</th>
+                  <th style={{ width: 80 }}>메인</th>
                   <th style={{ width: 90 }}>사용여부</th>
                 </tr>
               </thead>
@@ -204,6 +221,21 @@ export default function PortfolioListPage() {
                     </td>
                     <td className={kit.clamp} style={{ textAlign: "center" }}>
                       {r.html_file ?? "-"}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      {r.is_main ? (
+                        <Badge
+                          label="메인"
+                          color="BLUE"
+                          variant="surface"
+                          size="1"
+                          radius="medium"
+                        />
+                      ) : (
+                        <Text size="2" color="var(--muted)">
+                          -
+                        </Text>
+                      )}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <Text
