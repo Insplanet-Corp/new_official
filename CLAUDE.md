@@ -294,10 +294,42 @@ CDN 장애 시 이 문서들만 폰트가 바뀐다. 자체 호스팅 이전 미
   번째에만 React 루트를 만들어서, 노드는 데스크톱 `Insight` 안에 한 번만 두고
   `InsightShaderSlot` 이 폭에 따라 `.insight-card`↔`.m-insight-frame` 으로 **옮긴다**(캔버스
   컨텍스트 유지됨). 둘 중 하나에 상태를 넣게 되면 이 방식을 재검토할 것.
-- ⚠️ **데스크톱 푸터는 `#page-root:has(.m-footer) .footer` 로 감춘다** — about/contact/projects
-  는 아직 모바일 화면이 없어 그쪽에서는 계속 보여야 하므로 무조건 숨기면 안 된다.
-- **아직 어댑티브인 곳**: about·contact·projects (모바일 마크업 없음, PC 화면을 그대로 받음).
-  CSS(`.ma-*` `.mc-*` `.mp-*`)는 이미 들어와 있다 — 홈과 같은 패턴으로 붙이면 된다.
+- ⚠️ **데스크톱 푸터는 `#page-root:has(.m-footer) .footer` 로 감춘다** — 모바일 화면이 없는
+  라우트가 남으면 그쪽에서는 계속 보여야 하므로 무조건 숨기면 안 된다(2026-08-24 기준 전부
+  대응돼 이 조건은 지금 항상 거짓이지만, 셀렉터는 남겨 둔다).
+- **어댑티브였던 about·projects·contact 모두 반응형으로 전환 완료** — `MobileAbout`/
+  `MobileProjectsPage`/`MobileContact` 가 각 라우트에 붙었다. 새 라우트를 반응형으로 붙일 때는
+  이 세 컴포넌트를 템플릿으로 삼으면 된다(정적 사이트의 `mobile-*.html` 을 그대로 옮기고,
+  CSS(`.ma-*` `.mc-*` `.mp-*`)는 이미 style.css 에 들어와 있어 새로 쓸 필요 없음).
+
+**Contact 모바일 (2026-08-24, `MobileContact`)**
+
+- 정적 사이트 `mobile-contact.html` 을 그대로 옮겼다 — 히어로 → 폼 step1(칩) → 폼 step2(정보/
+  내용/동의/제출) → Join Us → Careers 팝업 → 푸터. CSS(`.mc-*` `.mr-*`)는 이미 style.css 에
+  다 들어와 있었다(PC `.ct-*`/`.rc-*` 와 완전히 분리된 프리픽스).
+- **PC 의 `ChipGroup`/`FilteredInput`/`FileRow` 를 그대로 재사용하지 않고 `Mobile*` 버전을
+  새로 만들었다** — 두 트리를 클래스명으로 완전히 분리해 둔 기존 관례(`.ma-*`/`.mc-*`/`.mp-*`
+  vs `.ct-*`)를 따른 것. prop 으로 클래스 프리픽스를 넘기는 방법도 있었지만, 다른 Mobile*
+  컴포넌트들(`MobileAbout` 등)도 PC 컴포넌트를 참조하지 않는 독립 트리라 그 패턴을 유지했다.
+- **`jumpToField`(`lib/formGating.ts`)에 `flashClass` 옵션을 추가했다**(기본값 `'ct-flash'`) —
+  PC/모바일이 필수값 미입력 시 펄스시키는 CSS 클래스가 다르다(`.ct-flash` vs `.mc-flash`).
+  이 유틸은 PC 도 이미 인퀴리 폼+recruit 팝업 둘이 공유하던 것이라 파라미터화가 자연스러웠다.
+- **칩 옵션 라벨은 `mobile-contact.html` 을 손으로 베끼지 않고 PC 와 같은 `PROJECT_FIELDS`/
+  `RECRUIT_ROLES`(`data/contact.ts`)에서 가져온다** — 정적 페이지가 먼저 쓰였던 문구("CMS",
+  "유지보수" 등)가 PC 확정본과 다르게 남아 있었다(현재는 "CMS ∙ 시스템", "연간 유지보수").
+  값이 갈리면 `quotes.project_fields` 에 어긋난 문자열이 저장되고 어드민 필터와도 안 맞는다.
+- **Careers 팝업(`.mr-popup`)은 PC `RecruitModal` 의 딤 배경 모달이 아니라 풀스크린 시트다**
+  (닫기는 X/ESC 뿐, 바깥 클릭 닫기 없음). 잠금도 정적 사이트의 구식 touchmove 체이닝 방지
+  없이 PC 와 같은 `html.rc-lock`(`overflow:hidden`) + Lenis stop 만 썼다 — `.mr-scroll` 에
+  이미 `overscroll-behavior:contain` 이 걸려 있어 최신 브라우저에서는 그걸로 충분하다(확인 못
+  함: 실제 iOS Safari 구버전에서의 체이닝 여부).
+- Join Us 팝업 상태(`recruitOpen`)는 PC `ContactPageBody` 와 별개로 `MobileContact` 가 따로
+  들고 있다 — 두 트리가 항상 함께 마운트되고 폭으로만 갈리므로(홈과 같은 패턴) 공유할 이유가
+  없다.
+- ⚠️ **확인 못 함 — 리빌 애니메이션.** 브라우저 패널은 IntersectionObserver 콜백을 안 줘서
+  `.in` 클래스를 강제로 넣어 레이아웃만 확인했다(칩 클릭 → 게이팅 → 제출 활성화, Join Us
+  스크럽 clip-path, Careers 팝업 열기/ESC 닫기는 스크립트로 직접 실행해 확인함). **사람이
+  실제 폰에서 스크롤해 리빌 타이밍을 봐야 한다.**
 
 **메인 배지 / 메인 플래그 / 레거시 JS 수정**
 
@@ -394,8 +426,6 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 ### 바로 이어서 할 만한 것
 
 - **`009`, `011` 실행** — 안 돌리면 각각 `/projects` 썸네일 옛 경로, 메인 저장 막힘.
-- **about · contact · projects 모바일** — 홈과 같은 반응형 패턴으로 각 라우트에 모바일 트리를
-  덧붙이면 된다. CSS는 이미 다 들어와 있다.
 - **실데이터 입력** — 담당자에게 실제 포트폴리오 목록과 이미지를 받아야 한다.
 - **`quotes` 에 메뉴권한 RLS** — `portfolios` 는 걸었지만 `quotes` 는 아직 메뉴권한과 무관하게 열려 있다.
 - **카드 클릭 → 상세 HTML 이동** — 컬럼은 있고 링크는 미연결(사용자가 "추후"로 보류)

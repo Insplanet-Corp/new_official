@@ -21,7 +21,11 @@ export const firstMissing = (fields: RequiredField[]): RequiredField | undefined
 
 export function jumpToField(
   field: RequiredField,
-  { useLenis = false, focusDelay = 650 }: { useLenis?: boolean; focusDelay?: number } = {},
+  {
+    useLenis = false,
+    focusDelay = 650,
+    flashClass = 'ct-flash',
+  }: { useLenis?: boolean; focusDelay?: number; flashClass?: string } = {},
 ) {
   const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
   if (field.scroll) {
@@ -40,9 +44,9 @@ export function jumpToField(
   }, focusDelay);
   const fe = field.flash;
   if (fe) {
-    fe.classList.remove('ct-flash');
+    fe.classList.remove(flashClass);
     void fe.offsetWidth; // restart the animation
-    fe.classList.add('ct-flash');
-    setTimeout(() => fe.classList.remove('ct-flash'), 1000);
+    fe.classList.add(flashClass);
+    setTimeout(() => fe.classList.remove(flashClass), 1000);
   }
 }
