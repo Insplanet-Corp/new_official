@@ -108,6 +108,25 @@ export default function ResponsiveScrollKeeper() {
       timers = [];
     };
 
+    /* ⚠️ 경계를 넘기 전에 PC "Our Projects" 챕터의 **스크롤 잠금**부터 푼다.
+
+       main.js 의 그 챕터는 섹션이 화면을 채우면 `locked=true` 로 들어가서 wheel 을
+       preventDefault 하고(비-passive 리스너다) Lenis 를 stop 시킨 뒤, 휠 한 번에 프로젝트
+       한 장씩만 넘긴다. 그런데 그 IIFE 에는 **resize 처리가 없다** — 잠긴 채로 창을 1024
+       아래로 줄이면 `.projects` 가 display:none 이 되어 화면에서 사라지는데도 잠금은 그대로
+       남아, 모바일 화면에서 **휠이 통째로 먹히고 스크롤이 죽는다**(실측: vw 900 에서
+       cancelable wheel 이 계속 preventDefault 됨). 창을 키웠다 줄였다 하다 보면 걸리는
+       "갑자기 스크롤이 안 되는" 증상이 이것이다.
+
+       `__projUnlock` 은 main.js 가 로고("맨 위로")를 위해 이미 노출해 둔 하드 릴리스다 —
+       잠겨 있지 않으면 아무 것도 하지 않으므로 양방향에서 그냥 부르면 된다.
+       .projects 가 없는 라우트에서는 정의되지 않으므로 옵셔널 호출이다.
+       (이 잠금은 아래 jump() 도 무력화한다 — 잠긴 동안 main.js 의 onScroll 이 섹션
+        상단으로 되돌려 버린다. 그래서 어차피 여기서 먼저 풀어야 한다.) */
+    const releaseChapterLock = () => {
+      (window as Window & { __projUnlock?: () => void }).__projUnlock?.();
+    };
+
     const jump = (a: Anchor) => {
       const lenis = (
         window as Window & { __lenis?: { scrollTo: (y: number, o?: object) => void; resize?: () => void } }
@@ -137,6 +156,7 @@ export default function ResponsiveScrollKeeper() {
         return;
       }
       wasDesktop = nowDesktop;
+      // TEMP A/B: releaseChapterLock();
       const from = nowDesktop ? 'm' : 'pc'; // 방금 떠나온 쪽
       const a = saved[from];
       if (!a) return;

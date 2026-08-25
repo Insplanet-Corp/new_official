@@ -21,9 +21,50 @@
      4. pdMouse  { x, y, grow } — 마우스 좌표. 부모의 커스텀 커서는 부모 문서의
                    mousemove 로 움직이는데, 포인터가 iframe 위에 올라가면 그 이벤트가
                    부모에 도달하지 않아 커서가 그 자리에 멈춘다.
-                   iframe 이 시트(=뷰포트) 전체를 덮으므로 좌표는 1:1 로 맞는다. */
+                   iframe 이 시트(=뷰포트) 전체를 덮으므로 좌표는 1:1 로 맞는다.
+
+   메시지 말고 하나 더 — **부드러운 스크롤(Lenis)** 도 여기서 띄운다. 아래 주석 참고. */
 (function () {
-  if (parent === window) return; // 단독 열람 — 아무것도 하지 않는다
+  /* ── 부드러운 스크롤 (Lenis) — 사이트 본문과 같은 감(lerp 0.09) ──────────────────
+
+     왜 이 파일인가 —
+     정적 사이트에서는 상세가 부모 문서 안(.ps-scroll)에 주입됐고, 부모의
+     js/project-sheet.js 가 시트 전용 Lenis 를 띄워 줬다(startSheetLenis, lerp 0.09).
+     지금은 상세가 sandbox iframe 안에서 **자기 문서를** 스크롤하므로 부모가 그 스크롤에
+     손댈 수가 없다 — 그래서 이 문서가 직접 띄운다.
+     이게 없으면 사이트 전체가 부드러운데 상세 창만 네이티브 스크롤이라 거기서만 뚝뚝 끊긴다.
+
+     ⚠️ parent === window early return 보다 **위**에 둔다 — 상세를 주소창에서 단독으로
+        열었을 때도 같은 감이어야 한다.
+     ⚠️ _shared/style.css 에 `html.lenis` / `.lenis.lenis-smooth` 규칙이 이미 들어 있다
+        (본문 style.css 의 사본). 그 파일을 갈아끼울 때 그 블록을 빼지 말 것 — 빼면
+        스크롤이 어긋난다.
+     · 스크립트를 못 받거나 구형 브라우저면 조용히 네이티브 스크롤로 남는다(기능은 그대로).
+     · rAF 루프는 계속 돈다. 부모가 닫아도 iframe 을 버리지 않기 때문인데, 화면 밖 iframe 의
+       rAF 는 브라우저가 스로틀하고 Lenis 는 목표에 도달하면 즉시 반환하므로 무시할 수준이다.
+       (본문 페이지의 js/main.js 도 같은 모양의 루프를 쓴다 — 일부러 맞췄다.) */
+  (function bootLenis() {
+    if (window.__pdLenis) return; // 두 번 부팅 방지
+    if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    var s = document.createElement('script');
+    s.src = '/js/vendor/lenis.min.js';
+    s.onload = function () {
+      if (!window.Lenis) return;
+      try {
+        var lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+        window.__pdLenis = lenis;
+        (function raf(t) {
+          lenis.raf(t);
+          requestAnimationFrame(raf);
+        })();
+      } catch (e) {
+        /* 네이티브 스크롤로 남는다 */
+      }
+    };
+    document.head.appendChild(s);
+  })();
+
+  if (parent === window) return; // 단독 열람 — 여기부터(부모와의 다리)는 건너뛴다
 
   function post(msg) {
     try {

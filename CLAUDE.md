@@ -125,6 +125,20 @@ computed style 로 값이 실제로 먹는지 확인할 것.**
 세션 토큰을 읽을 수 있다. 그래서 `sandbox="allow-scripts"` (⚠️ **`allow-same-origin` 을
 절대 추가하지 말 것** — 세션 토큰이 열린다) iframe 을 그대로 쓴다.
 
+**⚠️ 상세 안의 부드러운 스크롤은 `_shared/bridge.js` 가 띄운다** (2026-08-25).
+정적 사이트는 상세를 부모 문서(`.ps-scroll`)에 주입해서 부모의 `js/project-sheet.js` 가
+시트 전용 Lenis 를 띄워 줬다(`startSheetLenis`, lerp 0.09). 우리는 상세가 sandbox iframe
+안에서 **자기 문서를** 스크롤하므로 부모가 그 스크롤에 손댈 수 없다 — 그래서 bridge.js 가
+iframe 안에서 `/js/vendor/lenis.min.js` 를 직접 띄운다(같은 lerp 0.09, `parent === window`
+early return 보다 위라 단독 열람도 같은 감).
+- 이게 빠져 있어서 "사이트는 부드러운데 상세 창만 뚝뚝 끊긴다" 가 났다. 지우지 말 것.
+- `_shared/style.css` 의 `html.lenis` / `.lenis.lenis-smooth` 블록이 짝이다 — 그 파일을
+  본문 style.css 로 다시 덮을 때 그 블록이 살아 있는지 확인할 것.
+- 확인함: 상세를 단독 URL(`/portfolio/bokjiro/index.html`)로 열면 `__pdLenis` 가 lerp 0.09
+  로 뜨고 `html.lenis` 가 붙으며 `lenis.scrollTo` 가 동작, 콘솔 에러 0.
+  **확인 못 함**: 시트(iframe) 안에서의 실제 스크롤 감 — 자동화 브라우저가 sandbox iframe
+  로드를 `ERR_BLOCKED_BY_CLIENT` 로 막아 끝까지 못 봤다. 스크립트 경로는 단독 열람과 동일하다.
+
 **폴더 구조**: `_shared/`(fonts.css · style.css · project-detail.css · footer.css ·
 bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등)는 하나씩. 새 프로젝트는
 `_template/` 을 복사한다. ⚠️ **폴더명을 바꾸면 `portfolios.html_file`(DB, `<슬러그>/index.html`
@@ -197,8 +211,29 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 - **상세 산출물을 옮길 때 CSS 의 `url()` 까지 확인할 것** — HTML 의 `src`/`href` 만 봐서는
   폰트 등 절반이 안 보인다(`fonts.css` 의 상대경로가 옮긴 폴더 기준으로 깨짐).
 - **`body{overflow-x:hidden}` 은 문서가 옆으로 스크롤되는 것을 못 막는다** — 스크롤 인 연출이
-  요소를 화면 밖에서 대기시키면 그대로 밀린다. `html{overflow-x:clip}` 을 쓸 것
+  요소를 화면 밖에서 대기시키면 그대로 밀린다. `overflow-x:clip` 을 쓸 것
   (스크롤 컨테이너를 안 만들어 `position:sticky` 도 안 죽인다).
+- **⚠️ 그 `overflow-x:clip` 을 `html`/`body` 에 걸지 말 것 — `#page-root` 에 건다.**
+  (2026-08-25) 루트 스크롤러에 클립이 걸리면 Blink 가 루트 스크롤의 컴포지터 fast path 를
+  포기하고 스크롤 프레임마다 메인 스레드 페인트로 떨어진다. **"전체 스크롤이 정적 사이트보다
+  뚝뚝 끊긴다"** 의 원인이 이것이었다 — 정적 사이트(insplanet)에는 이 규칙이 아예 없다.
+  dev/프로덕션·로컬/Vercel 무관하게 똑같이 났고, 콘솔 에러는 없다.
+  - 사용자 확인: Vercel 배포본 콘솔에서 `documentElement.style.overflowX='visible'` 한 줄로
+    즉시 부드러워지는 것을 확인함. → `home-responsive.css` / `mobile-pages.css` 두 곳을
+    `#page-root { overflow-x: clip }` 로 옮겼다.
+  - 확인함: `/`·`/about`·`/contact`·`/projects` × 1440·390 에서 `scrollWidth === clientWidth`
+    (가로 스크롤 안 생김), `html`/`body` 는 `visible`, 핀 4개(`pin-beyond-stage`
+    `pin-insight-stage` `partners-pin` `projects-pin`)가 계속 `position:sticky` 로 붙고
+    실제로 `top:0` 에 고정됨, 메뉴 오버레이(`#menu-overlay`, page-root 안의 fixed)가
+    뷰포트를 그대로 덮음, 모바일 `.m-proj-track` 은 자기 안에서만 가로 스크롤됨.
+  - `#page-root` 로 충분한 이유: 본문이 전부 그 안에 있고, 밖에 있는 건 `#cursor`·`.ps-sheet`
+    같은 **fixed** 뿐인데 fixed 는 문서 가로 스크롤 폭에 애초에 기여하지 않는다.
+  - 곁가지로 재봤지만 **주범이 아니었던 것들**(참고용, 다시 파지 말 것): dev 모드(Vercel 에서도
+    동일), 이미지 로딩(프로덕션 `scrollY=0` 에서 정적 13장/0.2MP vs next 21장/0.4MP 로 사실상
+    동일 — 예전에 "15.6MP" 로 본 건 이미 스크롤을 끝낸 탭의 캐시를 잰 오측정이었다),
+    Lenis 설정·버전(완전 동일). DOM 2배(301→587)로 강제 레이아웃이 +50%(0.29→0.43ms),
+    `ResponsiveScrollKeeper` 가 스크롤 프레임당 +0.47ms — 둘 다 실재하지만 합쳐 프레임당
+    0.9ms(예산의 5%)라 체감 끊김의 주범은 아니다.
 - **정적 사이트에서 상세를 다시 가져올 때 `kb-app/index.html` 을 통째로 덮지 말 것** — 히어로/
   Overview 마크업이 컴포넌트 속성으로 옮겨졌다. 가져올 건 `.pd-sec` 섹션 목록(과 img
   width/height)뿐이고, `_shared/project-detail.css` 는 정적 사이트 쪽이 계속 바뀌므로
@@ -744,3 +779,40 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
     `scroll-hint` 에 `.on-dark`, 인트로에서는 해제되는 것까지 봤다.
     ℹ️ **로고(`#ci-logo`)는 원래 여기서 안 바뀐다** — 이미지가 오른쪽 절반만 덮고 로고는 밝은
     왼쪽 컬럼 위에 있어서, 로고는 통짜로 어두운 섹션(CTA)에서만 뒤집힌다(의도된 동작).
+16. **⚠️ `.on-dark` 는 전역 플래그다 — 안 보이는 트리가 매 스크롤마다 남의 것을 지웠다**
+    (2026-08-25 수정) — 반응형 전환(34번) 이후 PC 트리와 모바일 트리가 **항상 함께 마운트**되고
+    폭으로만 갈린다. 그런데 스크롤 핸들러는 CSS 로 숨겨져도 계속 돈다. 숨은 쪽은 rect 가 0 이라
+    "안 덮고 있다" 로 계산해 `classList.toggle('on-dark', false)` 를 쓰고, 그게 보이는 쪽이
+    방금 켠 흰색 헤더를 지운다. **먼저 쓴 쪽이 지고, 순서는 리스너 등록 순서라 페이지마다 다르다.**
+    실제 증상:
+    - 홈 모바일 Insight("비즈니스의 본질을 읽고…")가 화면을 다 덮어도 헤더가 검정 그대로
+      → `public/js/main.js` 의 `renderAf`(데스크톱 Our Projects 챕터)가 지우고 있었다.
+    - `/about` 모바일 히어로·마무리 이미지도 같은 증상 → `public/js/about-hero.js` 의 두 IIFE.
+    → **규칙: 자기 마크업이 실제로 그려져 있을 때만 전역 헤더 플래그를 쓴다.**
+      `if(!<자기 섹션>.getClientRects().length) return;` 를 render 맨 앞에 둔다.
+      (`getComputedStyle(el).display` 는 **안 된다** — 조상이 `display:none` 이어도 자기 값은
+      `block` 으로 나온다. 실제로 `.about-hero` 가 그랬다.)
+      네 곳에 넣었다: `main.js renderAf` · `about-hero.js` 히어로 render + 마무리 `setChrome`/render ·
+      `MobileInsight` · `MobileAbout`(히어로·마무리). **`main.js`/`about-hero.js` 수정분은
+      정적 사이트에서 다시 가져오면 사라진다 — 재적용 목록에 포함.**
+    ⚠️ 새 모바일/PC 챕터가 `on-dark`(또는 다른 전역 플래그)를 쓰면 **양쪽 다** 이 가드를 넣을 것.
+    한쪽만 넣으면 반대 방향에서 똑같이 깨진다.
+    확인함(2026-08-25, dev 5599): 375 에서 홈 Insight·`/about` 히어로·마무리 이미지 전부
+    덮는 구간에만 흰색, 벗어나면 복귀. 1280 에서 Our Projects·about 히어로·마무리 이미지도
+    그대로 동작(회귀 없음), 콘솔 에러 없음.
+    **같은 뿌리의 두 번째 증상 — 모바일 Say Hello 헤더가 검정** (2026-08-25 수정):
+    PC 는 `renderAf` 가 `.contact-cta` 를 보고 헤더를 뒤집는데 ≤1023 에서는 그게
+    `display:none` 이라 판정 자체가 성립하지 않았고, **모바일 `.m-cta` 쪽에는 그 코드가
+    아예 없었다**(원래부터 없던 구멍이지, 위 가드 때문에 생긴 회귀가 아니다).
+    → `MobileCta` 에 헤더 플립을 붙였다(밴드 수치는 `MobileInsight` 와 동일).
+    ⚠️ 이때 **모바일 챕터끼리도 같은 충돌이 난다** — 멀리 지나온 `MobileInsight` 가 계속
+    `false` 를 덮어 Say Hello 가 켠 것을 지웠다. 그래서 두 컴포넌트 모두 **자기 섹션이
+    ±1뷰포트 안에 있을 때만** 쓴다(`MobileAbout` 이 이미 쓰던 방식). 1뷰포트 여유는 빠르게
+    튕겨 스크롤할 때 "지우는 프레임" 을 건너뛰어 **흰 푸터 위에 흰 글자**가 남는 것을 막는다.
+    375 전 구간 실측(2026-08-25): 흰색 구간은 3000~6000(Insight)·11400~11700(Say Hello)
+    뿐이고 흰 푸터(12028~)에서는 정상 복귀. 1280 도 그대로 동작.
+    ⚠️ **모바일에 새 어두운 챕터를 추가하면 헤더 플립을 직접 붙여야 한다** — PC 쪽 런타임이
+    대신 해 주지 않는다.
+    ℹ️ **덤으로 찾은 것(안 고침)**: 모바일에서 `#scroll-hint` 가 **항상 `is-hidden`** 이다.
+    `main.js` 의 "푸터 보이면 SCROLL 숨김" IIFE 가 데스크톱 `.footer` 를 보는데 모바일에서는
+    그게 `display:none` 이라 `rect.top=0` → 항상 숨김 판정. `.m-footer` 를 같이 봐야 한다.

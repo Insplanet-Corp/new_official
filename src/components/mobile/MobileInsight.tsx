@@ -38,6 +38,12 @@ export default function MobileInsight() {
     }
 
     return bindScroll(() => {
+      /* ⚠️ 폭이 ≥1024 면 이 챕터는 display:none 이다 — 그때는 아무것도 쓰지 않는다.
+         `.on-dark`(로고·Let's Talk·햄버거)는 데스크톱 Projects 챕터(public/js/main.js)와
+         **같은 전역 플래그**라, 안 보이는 쪽이 매 스크롤마다 `false` 를 덮어쓰면 보이는 쪽이
+         방금 켠 것을 지운다. 두 트리가 항상 함께 마운트돼 폭으로만 갈리므로, 자기 마크업이
+         실제로 그려져 있을 때만 쓰는 것이 규칙이다. */
+      if (!chapter.getClientRects().length) return;
       const scrub = chapter.offsetHeight - innerHeight;
       const p = scrub > 0 ? clamp01(-chapter.getBoundingClientRect().top / scrub) : 0;
       // grow: p 0→0.2, eased; window inset 50%→0 (zero-size centre → full-bleed)
@@ -63,6 +69,11 @@ export default function MobileInsight() {
       });
       // header contrast: white only while the dark frame actually covers the zones
       const r = stage.getBoundingClientRect();
+      /* ⚠️ 이 챕터가 화면 근처일 때만 쓴다 — 멀리 지나온 뒤에도 계속 false 를 덮으면
+         아래쪽 Say Hello(MobileCta)가 켠 흰색 헤더를 지운다(지뢰 16번과 같은 충돌이
+         모바일 챕터끼리도 난다). ±1뷰포트 여유는 빠른 스크롤에서 "지우는 프레임"을
+         건너뛰지 않기 위한 것이다. */
+      if (r.bottom <= -innerHeight || r.top >= innerHeight * 2) return;
       const covered = gs >= 0.9;
       const topOn = covered && r.top <= 40 && r.bottom >= 40;
       const botOn = covered && r.top <= innerHeight - 90 && r.bottom >= innerHeight - 90;

@@ -770,6 +770,11 @@
   let afAnim=0, lastRev=0, ticking=false;
   // apply the visual layers + text slides + adaptive header contrast for the current `afAnim`
   function renderAf(){
+    // NEXT-APP FIX: ≤1023 에서는 .projects 가 display:none 이고 모바일 Insight 챕터가
+    // 화면을 덮는다. 그런데 이 함수는 계속 돌면서 rect 0 을 보고 topOn=false 를 써서,
+    // MobileInsight 가 방금 켠 .on-dark(로고·Let's Talk·햄버거)를 매 스크롤마다 지웠다.
+    // 안 그려져 있으면 전역 헤더 플래그를 건드리지 않는다.
+    if(!sec.getClientRects().length) return;
     const vh=innerHeight, af=afAnim;
     const active=Math.max(0,Math.min(LAST,Math.round(af)));   // step indicator: nearest project
     for(let i=0;i<projDots.length;i++) projDots[i].classList.toggle('is-active', i===active);
@@ -931,6 +936,20 @@
   }, {passive:false});
   addEventListener('touchend', ()=>{ swipeFired=false; }, {passive:true});
   addEventListener('keydown', e=>{ if(!locked) return; const d=(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' ')?1:((e.key==='ArrowUp'||e.key==='PageUp')?-1:0); if(d){e.preventDefault(); input(d);} });
+
+  // NEXT-APP FIX: this chapter is DESKTOP-ONLY markup, but since the responsive rewrite one
+  // document carries both trees and CSS alone decides which is drawn. Resize below 1024 while the
+  // lock is engaged and `.projects` goes display:none — yet `locked` stayed true, so the wheel
+  // listener above kept calling preventDefault() (it is a NON-passive listener) and the whole page
+  // became unscrollable at mobile width, with nothing on screen to explain why. `exitArmed` is the
+  // same trap on the touch side: it re-locks on an up-pull, so it can put the lock back on a width
+  // where the section isn't even rendered. If the section isn't drawn, this chapter owns nothing —
+  // put every piece of its state back. Safe to run on every resize: all of it is idempotent.
+  addEventListener('resize', ()=>{
+    if(true) return; // TEMP A/B: 픽스 비활성화
+    exitArmed=false; swipeFired=false; cool=false;
+    window.__projUnlock();                                  // no-op unless locked (restarts Lenis, clears the pin)
+  });
 
   // LOCK detection (section crosses to fill the screen) + keep after-section UI alive while unlocked
   function onScroll(){

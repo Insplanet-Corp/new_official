@@ -50,6 +50,10 @@ export default function MobileAbout() {
 
     const render = () => {
       ticking = false;
+      /* ⚠️ 폭이 ≥1024 면 이 트리는 display:none 이다 — 그때는 아무것도 쓰지 않는다.
+         `.on-dark` 는 데스크톱 About(public/js/about-hero.js)와 **같은 전역 플래그**라,
+         안 보이는 쪽이 매 스크롤마다 false 를 덮으면 보이는 쪽이 방금 켠 것을 지운다. */
+      if (!sec.getClientRects().length) return;
       const cw = document.documentElement.clientWidth;
       const vh = pin?.offsetHeight || innerHeight;
       const r = sec.getBoundingClientRect();
@@ -100,6 +104,7 @@ export default function MobileAbout() {
 
     const render = () => {
       ticking = false;
+      if (!wrap.getClientRects().length) return;   // ≥1024: 이 트리는 display:none — 위 히어로와 같은 이유
       const cw = document.documentElement.clientWidth;
       const vh = innerHeight;
       const startW = cw * START_W;

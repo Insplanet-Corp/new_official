@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { revealOnScroll } from '@/lib/dom';
+import { bindScroll, revealOnScroll } from '@/lib/dom';
 
 /* Chapter 07 (mobile): Say Hello CTA — 검은 전체 화면 + PC 와 같은 WebGL 지평선 글로우. */
 export default function MobileCta() {
@@ -9,6 +9,35 @@ export default function MobileCta() {
 
   // 섹션이 20% 보이면 .in — 제목/부제/화살표가 CSS 의 transition-delay 로 차례로 뜬다
   useEffect(() => (ref.current ? revealOnScroll([ref.current], 0.2) : undefined), []);
+
+  /* 고정 헤더를 흰색으로 — 이 섹션은 통짜 #141414 라 로고·Let's Talk·햄버거가 그 위에 얹힌다.
+
+     PC 는 main.js 의 renderAf 가 .contact-cta 를 보고 같은 일을 하는데, ≤1023 에서는
+     .contact-cta 가 display:none 이라 그쪽 판정이 성립하지 않는다 — 그래서 모바일은
+     여기서 직접 건다(PC/모바일이 서로의 마크업을 보지 않는 기존 관례 그대로).
+
+     ⚠️ 화면 근처일 때만 쓴다. `.on-dark` 는 MobileInsight 등과 **같은 전역 플래그**라
+        멀리 있는 챕터가 매 스크롤마다 false 를 덮으면 서로 지운다(지뢰 16번).
+        ±1뷰포트 여유를 두는 것은 빠르게 튕겨 스크롤할 때 "지우는 프레임"을 건너뛰어
+        흰 푸터 위에 흰 글자가 남는 것을 막기 위해서다. */
+  useEffect(() => {
+    const sec = ref.current;
+    if (!sec) return;
+    const tops = ['ci-logo', 'lets-talk', 'full-menu']
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+    const scrollHint = document.getElementById('scroll-hint');
+
+    return bindScroll(() => {
+      if (!sec.getClientRects().length) return; // ≥1024: 이 트리는 display:none
+      const vh = innerHeight;
+      const r = sec.getBoundingClientRect();
+      if (r.bottom <= -vh || r.top >= vh * 2) return; // 멀리 있으면 손대지 않는다
+      // 밴드 위치는 MobileInsight 와 같다 — 375 헤더는 y 16~64, SCROLL 힌트는 아래에서 24px
+      tops.forEach((el) => el.classList.toggle('on-dark', r.top <= 40 && r.bottom >= 40));
+      scrollHint?.classList.toggle('on-dark', r.top <= vh - 90 && r.bottom >= vh - 90);
+    });
+  }, []);
 
   return (
     <section className="m-cta" ref={ref}>

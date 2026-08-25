@@ -18,6 +18,10 @@
   let ticking=false;
   function render(){
     ticking=false;
+    // NEXT-APP FIX: ≤1023 에서는 데스크톱 About 트리(.about)가 display:none 이고 MobileAbout 이
+    // 화면을 그린다. 그래도 이 render 는 계속 돌면서 rect 0 을 보고 .on-dark 를 false 로 덮어,
+    // 모바일 쪽이 방금 켠 흰색 헤더를 매 스크롤마다 지웠다. 안 그려져 있으면 손대지 않는다.
+    if(!sec.getClientRects().length) return;
     const cw=document.documentElement.clientWidth, vh=innerHeight;
     const v=clamp((cw-1024)/896);                                     // == css --v (1024 -> 1920)
     const g=clamp((cw-1920)/640);                                     // == css --g (1920 -> 2560)
@@ -87,6 +91,7 @@
   const easeInOutCubic=x=>x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
 
   function setChrome(r,vh){
+    if(!box.getClientRects().length) return;          // NEXT-APP FIX: 모바일 폭에서는 이 섹션이 안 그려진다 — 위 render() 와 같은 이유
     const topOn=r.top<=120 && r.bottom>=120;          // covers the logo / Let's Talk / menu band
     const botOn=r.top<=vh-120 && r.bottom>=vh-120;    // covers the SCROLL hint band
     [['ci-logo',topOn],['lets-talk',topOn],['full-menu',topOn],['scroll-hint',botOn]]
@@ -101,6 +106,10 @@
   let ticking=false;
   function render(){
     ticking=false;
+    // NEXT-APP FIX: ≤1023 에서는 데스크톱 About 트리(.about)가 display:none 이고 MobileAbout 이
+    // 화면을 그린다. 그래도 이 render 는 계속 돌면서 rect 0 을 보고 .on-dark 를 false 로 덮어,
+    // 모바일 쪽이 방금 켠 흰색 헤더를 매 스크롤마다 지웠다. 안 그려져 있으면 손대지 않는다.
+    if(!wrap.getClientRects().length) return;   // ⚠️ 여기는 wrap 이다 — 이 IIFE 에 sec 은 없다(ReferenceError 로 스크럽이 통째로 죽는다)
     const cw=document.documentElement.clientWidth, vh=innerHeight;
     const v=clamp((cw-1024)/896);                                // == css --v (radius only)
     const startW=cw*0.0625;                                      // TINY start card — 6.25vw (== css 6.25vw)

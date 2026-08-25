@@ -69,9 +69,16 @@
   }
 }
 
-/* 가로 스크롤 안전망. clip 이지 hidden 이 아니다 — hidden 은 body 를 스크롤 컨테이너로
-   만들어 position:sticky(핀 고정 섹션)를 죽인다. */
-html,
-body {
+/* 가로 스크롤 안전망. 두 가지를 지킨다 —
+   1) clip 이지 hidden 이 아니다: hidden 은 스크롤 컨테이너를 만들어 position:sticky
+      (핀 고정 섹션)를 죽인다.
+   2) ⚠️ html/body 가 아니라 #page-root 에 건다. 루트 스크롤러(html/body)에 클립이
+      걸리면 Blink 가 루트 스크롤의 컴포지터 fast path 를 포기하고 스크롤 프레임마다
+      메인 스레드 페인트로 떨어진다 — 정적 사이트(insplanet)에는 이 규칙이 아예 없고,
+      next 에만 넣었더니 "전체 스크롤이 뚝뚝 끊기는" 증상이 났다. 되돌리지 말 것.
+      #page-root 는 스크롤러가 아니라 평범한 박스라 클립해도 스크롤 경로에 영향이 없고,
+      본문은 전부 그 안에 있다(밖에 있는 건 #cursor·.ps-sheet 같은 fixed 뿐인데
+      fixed 는 문서 가로 스크롤 폭에 애초에 기여하지 않는다). */
+#page-root {
   overflow-x: clip;
 }
