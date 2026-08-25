@@ -29,15 +29,26 @@ export const dynamic = 'force-dynamic';
    레이어를 잡으므로 클라이언트에서 뒤늦게 채우면 슬라이드가 죽는다.
 
    ⚠️ use_yn 을 쿼리에서도 명시적으로 건다 — RLS 하나에 기대지 않는다(13번).
-   최신 MAX_SHOWCASE(5)건까지 쓴다 — 슬라이드 수는 main.js 가 DOM 에서 센다. */
+   순서는 어드민 포트폴리오 목록의 No 순서(sort_order)를 그대로 따른다 — 위에서
+   MAX_SHOWCASE(3)건까지 쓴다. 슬라이드 수는 main.js 가 DOM 에서 센다. */
 async function loadMainProjects(): Promise<Portfolio[]> {
-  const { data, error } = await supabase
-    .from('portfolios')
-    .select('*')
-    .eq('is_main', true)
-    .eq('use_yn', 'Y')
+  const base = () =>
+    supabase
+      .from('portfolios')
+      .select('*')
+      .eq('is_main', true)
+      .eq('use_yn', 'Y');
+
+  /* ⚠️ 012 미실행 DB 에는 sort_order 가 없다 — /projects 와 같은 이유로 물러난다 */
+  let { data, error } = await base()
+    .order('sort_order', { ascending: true })
     .order('seq', { ascending: false })
     .limit(MAX_SHOWCASE);
+  if (error?.code === '42703') {
+    ({ data, error } = await base()
+      .order('seq', { ascending: false })
+      .limit(MAX_SHOWCASE));
+  }
 
   if (error) {
     // 홈이 통째로 500 이 되는 것보다 기본 슬라이드로 그리는 편이 낫다

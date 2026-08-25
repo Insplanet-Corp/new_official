@@ -6,6 +6,14 @@
      done(종료)    → 썸네일 · html_file 이 채워지고 CI/기간은 비어 있다
    화면은 이 규칙을 강제하되, DB 는 NULL 을 허용한다(과거 데이터 보정 여지). */
 
+/** 메인 노출 상한. 홈 "Our Projects" 슬라이드 수와 같은 값이다 (사용자 결정).
+
+    한 곳에서만 정의한다 — 어드민 폼의 체크박스 비활성, 저장 직전 재확인,
+    홈 쿼리의 limit(`MAX_SHOWCASE`), 015 의 DB 트리거가 전부 이 숫자를 뜻한다.
+    ⚠️ 숫자를 바꾸면 `supabase/migrations/015_portfolio_main_limit.sql` 의
+    상한도 같이 바꿔야 한다 — SQL 은 이 상수를 못 읽는다. */
+export const MAX_MAIN = 3;
+
 export type PortfolioCategory = "Web" | "Mobile" | "Consulting";
 export type PortfolioStatus = "ongoing" | "done";
 
@@ -21,8 +29,14 @@ export const STATUS_VALUES: PortfolioStatus[] = ["ongoing", "done"];
 
 export type Portfolio = {
   id: string;
-  /** 기획서 목록의 "No". id 가 uuid 라 따로 둔 순번 */
+  /** 등록 순번. `generated always as identity` 라 사람이 못 바꾼다 — 표시
+      순서는 sort_order 가 정한다 */
   seq: number;
+  /** 표시 순서(012). 작을수록 위/앞. 어드민 드래그 앤 드롭이 정하고
+      /projects · 홈 메인 슬라이드가 같은 순서로 그린다.
+      값이 연속이라는 보장은 없다 — 어드민 목록의 "No" 는 이 값이 아니라
+      정렬한 뒤의 위치(1,2,3…)다 */
+  sort_order: number;
   created_at: string;
   updated_at: string;
   /** 프로젝트명. \n 이 있으면 그 자리에서 줄바꿈한다 */
@@ -86,23 +100,52 @@ export const EMPTY_DRAFT: PortfolioDraft = {
   html_file: "",
 };
 
-/** html_file -> iframe 에 넣을 사이트 내부 경로. 넣을 수 없으면 null.
+/* ---- 상세화면 경로 ---------------------------------------------------------
+   html_file 에 저장하는 값은 **폴더명 하나**다 (예: 'kb-app').
+   파일명은 규칙으로 붙인다 — 상세는 언제나 그 폴더의 index.html 이다.
 
-    ⚠️ DB 값을 그대로 src 에 넣으면 외부 주소를 넣어 우리 페이지 안에 임의의 사이트를
-    띄우는 통로가 된다(피싱). public/portfolio/ 밑으로만 허용한다 — 상위 이동('..')과
-    절대 URL(스킴·프로토콜 상대)을 모두 막는다. 상세 라우트와 시트가 이 하나를 같이 쓴다. */
-export const detailSrc = (htmlFile: string | null): string | null => {
-  const raw = (htmlFile ?? "").trim();
-  if (!raw) return null;
+   예전에는 '/kb-app/index.html' 처럼 파일명까지 적어 저장했다(2026-08-25 이전
+   37건이 전부 그 표기다). 읽는 쪽은 두 표기를 다 받아 준다 — 014 를 안 돌려도
+   화면이 깨지지 않게 하기 위함이다. */
+
+/** 상세 폴더 안의 진입 파일. 바꿀 일은 없지만 하드코딩을 한 곳에 모아 둔다 */
+export const DETAIL_INDEX = "index.html";
+
+/** 어떤 표기로 들어와도 폴더명만 남긴다. 쓸 수 없는 값이면 ''.
+
+    ⚠️ DB 값을 그대로 iframe src 에 넣으면 외부 주소를 넣어 우리 페이지 안에 임의의
+    사이트를 띄우는 통로가 된다(피싱). 그래서 여기서 **한 조각짜리 폴더명**만 통과시킨다 —
+    절대 URL(스킴·프로토콜 상대)도, 상위 이동('..')도, 중첩 경로도 전부 막힌다. */
+export const toDetailFolder = (value: string | null): string => {
+  const raw = (value ?? "").trim();
+  if (!raw) return "";
   // 절대 URL(스킴 또는 프로토콜 상대)은 거부한다
-  if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith("//")) return null;
-  /* 앞의 '/' 와 'portfolio/' 접두는 있어도 없어도 받아 준다 — 어드민 폼의 예시는
-     '/heyyoung-1024/index.html' 인데 008 주석은 '/portfolio/...' 로 적혀 있어
-     실제 DB 에 두 표기가 섞인다. 붙여 쓰기만 하면 '/portfolio//heyyoung-...' 이
-     되어 Next 가 308 로 한 번 더 돌려보낸다. */
-  const rel = raw.replace(/^\/+/, "").replace(/^portfolio\//, "");
-  if (!rel || rel.split("/").includes("..")) return null;
-  return `/portfolio/${rel}`;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith("//")) return "";
+
+  /* 앞의 '/' 와 'portfolio/' 접두는 있어도 없어도 받아 준다 — 008 주석은
+     '/portfolio/...' 로, 옛 어드민 폼 예시는 '/kb-app/index.html' 로 적혀 있어
+     실제 DB 에 두 표기가 섞인다. */
+  const parts = raw
+    .replace(/^\/+/, "")
+    .replace(/^portfolio\//, "")
+    .split("/")
+    .filter(Boolean);
+
+  // 마지막 조각이 파일명이면 떼어 낸다 (옛 표기 '<폴더>/index.html')
+  if (parts.length && /\.html?$/i.test(parts[parts.length - 1])) parts.pop();
+
+  // 남는 것은 폴더명 하나여야 한다. 'index.html' 만 적었다면 여기서 걸린다
+  if (parts.length !== 1) return "";
+  const folder = parts[0];
+  if (folder === "." || folder === "..") return "";
+  return folder;
+};
+
+/** html_file -> iframe 에 넣을 사이트 내부 경로. 넣을 수 없으면 null.
+    상세 라우트와 시트가 이 하나를 같이 쓴다. */
+export const detailSrc = (htmlFile: string | null): string | null => {
+  const folder = toDetailFolder(htmlFile);
+  return folder ? `/portfolio/${folder}/${DETAIL_INDEX}` : null;
 };
 
 /* 기획서(25p)의 DETAIL_PATH(/com/resource/content/portfolio/detail/)는 없앴다.
@@ -132,6 +175,16 @@ export const formatPeriod = (
   if (!from && !to) return "-";
   return `${fmt(from)} ~ ${fmt(to)}`;
 };
+
+/* ---- 표시 순서 -------------------------------------------------------------
+   어드민·공개 화면이 모두 이 순서를 쓴다. sort_order 가 같으면(백필 전 데이터나
+   동시 등록) 예전 기준인 seq 내림차순으로 갈라 목록이 흔들리지 않게 한다.
+
+   ⚠️ Supabase 쿼리에도 같은 순서를 걸어야 한다(ORDER_SORT). 서버가 정렬해 주면
+   클라이언트에서 다시 세울 필요가 없지만, 드래그 중에는 로컬 배열이 진실이라
+   저장 후 되읽을 때 이 비교 함수로 맞춘다. */
+export const bySortOrder = (a: Portfolio, b: Portfolio): number =>
+  a.sort_order - b.sort_order || b.seq - a.seq;
 
 /** 목록의 등록/수정일 */
 export const formatDay = (ts: string): string => ts.slice(0, 10);
@@ -172,7 +225,9 @@ export const toDraft = (p: Portfolio): PortfolioDraft => ({
   client_ci: p.client_ci ?? "",
   startedAt: toFormDate(p.started_on),
   endedAt: toFormDate(p.ended_on),
-  html_file: p.html_file ?? "",
+  /* 폼은 폴더명만 다룬다. 못 알아먹을 값이면 원본을 그대로 보여 준다 —
+     조용히 지워 버리는 것보다 사용자가 보고 고치는 편이 낫다(validate 가 막는다) */
+  html_file: toDetailFolder(p.html_file) || (p.html_file ?? ""),
 });
 
 /** 폼 값 -> insert/update 페이로드. 빈 문자열은 NULL 로 눕힌다 */
@@ -198,7 +253,8 @@ export const toRow = (d: PortfolioDraft) => {
     thumb_main: nz(d.thumb_main),
     client: nz(d.client),
     launch: nz(d.launch),
-    html_file: nz(d.html_file),
+    // 폴더명만 저장한다. index.html 은 읽을 때 붙인다
+    html_file: toDetailFolder(d.html_file) || null,
     client_ci: nz(d.client_ci),
     started_on: toIsoDate(d.startedAt),
     ended_on: toIsoDate(d.endedAt),
@@ -220,12 +276,17 @@ export const validate = (d: PortfolioDraft): string | null => {
   if (d.is_main && !d.thumb_main.trim())
     return "메인으로 노출하려면 썸네일 – 메인을 첨부해 주세요.";
 
+  /* 적었다면 폴더명 하나로 해석돼야 한다. 여기서 안 막으면 toRow 가 NULL 로
+     눕혀서 "저장은 됐는데 카드가 안 눌리는" 상태가 된다 */
+  if (d.html_file.trim() && !toDetailFolder(d.html_file))
+    return "상세화면 폴더명은 public/portfolio/ 아래 폴더 이름 하나만 적어 주세요 (예: kb-app).";
+
   if (d.status === "done") {
     if (!d.thumb_pc.trim()) return "종료 프로젝트는 썸네일 – PC 가 필요합니다.";
     if (!d.thumb_mobile.trim())
       return "종료 프로젝트는 썸네일 – 모바일이 필요합니다.";
     // if (!d.html_file.trim())
-    //   return '종료 프로젝트는 상세화면 HTML 파일명이 필요합니다.';
+    //   return '종료 프로젝트는 상세화면 폴더명이 필요합니다.';
   }
 
   if (d.status === "ongoing") {

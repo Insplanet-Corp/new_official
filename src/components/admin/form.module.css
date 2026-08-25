@@ -101,6 +101,14 @@
   accent-color: var(--ink);
   cursor: pointer;
 }
+/* 더 고를 수 없는 체크박스 — 왜 못 고르는지는 Row 의 hint 가 설명한다 */
+.choiceOff,
+.choiceOff input {
+  cursor: not-allowed;
+}
+.choiceOff {
+  color: var(--muted);
+}
 
 /* 메뉴권한처럼 여러 개를 격자로 */
 .checkGrid {

@@ -222,3 +222,51 @@
   color: var(--faint);
   margin-right: 4px;
 }
+
+/* ===== 드래그 정렬 (포트폴리오 목록) ====================================== */
+/* 손잡이만 draggable 이다 — 행 전체를 draggable 로 두면 셀 안의 링크·텍스트를
+   집으려는 순간에도 드래그가 시작돼 클릭이 잘 안 잡힌다. */
+/* `.table tbody td` 가 padding/vertical-align 을 잡고 있어 클래스 하나로는 진다 —
+   같은 파일 안이라 자손 셀렉터로 특이도를 올려도 안전하다(CSS Modules 는 파일 단위 스코프) */
+.table tbody td.dragCell {
+  width: 40px;
+  padding: 8px 0 8px 10px;
+  vertical-align: middle;
+}
+.dragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--faint);
+  cursor: grab;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+  /* 아이콘 위에서 끌기 시작할 때 텍스트 선택이 같이 잡히지 않도록 */
+  user-select: none;
+}
+.dragHandle:hover {
+  background: var(--line-2);
+  color: var(--ink);
+}
+.dragHandle:active {
+  cursor: grabbing;
+}
+/* 끌고 있는 행. 원본 자리를 흐리게 남겨 어디서 출발했는지 보이게 한다 */
+.rowDragging td {
+  opacity: 0.4;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

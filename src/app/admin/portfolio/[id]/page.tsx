@@ -151,7 +151,7 @@ export default function PortfolioDetailPage({
           </ReadOnly>
         </Row>
         <Row
-          label="상세화면 HTML"
+          label="상세화면 폴더명"
           hint={
             row?.html_file
               ? "홈페이지에서 이 프로젝트 카드를 누르면 이 화면으로 이동합니다."

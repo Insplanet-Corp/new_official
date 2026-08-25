@@ -36,11 +36,18 @@ async function loadPortfolios(): Promise<Portfolio[]> {
      하나 추가하면 조용히 뚫린다. 실제로 대시보드에서 만든 옛 정책
      "Anyone can view published portfolios" 때문에 N 인 항목이 홈페이지에
      노출된 적이 있다(007 마이그레이션에서 제거). */
-  const { data, error } = await supabase
-    .from('portfolios')
-    .select('*')
-    .eq('use_yn', 'Y')
+  const base = () => supabase.from('portfolios').select('*').eq('use_yn', 'Y');
+
+  /* 어드민 목록의 드래그 순서(012). 카드 그리드도 진행중 표도 이 순서다.
+     ⚠️ 012 를 아직 실행하지 않은 DB 에는 sort_order 컬럼이 없어 42703 이 난다 —
+     그 한 번으로 공개 페이지가 빈 그리드가 되면 안 되므로 예전 순서(최근 등록
+     순)로 물러난다. 012 를 돌리면 이 경로는 다시 안 탄다. */
+  let { data, error } = await base()
+    .order('sort_order', { ascending: true })
     .order('seq', { ascending: false });
+  if (error?.code === '42703') {
+    ({ data, error } = await base().order('seq', { ascending: false }));
+  }
 
   if (error) {
     // 공개 페이지라 예외로 500 을 내기보다 비운 채로 그린다 (히어로·필터바는 남는다)

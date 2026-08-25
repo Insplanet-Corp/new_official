@@ -1,5 +1,9 @@
 /* Single source of truth for the admin tab bar. Order here = order on screen.
-   순서와 메뉴 구성은 기획서(관리자시스템_화면설계서) 3p 메뉴구조를 따른다. */
+   순서와 메뉴 구성은 기획서(관리자시스템_화면설계서) 3p 메뉴구조를 따른다.
+
+   ⚠️ 기획서의 '메인관리' 탭은 없앴다(2026-08-25, 사용자 결정). 메인 노출은
+   포트폴리오관리 한 곳에서 [메인] 체크 + 썸네일-메인 + 순서로 다 처리한다.
+   지운 화면은 저장이 붙지 않은 스켈레톤이었다 — git 이력에서 볼 것. */
 
 export type AdminTab = {
   href: string;
@@ -17,18 +21,11 @@ export type AdminTab = {
 
 export const ADMIN_TABS: AdminTab[] = [
   {
-    href: '/admin/main',
-    label: '메인관리',
-    eyebrow: 'Main',
-    title: '메인관리',
-    desc: '홈페이지 메인에 노출할 포트폴리오를 관리합니다. 사용여부 Y 중 가장 최근 등록 건이 노출됩니다.',
-  },
-  {
     href: '/admin/portfolio',
     label: '포트폴리오관리',
     eyebrow: 'Portfolio',
     title: '포트폴리오관리',
-    desc: '진행 중 · 종료된 프로젝트를 관리합니다. 분류 · 진행 상태 · 사용여부로 걸러 볼 수 있습니다.',
+    desc: '진행 중 · 종료된 프로젝트를 관리합니다. 목록 순서를 드래그로 바꾸면 홈페이지 노출 순서도 같이 바뀝니다.',
   },
   {
     href: '/admin/quotes',

@@ -703,8 +703,9 @@
   const vises=[...sec.querySelectorAll('.proj-vis')];
   const slides=[...sec.querySelectorAll('.proj-slide')];
   // slide count comes from the DOM (was hard-coded 3). The Next app feeds this section from the
-  // admin "main" flag, so it can be 1..5. Everything below derives from COUNT/LAST — do not
-  // re-introduce a literal 3 or 2 here.
+  // admin "main" flag, and the admin caps that at 3 (MAX_MAIN) — but a project can have 1 or 2
+  // main rows registered, so the count is still 1..3, not a constant. Everything below derives
+  // from COUNT/LAST: do NOT re-introduce a literal 3 or 2 here, or fewer-than-3 breaks.
   const COUNT=Math.max(1,vises.length), LAST=COUNT-1;
   // adaptive header UI: sample each project image's luminance where the fixed controls sit (top-right
   // for Let's Talk/menu, bottom-right for SCROLL) -> flip them to white over dark images.

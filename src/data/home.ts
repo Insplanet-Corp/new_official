@@ -1,5 +1,5 @@
 import { storageRender } from '@/lib/images';
-import { type Portfolio, titleLines } from '@/lib/portfolios';
+import { MAX_MAIN, type Portfolio, titleLines } from '@/lib/portfolios';
 
 /* Content for the main page (and reused by the mobile page). */
 
@@ -114,8 +114,14 @@ export type ShowcaseItem = {
   background: string;
 };
 
-/** 슬라이드 상한. 늘리려면 style.css 의 .proj-vis:nth-child z-index 도 같이 늘릴 것 */
-export const MAX_SHOWCASE = 5;
+/** 슬라이드 상한 = 메인 등록 상한(3). 어드민이 4건째를 아예 못 걸므로 잘릴 일이 없다.
+
+    순서는 어드민 포트폴리오 목록의 **No 순서**다 — 홈 쿼리가 `is_main` 인 행을
+    `sort_order` 오름차순으로 읽는다.
+
+    ⚠️ 늘리려면 `MAX_MAIN`(lib/portfolios.ts) · `style.css` 의 `.proj-vis:nth-child`
+    z-index · `015` 의 DB 트리거를 **셋 다** 같이 늘려야 한다. */
+export const MAX_SHOWCASE = MAX_MAIN;
 
 export const SHOWCASE: readonly ShowcaseItem[] = [
   {

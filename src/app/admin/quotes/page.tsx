@@ -202,13 +202,13 @@ export default function QuotesListPage() {
                     </td>
                     <td>{fieldText(r, "nature") || "-"}</td>
                     <td>
-                      <Badge
+                      {/* <Badge
                         label={statusMeta(r.status).label}
                         color={STATUS_COLOR[r.status ?? ""] ?? "GRAY"}
                         variant="surface"
                         size="1"
                         radius="medium"
-                      />
+                      /> */}
                       <select
                         className={kit.statusSelect}
                         aria-label="진행 상태 변경"
