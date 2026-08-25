@@ -176,6 +176,20 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
      한글 IME 조합 중(`isComposing`)에는 가로채지 않는다.
   - 여기에 **lazy-load 치수 보험**도 얹혀 있다: `loading="lazy"` 인데 `width`/`height` 가
     없는 이미지는 자동으로 eager 로 바꾼다(아래 이미지 성능 항목 참고).
+  - **자석 hover(`.pd-close`/`.pd-btn`)도 여기 있다** (2026-08-25). 부모 `main.js` 의
+    `#full-menu` 자석 효과와 같은 스프링(`STRENGTH .5 / STIFF .12 / DAMP .78 / MAX 20`)인데,
+    **부모 코드는 여기까지 못 온다** — 불투명 출처라 `contentDocument` 를 못 읽는다.
+    그래서 같은 상수를 iframe 안에서 한 번 더 돌린다. **한쪽만 바꾸면 감각이 갈린다.**
+    ⚠️ 이 블록은 브리지 IIFE **밖**에 있다 — 안에 넣으면 `parent === window` 얼리 리턴에
+    걸려 상세를 주소창으로 직접 열었을 때만 죽는다.
+    ⚠️ 요소를 미리 잡지 않고 document 위임으로 찾는다 — `.pd-close`/`.pd-btn` 은
+    `works.js` 가 그리는데 그 스크립트가 `bridge.js` **뒤**에 로드돼 최상위
+    `querySelector` 는 조용히 `null` 이다.
+    ⚠️ 움직이는 것은 버튼 자신뿐이다 — `.pd-close` 의 셰브론은 `pd-close-pass` keyframe 이
+    따로 굴린다(둘 다 transform 이라 같은 요소에 걸면 서로 잡아먹는다).
+    **확인함**: 위임 리스너가 붙고 목표 좌표가 상한 안에서 계산된다(dev 5599, `__mag` 확인).
+    **확인 못 함**: 실제 rAF 스프링 렌더 — 브라우저 패널이 `document.hidden` 이라 rAF 가
+    아예 안 돈다. 사람이 실제 브라우저에서 올려 봐야 한다.
 - **⚠️ sandbox iframe(불투명 출처)에서는 `@font-face` 요청만 CORS 를 탄다.** 이미지·CSS·JS 는
   no-cors 로 그냥 뜨는데 폰트만 조용히 시스템 폰트로 폴백된다. → `next.config.ts` 의
   `headers()` 로 `/assets/fonts/:path*` 에 `Access-Control-Allow-Origin: *` 를 붙였다.
