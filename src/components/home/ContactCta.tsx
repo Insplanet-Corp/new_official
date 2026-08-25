@@ -8,7 +8,7 @@ export default function ContactCta() {
         <h2 className="cta-title">Say Hello!</h2>
         <div className="cta-row">
           <p className="cta-sub">우리와 어떤 프로젝트를 함께 하고 싶으세요?</p>
-          <a className="cta-arrow" href="#" aria-label="Contact us">
+          <a className="cta-arrow" href="/contact" aria-label="Contact us">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M4 12h15M13 6l6 6-6 6"

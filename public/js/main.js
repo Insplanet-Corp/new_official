@@ -220,13 +220,20 @@
   if(!overlay||!openBtn||!closeBtn)return;
   const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   const ctx=(!reduce&&canvas&&canvas.getContext)?canvas.getContext('2d'):null;
-  const ORIGIN='at calc(100% - 76px) 60px';
+  // 원점은 햄버거 버튼의 실제 중심에서 읽는다 — PC 는 right:44/top:36 의 64box(= W-76,60),
+  // 모바일(≤1023)은 right:12/top:16 의 48box(= W-36,40) 로 자리가 다르다. 좌표를 박아 두면
+  // 모바일에서 원이 화면 밖에서 시작해 리빌이 어긋난다. resize() 가 폭 변화마다 다시 잰다.
+  let ORIGIN='at calc(100% - 76px) 60px';
   const TAU=6.2831853;
   const RINGGAP=70, ARC=70, DOTMIN=0, DOTMAX=41, FRINGE=500, DUR=600; // ring/arc spacing, dot min/max radius, fringe band, ms (DUR = open speed, unchanged)
 
   let cx=0,cy=0,W=0,H=0,maxR=1;
   function resize(){
-    W=innerWidth;H=innerHeight;cx=W-76;cy=60;
+    W=innerWidth;H=innerHeight;
+    const b=openBtn.getBoundingClientRect();
+    // 버튼이 display:none 이면 0 이 나온다 — 그때는 PC 기본값을 유지한다
+    if(b.width&&b.height){cx=b.left+b.width/2;cy=b.top+b.height/2;}else{cx=W-76;cy=60;}
+    ORIGIN='at '+Math.round(cx)+'px '+Math.round(cy)+'px';
     const far=Math.hypot(Math.max(cx,W-cx),Math.max(cy,H-cy));
     maxR=far+FRINGE+80;           // solid (=wave-FRINGE) still covers the far corner at full open
     if(!ctx)return;
@@ -290,7 +297,7 @@
   const SCROLL_KEYS=new Set([' ','Spacebar','PageUp','PageDown','Home','End','ArrowUp','ArrowDown']);
   // allow wheel/touch INSIDE the menu's own scroll container (overscroll-behavior:contain stops
   // it chaining to the page); only block inputs aimed at the locked page behind the overlay.
-  const inMenuScroll=e=>e.target&&e.target.closest&&e.target.closest('.menu-scroll');
+  const inMenuScroll=e=>e.target&&e.target.closest&&e.target.closest('.menu-scroll,.m-menu-scroll');
   addEventListener('wheel',e=>{if(scrollLocked&&!inMenuScroll(e))e.preventDefault();},{passive:false});
   addEventListener('touchmove',e=>{if(scrollLocked&&!inMenuScroll(e))e.preventDefault();},{passive:false});
   addEventListener('keydown',e=>{if(scrollLocked&&SCROLL_KEYS.has(e.key))e.preventDefault();},{passive:false});
@@ -300,6 +307,7 @@
   };
   overlay.inert=true;   // closed by default: keep it out of focus order / assistive tech
   const open=()=>{
+    resize();   // 열기 직전에 원점을 다시 잰다 — 폭이 바뀌었거나(PC↔모바일) 헤더가 옮겨졌을 수 있다
     overlay.inert=false;
     overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
     lockScroll(true);
@@ -331,7 +339,7 @@
     if(pr)pr.classList.add('pg-blank');                          // blank the main behind the (still-covering) menu
     setTimeout(()=>{location.href=dest;}, DUR+40);
   }
-  overlay.querySelectorAll('a.menu-item[href]').forEach(a=>{
+  overlay.querySelectorAll('a.menu-item[href],a.m-menu-item[href]').forEach(a=>{
     a.addEventListener('click',e=>{
       // the CURRENT page's item (greyed, .is-current) keeps its hover/cursor feel but ignores clicks
       if(a.classList.contains('is-current')){e.preventDefault();e.stopPropagation();return;}

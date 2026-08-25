@@ -26,6 +26,16 @@
   .m-projects {
     display: none;
   }
+
+  /* ⚠️ MobileRecruitModal(.mr-popup)은 body 로 포탈된다 — #page-root 의 transform 때문에
+     그래야 position:fixed 가 뷰포트 기준을 지킨다. 대신 위 .m-contact 밖으로 나가므로
+     그 display:none 이 안 먹는다. 게다가 .mr-popup 의 기본 숨김(visibility:hidden)은
+     @media (max-width:1023px) 안에만 있어서, 1024 이상에서는 스타일이 하나도 안 붙은
+     날 HTML 이 body 맨 앞에 그대로 보였다. 여기서 직접 감춘다.
+     (PC .rc-modal 은 미디어쿼리 밖에 기본 숨김이 있어 이 문제가 없다.) */
+  .mr-popup {
+    display: none;
+  }
 }
 
 /* 가로 스크롤 안전망. clip 이지 hidden 이 아니다 — hidden 은 body 를 스크롤 컨테이너로

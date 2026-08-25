@@ -78,6 +78,50 @@ export default function MenuOverlay({ projectCount }: Props) {
           </div>
         </div>
       </div>
+      {/* 모바일(≤1023) 메뉴 — Figma offiofficial_02_fmenu2_375 (2477:46857).
+          데스크톱 2단 .menu-inner 과 내용이 다르다(패밀리는 설명 없이 이름+화살표만, 주소/연락처
+          대신 Company Brief + 카피라이트). 두 트리를 항상 함께 그리고 폭으로만 가른다 — 34번의
+          responsive 패턴. 리빌 원(#menu-panel/#menu-dots)·로고·닫기 버튼은 PC 와 공유한다. */}
+      <div className="m-menu-scroll" data-lenis-prevent="">
+        <nav className="m-menu-nav">
+          {MENU_NAV.map((item) => (
+            <a
+              key={item.href}
+              className={
+                onSubPage && item.href === pathname ? 'm-menu-item is-current' : 'm-menu-item'
+              }
+              href={item.href}
+            >
+              <span>{item.label}</span>
+              {item.href === BADGE_HREF && projectCount ? (
+                <span className="m-menu-badge">{projectCount}</span>
+              ) : null}
+            </a>
+          ))}
+        </nav>
+
+        <ul className="m-menu-family">
+          {MENU_PRODUCTS.map((p) => (
+            <li key={p.name}>
+              <span>{p.name}</span>
+              <span className="m-menu-fam-ico">
+                <img src="/assets/icon_arrow_round.svg" alt="" />
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="m-menu-bottom">
+          <a className="m-menu-brief" href="#">
+            Company Brief Download
+            <span className="m-menu-brief-ico">
+              <img src="/assets/icon_download.svg" alt="" />
+            </span>
+          </a>
+          <p className="m-menu-copy">{CONTACT.copyright}</p>
+        </div>
+      </div>
+
       <img id="menu-logo" src="/assets/ci_logo_white.svg" alt="Insplanet" />
       <button id="menu-close" type="button" aria-label="메뉴 닫기">
         <img src="/assets/menu_close.svg" alt="" />

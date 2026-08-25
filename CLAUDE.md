@@ -305,6 +305,33 @@ platform URL)가 갖춰져야 가능 — 본문 이미지까지 Figma 렌더 이
   스크럽 clip-path, Careers 팝업 열기/ESC 닫기는 스크립트로 직접 실행해 확인함). **사람이
   실제 폰에서 스크롤해 리빌 타이밍을 봐야 한다.**
 
+**모바일 전체메뉴 + 잔여 정리 (2026-08-25)**
+
+- **모바일 전체메뉴를 붙였다** (Figma `2477:46857`). `.m-menu-*` CSS 는 정적 사이트에서 이미
+  style.css 에 들어와 있었는데 **마크업을 그리는 곳이 없어서** ≤1023 에서도 PC 2단
+  `.menu-inner` 가 그대로 나오고 있었다. `MenuOverlay.tsx` 가 이제 PC/모바일 두 트리를 다
+  그리고 폭으로 가른다(`.m-menu-scroll` 기본 `display:none` ↔ ≤1023 에서 `.menu-scroll` 을 숨김).
+  리빌 원·`#menu-logo`·`#menu-close` 는 두 트리가 공유한다.
+- **`main.js` 메뉴 IIFE 를 3군데 고쳤다** — 정적 사이트에서 `main.js` 를 다시 가져오면 사라지므로
+  흡수할 때 재적용할 것(메인 슬라이드 5장 블록과 같은 주의):
+  1. 리빌 원점을 `openBtn.getBoundingClientRect()` 로 **실측**한다(`cx=W-76,cy=60` 하드코딩 제거).
+     모바일 햄버거는 `W-36,40` 이라 그대로 두면 원이 엉뚱한 데서 퍼진다. 덤으로 PC 도 정확해졌다 —
+     `#full-menu` 의 right/top/size 가 전부 `clamp()` 라 76 은 특정 폭에서만 맞았다(1280 에서 1.7px 오차).
+     `open()` 에서도 `resize()` 를 한 번 더 불러 폭이 바뀐 뒤 첫 열기를 맞춘다.
+  2. `inMenuScroll` 셀렉터에 `.m-menu-scroll` 추가 — 없으면 열린 메뉴 안에서 터치 스크롤이 막힌다.
+  3. close-then-navigate 바인딩을 `a.menu-item[href],a.m-menu-item[href]` 로 확장.
+- **⚠️ `document.body` 로 포탈하는 모바일 컴포넌트는 ≥1024 에서 직접 숨겨야 한다.**
+  `MobileRecruitModal`(`.mr-popup`)이 데스크톱 `/contact` 최상단에 **스타일 없는 날 폼**으로
+  보이고 있었다. 원인 셋이 겹친 것: ① 열림/닫힘 트랜지션 때문에 `open` 여부와 무관하게 항상
+  렌더한다 ② 닫힘 상태(`visibility:hidden`)가 `@media (max-width:1023px)` **안에만** 있다
+  ③ 포탈이라 `.m-contact{display:none}` 바깥에 있다. → `mobile-pages.css` 의 ≥1024 블록에서
+  `.mr-popup` 을 직접 숨긴다. PC `.rc-modal` 은 기본 숨김이 미디어쿼리 밖이라 같은 문제가 없다.
+- **`<picture>` 방식 폐기** — PC/모바일 섹션을 `<picture>` 한 장으로 합치던 실험(숨은 이미지도
+  받아 온다는 페이로드 문제)을 사용자가 되돌리고 `.pd-sec--pc`/`.pd-sec--m` 두 벌로 확정했다.
+  `scripts/merge-pc-mobile-sections.py` 삭제, 남은 `<picture>` 마크업·CSS 도 제거.
+  ⚠️ **`_shared/works.js` 의 히어로 `<picture>`(`hero-mobile` 속성)는 그대로 둔다** — 상세 30개가
+  전부 쓰는 모바일 히어로 교체 수단이고 섹션 병합과 무관하다.
+
 **메인 배지 / 메인 플래그 / 레거시 JS 수정**
 
 - 전체메뉴 Projects 배지(`.menu-badge`)가 `site.ts`에 하드코딩(`'42'`)돼 있던 걸 DB 건수(완료
