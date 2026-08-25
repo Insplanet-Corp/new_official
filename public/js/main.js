@@ -724,7 +724,13 @@
       const c=cv.getContext('2d',{willReadFrequently:true});c.drawImage(img,0,0,cw,ch);
       const at=(rx,ry)=>{const d=c.getImageData(Math.round(rx*(cw-1)),Math.round(ry*(ch-1)),1,1).data;return 0.299*d[0]+0.587*d[1]+0.114*d[2];};
       lum[idx]={top:at(0.86,0.06)<110, bot:at(0.86,0.94)<110};
-    }catch(e){}
+    }catch(e){
+      // NEXT-APP FIX: this used to swallow everything. A cross-origin thumbnail (Supabase
+      // Storage) taints the canvas and getImageData throws SecurityError -> every luminance
+      // stayed false and the header controls never flipped white, with nothing in the console.
+      // The <img> needs crossorigin="anonymous"; say so instead of failing silently.
+      console.warn('[projects] luminance sampling failed'+(img&&img.crossOrigin?'':' — .proj-img has no crossorigin="anonymous"')+':',e);
+    }
   }
   vises.forEach((v,i)=>{ const img=v.querySelector('.proj-img'); if(!img)return;
     if(img.complete&&img.naturalWidth)sampleImg(img,i); else img.addEventListener('load',()=>sampleImg(img,i),{once:true}); });

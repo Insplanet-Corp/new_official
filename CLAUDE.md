@@ -276,10 +276,16 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   경계도 768→1024로 올라가 14번의 "모바일 완성 후 올릴 것" 과제가 자연히 해소됐다.
 - 레거시 `main.js` 는 로드 시 한 번 바인딩하는 방식이라 두 마크업이 항상 DOM에 있는 이 구조와
   오히려 잘 맞는다(재바인딩 불필요).
-- ⚠️ **`#insight-shader` 는 노드가 하나뿐이어야 한다** — 셰이더 번들이 `getElementById`로 첫
-  번째에만 React 루트를 만들어서, 노드는 데스크톱 `Insight` 안에 한 번만 두고
-  `InsightShaderSlot` 이 폭에 따라 `.insight-card`↔`.m-insight-frame` 으로 **옮긴다**(캔버스
-  컨텍스트 유지됨). 둘 중 하나에 상태를 넣게 되면 이 방식을 재검토할 것.
+- ⚠️ **WebGL 노드는 사이트에 하나뿐이어야 한다** — 레거시 스크립트들이 `getElementById` /
+  `querySelector` 로 **첫 번째 하나**만 잡는다. 노드를 PC/모바일 두 벌 두면 스크립트가 PC 쪽을
+  잡고, 폭이 좁아져 PC 섹션이 `display:none` 이 되는 순간 그 노드가 **0×0** 이 되어 조용히
+  사라진다(모바일 쪽 노드에는 렌더러가 없어 배경색만 남는다). 그래서 노드는 PC 트리에 한 번만
+  두고 `ResponsiveSlot` 이 폭에 따라 **옮긴다**(캔버스 컨텍스트·React 루트 모두 유지됨).
+  현재 두 개다 — `#insight-shader`(`.insight-card`↔`.m-insight-frame`),
+  `#cta-glow`(`.contact-cta`↔`.m-cta`, 2026-08-25 추가: "창을 줄이면 Say Hello 글로우가
+  사라진다" 가 정확히 이 증상이었다). 옮기는 프레임 중 하나에 상태를 넣게 되면 이 방식을
+  재검토할 것.
+  ⚠️ **새 WebGL/캔버스 연출을 모바일에도 쓸 때 캔버스를 복사해 넣지 말 것** — 같은 함정이다.
 - ⚠️ **데스크톱 푸터는 `#page-root:has(.m-footer) .footer` 로 감춘다** — 모바일 화면이 없는
   라우트가 남으면 그쪽에서는 계속 보여야 하므로 무조건 숨기면 안 된다(2026-08-24 기준 전부
   대응돼 이 조건은 지금 항상 거짓이지만, 셀렉터는 남겨 둔다).
@@ -344,6 +350,27 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   ⚠️ **`_shared/works.js` 의 히어로 `<picture>`(`hero-mobile` 속성)는 그대로 둔다** — 상세 30개가
   전부 쓰는 모바일 히어로 교체 수단이고 섹션 병합과 무관하다.
 
+**폭 경계를 넘을 때 스크롤 유지 (2026-08-25, `ResponsiveScrollKeeper`)**
+
+- 문제: PC/모바일 마크업을 CSS 로만 가르므로 1024 경계를 넘으면 문서 높이가 통째로 달라지는데,
+  브라우저는 스크롤을 **px 로만** 기억한다 — Our Projects 를 보다 창을 줄이면 엉뚱한 챕터로
+  떨어지고, 짧아지는 방향이면 바닥으로 잘리기까지 한다.
+- 해결: `PAIRS` 로 PC↔모바일 챕터 짝을 알고 있으므로, 스크롤/리사이즈마다 "몇 번째 챕터의 몇 %"
+  를 기록해 두고 경계를 넘은 뒤 반대편 챕터의 같은 비율로 즉시 옮긴다. 첫 챕터 위(히어로,
+  DOM 공유)는 `i:-1` 로 따로 다룬다. about·contact·projects 는 트리가 하나씩이라 페이지 비율로 맞춘다.
+- ⚠️ **Lenis 에게 `resize()` 를 먼저 시켜야 한다.** Lenis 는 목표를 자기가 캐시한 `limit` 으로
+  자르는데 그 값은 ResizeObserver→rAF 로 늦게 갱신된다. 안 부르면 옛 문서 높이로 잘려 목표보다
+  위에 멈춘다(실측: 12199 요청 → 12028 착지, 정확히 `모바일 scrollHeight - 모바일 innerHeight`).
+- ⚠️ **기록은 모드별로 따로 둔다**(`saved.pc` / `saved.m`). 레이아웃이 바뀐 직후에도 scroll 이
+  한 번 더 들어와 하나뿐인 기록을 덮을 수 있다. 복원은 "방금 떠나온 모드" 의 기록만 읽는다.
+- ⚠️ `matchMedia` 의 `change` 만 믿지 않고 `resize` 로도 같은 판정을 한다(`wasDesktop` 가드로
+  한 번만 복원). 브라우저 패널처럼 **change 이벤트도 rAF 도 안 도는 환경**이 실제로 있다.
+- 짝을 새로 추가할 때는 `home-responsive.css`/`mobile-pages.css` 가 감추는 목록과 **같은 짝**을
+  유지할 것 — 한쪽만 늘리면 그 챕터에서만 조용히 옛 동작(px 유지)으로 돌아간다.
+- **확인함**(dev, 브라우저 패널): 홈 `.projects` 40%/60% ↔ `.m-proj` 같은 비율, 히어로 구간 50%,
+  `/contact` 페이지 50% 왕복. ⚠️ 단 패널은 실제 resize/matchMedia 이벤트를 안 줘서 `resize` 를
+  **직접 dispatch 해서** 확인했다 — 사람이 실제 브라우저에서 창을 끌어 확인할 것.
+
 **메인 배지 / 메인 플래그 / 레거시 JS 수정**
 
 - 전체메뉴 Projects 배지(`.menu-badge`)가 `site.ts`에 하드코딩(`'42'`)돼 있던 걸 DB 건수(완료
@@ -389,6 +416,48 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   `use_yn='Y'` 까지 거르므로 그 경우 슬라이드는 2장이 된다.
   - **확인 못 함**: 휠로 5단계 실제로 넘기는 동작(브라우저 패널 rAF 정지 한계), 실제 메인
     등록분 렌더(등록 0건).
+
+**홈 Our Projects — 상세 시트 + 모바일 화살표 (2026-08-25)**
+
+- **홈에서도 프로젝트를 누르면 상세가 아래에서 올라온다.** `/projects` 목록이 쓰던
+  `ProjectSheet` 를 홈에도 그대로 붙였다(같은 컴포넌트, 같은 경로 — document 클릭에서
+  `a[href^="/projects/"]` 를 가로채고 `/projects/<id>` 로 pushState 한 뒤 iframe 을 올린다).
+  - PC 는 오른쪽 비주얼 패널(`.proj-visual`)을 덮는 투명 링크 `ProjectVisualLink`,
+    모바일은 캐러셀 카드 자체가 `<a>` 다. 둘 다 커서가 "View Project" 로 바뀌는 곳과 일치한다
+    (`Cursor.tsx` 의 `VIEW_SEL` 에 `.m-proj-card` 를 추가했다).
+  - ⚠️ **PC 는 링크를 레이어마다 깔면 안 된다** — 어느 `.proj-vis` 가 보이는지는 main.js 가
+    **인라인 opacity** 로 정하므로 CSS 로 못 읽고, 안 보이는 레이어의 링크가 클릭을 먹는다.
+    링크는 한 장만 깔고 href 만 바꾼다. 현재 슬라이드를 아는 **유일한 공개 신호**는
+    `renderAf()` 가 매 프레임 토글하는 `.proj-indicator .proj-dot.is-active` 라
+    MutationObserver 로 그것만 지켜본다.
+  - ⚠️ 오버레이에 `pointer-events` 를 주지 않았다 — `.proj-visual` 이 기본 `none` 이고
+    main.js 가 쇼케이스가 드러난 동안에만 `auto` 로 켜므로, 그 게이트를 그대로 물려받게 두는
+    것이 맞다. `auto` 를 박으면 챕터 밖에서도 눌린다.
+  - ⚠️ 클릭 가로채기 순서: `ProjectSheet` 의 document 리스너가 main.js 의 전역 링크
+    가로채기보다 **먼저** 등록돼야 한다(React effect 가 지연 주입되는 main.js 보다 앞선다).
+    main.js 는 맨 앞에서 `defaultPrevented` 를 확인하므로 지금 구조에서는 안전하다.
+  - `ShowcaseItem` 에 `id`/`href`/`detail` 이 생겼다 — 규칙은 `toCards` 와 같다(상세 HTML 이
+    등록된 행만 링크). `ProjectSheet` 의 prop 은 `SheetCard`(= `id|href|detail`)로 좁혀
+    두 종류의 카드를 다 받는다.
+
+- **모바일 캐러셀에 좌우 화살표를 붙였다** — 손가락으로는 트랙을 밀면 되지만 마우스에는
+  넘길 수단이 아예 없었다. `.m-proj-carousel:hover` 일 때만 뜨고, `@media (hover:hover) and
+  (pointer:fine)` 안에만 있어 터치 기기에는 존재하지 않는다.
+  - ⚠️ **화살표는 카드 바깥(`.m-proj-carousel` 직속)에 둘 것** — 카드 안에 넣으면
+    `VIEW_SEL`(`.m-proj-card`)에 걸려 화살표 위에서도 "View Project" 커서가 뜬다.
+  - ⚠️ **다음/이전 계산에 `active`(스크롤 파생)를 쓰면 안 된다** — `scrollTo({behavior:'smooth'})`
+    는 ~400ms 걸리는데 `active` 는 그게 끝나야 갱신돼서 **연타하면 같은 카드를 다시 요청한다**
+    (구현 중 실제로 재현했다). 목표(`target`)를 따로 들고, 스크롤이 **멎은 뒤에만**(140ms)
+    실제 위치로 맞춘다 — 부드러운 스크롤이 지나가는 중간 카드로 목표가 되감기지 않게.
+  - 카드가 `<a>` 가 되면서 `draggable={false}` 가 필요해졌다 — 없으면 마우스로 트랙을 밀 때
+    브라우저의 링크 끌기가 먼저 잡혀 가로 스크롤이 안 된다.
+  - 끝에서는 화살표를 감추지 않고 `disabled` 로 흐리게만 둔다(자리가 비면 남은 화살표가
+    움직인 것처럼 보인다).
+- **확인함**: PC 오버레이 href 가 활성 닷을 따라간다(닷을 1,2 로 옮겨 확인), PC/모바일 둘 다
+  클릭 시 `ps-open` + 해당 프로젝트 iframe(`onNuri`/`hey-young`)이 붙는다, 화살표 연타가
+  두 칸을 제대로 넘어가고 양 끝에서 클램프된다, `/projects` 회귀 없음.
+  **확인 못 함**: 눈으로 본 화살표 호버 연출·시트가 실제로 올라오는 슬라이드 — 브라우저 패널이
+  hidden 이라 rAF·부드러운 스크롤·깊은 스크롤 후 캡처가 전부 죽는다(사람이 봐야 한다).
 
 **메인관리 삭제 + 포트폴리오 표시 순서 (2026-08-25)**
 
@@ -614,3 +683,50 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
     같은 에러가 다시 보이면 그 폴더가 다시 생겼는지부터 볼 것 — 지우면 된다.
 12. **불투명 출처(sandbox) iframe 에서는 폰트만 CORS 를 탄다** — 이미지·CSS·JS 는 멀쩡한데
     `@font-face` 만 조용히 폴백된다. 정적 에셋에 `Access-Control-Allow-Origin` 이 필요하다.
+13. **⚠️ 다른 컴퓨터에서 LAN IP 로 dev 서버에 접속하면 화면만 뜨고 전부 죽는다** —
+    `next dev` 는 이미 0.0.0.0 에 바인딩하므로 `http://<맥의 LAN IP>:5599` 로 HTML 은
+    200 으로 잘 내려온다. 그런데 Next 16 은 localhost 가 아닌 host 로 들어온 `/_next/*`
+    요청 중 **Origin 헤더가 붙는 것**(= HMR 웹소켓 업그레이드)을 403 으로 막는다
+    (`server/lib/router-utils/block-cross-site-dev.ts`). 스크립트·CSS 는 GET 이라 Origin 이
+    없어 전부 200 이고, **콘솔에 남는 건 `WebSocket connection ... failed` 한 줄뿐**인데
+    Turbopack dev 런타임이 그 연결 위에서 앱 엔트리를 돌리기 때문에 하이드레이션이 끝나지
+    않는다 → `LegacyRuntime` 의 useEffect 가 안 돌아 `/js/main.js` 가 아예 안 붙고,
+    클릭·전체메뉴·스크롤 리빌이 전부 죽은 정적 화면이 된다.
+    → `next.config.ts` 의 `allowedDevOrigins` 에 사설 IP 대역을 넣어 해결했다(dev 전용,
+    배포 무관). **와일드카드는 점 단위 세그먼트 매칭이라 `192.168.**` 는 무효** —
+    `192.168.*.*` 로 써야 한다. 다른 대역(예: 172.20.x.x)을 쓰는 망에 가면 거기도 추가할 것.
+    증상 재현·수정 확인 완료(2026-08-25): 수정 전 `window.__insplanetRuntime === undefined`,
+    수정 후 `[HMR] connected` + 전체메뉴 열림까지 LAN IP 로 확인.
+14. **⚠️ 어드민에서 마케팅 페이지로 `next/link` 로 들어가면 화면이 죽는다** (2026-08-25 수정) —
+    마케팅 런타임(`public/js/main.js`)은 **문서 로드당 한 번** 바인딩하는 구조고,
+    `LegacyRuntime` 이 `window.__insplanetRuntime` 으로 재부팅을 막는다. 마케팅 페이지끼리는
+    main.js 가 같은 출처 `<a>` 클릭을 전부 가로채 `location.href` 로 하드 내비게이션을 하므로
+    문제가 없지만, main.js 가 없는 `/admin/*` 에서 `<Link href="/">` 로 들어오면:
+    **1회차**는 effect 가 main.js 를 주입해 대체로 동작하고, **2회차부터**(뒤로가기로 어드민에
+    갔다가 다시 누름) 같은 문서라 플래그가 true 로 남아 **main.js 를 다시 안 넣는다.**
+    1회차 main.js 는 React 가 이미 버린 옛 DOM 에 붙어 있어서 히어로 `.in` 리빌·스크롤 스크럽·
+    블롭·페이지 전환이 전부 죽는다 → **주소는 `/` 인데 헤더와 점 몇 개만 남은 화면.**
+    "종종 그런다" 로 보이는 이유가 이 1회차/2회차 차이다.
+    → 가드를 없애 재주입하면 전역 click/scroll 핸들러가 두 벌 붙어 더 나빠진다.
+    **해결은 경계에서 문서를 새로 로드하는 것** — 어드민→사이트 링크는 맨 `<a href>` 나
+    `<Button href reload>` 를 쓴다(`Button` 에 `reload` prop 을 추가했다: next/link 대신 맨 `<a>`).
+    ⚠️ **어드민에 사이트로 가는 링크를 새로 만들 때 `next/link` 를 쓰지 말 것.**
+    같은 이유로 어드민 헤더 로고는 `/` 가 아니라 **`/admin`** 으로 간다(사용자 요청).
+    재현·수정 확인 완료: 수정 전 2회차에서 `main.js` 태그 1개 재사용 + `head-title` 에 `.in`
+    없음(빈 화면), 수정 후 매번 새 문서 + `.in` 적용.
+15. **⚠️ Our Projects 에서 헤더가 흰색으로 안 바뀌던 건 canvas 오염(taint)이었다** (2026-08-25 수정) —
+    `main.js` 의 `sampleImg` 가 `.proj-img` 를 canvas 에 그려 우상단·우하단 밝기를 재고,
+    그 결과로 `#lets-talk` `#full-menu` `#scroll-hint` `.proj-indicator` 에 `.on-dark` 를 건다.
+    썸네일이 로컬 `/images/...` 에서 **Supabase Storage(다른 출처)** 로 바뀌면서 canvas 가
+    오염돼 `getImageData` 가 `SecurityError` 를 던졌고, `catch(e){}` 가 그걸 삼켜
+    **밝기가 전부 `false`** 로 남았다 — 콘솔 에러도, 빌드 실패도 없다.
+    → `Projects.tsx` 의 `<img className="proj-img">` 에 **`crossOrigin="anonymous"`** 를 붙였다.
+    Storage 는 `Access-Control-Allow-Origin: *` 를 준다(`render/image` 엔드포인트로 실측 확인).
+    `sampleImg` 의 빈 catch 도 `console.warn` 으로 바꿨다 — **정적 사이트에서 `main.js` 를 다시
+    가져오면 사라지는 수정 목록에 이것도 포함된다.**
+    ⚠️ **다른 출처 이미지를 canvas 로 읽는 연출을 새로 만들면 `crossOrigin` 을 같이 챙길 것.**
+    확인함(2026-08-25, dev 5599): 수정 전 `SecurityError`, 수정 후 3장 밝기 실측
+    (top 88.5 / 157.1 / 5.4) → 어두운 3번째에서 잠기면 `lets-talk`·`full-menu`·`proj-indicator`·
+    `scroll-hint` 에 `.on-dark`, 인트로에서는 해제되는 것까지 봤다.
+    ℹ️ **로고(`#ci-logo`)는 원래 여기서 안 바뀐다** — 이미지가 오른쪽 절반만 덮고 로고는 밝은
+    왼쪽 컬럼 위에 있어서, 로고는 통짜로 어두운 섹션(CTA)에서만 뒤집힌다(의도된 동작).

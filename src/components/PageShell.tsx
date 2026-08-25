@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import LegacyRuntime, { type DeferredScript } from '@/components/LegacyRuntime';
+import ResponsiveScrollKeeper from '@/components/ResponsiveScrollKeeper';
 import MenuOverlay from '@/components/chrome/MenuOverlay';
 import SiteChrome from '@/components/chrome/SiteChrome';
 import SiteFooter from '@/components/chrome/SiteFooter';
@@ -33,6 +34,8 @@ export default async function PageShell({ children, deferred, scripts, projectCo
         <MenuOverlay projectCount={badgeCount} />
       </div>
       <LegacyRuntime deferred={deferred} scripts={scripts} />
+      {/* 1024 경계를 넘을 때 보고 있던 챕터를 유지한다 */}
+      <ResponsiveScrollKeeper />
     </>
   );
 }

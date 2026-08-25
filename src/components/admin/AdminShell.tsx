@@ -228,7 +228,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             maxWidth: "1520px",
           }}
         >
-          <Link href="/" className={s.brand} aria-label="Insplanet 홈">
+          {/* 로고는 어드민 홈으로 간다(사이트가 아니라). /admin 은 서버에서 ADMIN_TABS[0]
+              으로 보내고, 그 탭에 권한이 없으면 위 effect 가 접근 가능한 첫 탭으로 한 번 더
+              돌린다 — 그래서 여기서 탭을 직접 지목하지 않고 /admin 을 쓴다. */}
+          <Link href="/admin" className={s.brand} aria-label="관리자 홈">
             <Flex row gap={6}>
               <img src="/assets/ci_logo.svg" alt="Insplanet" />
               <Badge
@@ -248,8 +251,12 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           <span className={s.barSpacer} />
 
           <Flex row align="center" gap={8} className={s.headRight}>
+            {/* ⚠️ reload 필수 — 클라이언트 라우팅으로 마케팅 페이지에 들어가면 화면이 죽는다
+                (LegacyRuntime.tsx 주석 참고). 새 탭으로 열고 싶어지면 target="_blank" 를
+                더하면 되고, 그때도 reload 는 그대로 둘 것. */}
             <Button
               href="/"
+              reload
               label="사이트 보기"
               variant="ghost"
               color="GRAY"

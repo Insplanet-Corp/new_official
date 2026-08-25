@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ADMIN_TABS } from "@/components/admin/tabs";
 import { supabase } from "@/lib/supabase";
@@ -147,7 +146,9 @@ export default function AdminLoginPage() {
           </form>
 
           <Text as="p" size="1" className={s.foot}>
-            <Link href="/">← 인스플래닛 사이트로 돌아가기</Link>
+            {/* ⚠️ next/link 가 아니라 맨 <a> — 마케팅 페이지는 문서를 새로 로드해야 한다
+                (LegacyRuntime.tsx 주석 참고) */}
+            <a href="/">← 인스플래닛 사이트로 돌아가기</a>
           </Text>
         </div>
       </div>

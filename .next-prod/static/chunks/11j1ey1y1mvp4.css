@@ -1,0 +1,1 @@
+@media (max-width:1023px){main.about,main.contact,main.pj{display:none}#page-root:has(.m-footer) .footer{display:none}}@media (min-width:1024px){.m-about,.m-contact,.m-projects,.mr-popup{display:none}}html,body{overflow-x:clip}

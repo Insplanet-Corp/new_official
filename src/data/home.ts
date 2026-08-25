@@ -1,5 +1,5 @@
 import { storageRender } from '@/lib/images';
-import { MAX_MAIN, type Portfolio, titleLines } from '@/lib/portfolios';
+import { MAX_MAIN, type Portfolio, detailSrc, titleLines } from '@/lib/portfolios';
 
 /* Content for the main page (and reused by the mobile page). */
 
@@ -107,11 +107,17 @@ export const PARTNERS_DESC = [
       수를 세도록 고쳤다(`COUNT`/`LAST`). 5를 넘겨 늘리려면 CSS 의
       `.proj-vis:nth-child(n)` z-index 도 같이 늘려야 한다. */
 export type ShowcaseItem = {
+  /** portfolios.id — 시트가 여는 주소(/projects/<id>)의 근거. 기본 슬라이드는 '' */
+  id: string;
   name: readonly string[];
   client: string;
   launch: string;
   image: string;
   background: string;
+  /** 상세가 등록된 것만 링크가 된다 — 없으면 클릭해도 아무 일 없음 (ProjectCard 와 같은 규칙) */
+  href: string | null;
+  /** 시트가 iframe 에 넣을 상세 경로. href 와 짝이다 */
+  detail: string | null;
 };
 
 /** 슬라이드 상한 = 메인 등록 상한(3). 어드민이 4건째를 아예 못 걸므로 잘릴 일이 없다.
@@ -125,6 +131,9 @@ export const MAX_SHOWCASE = MAX_MAIN;
 
 export const SHOWCASE: readonly ShowcaseItem[] = [
   {
+    id: '',
+    href: null,
+    detail: null,
     name: ['신한 SoL증권', '모바일 웹 리뉴얼 1'],
     client: '신한투자증권',
     launch: 'Jan, 2024',
@@ -132,6 +141,9 @@ export const SHOWCASE: readonly ShowcaseItem[] = [
     background: '#1D53F1',
   },
   {
+    id: '',
+    href: null,
+    detail: null,
     name: ['신한 SoL증권', '모바일 웹 리뉴얼 2'],
     client: '신한투자증권',
     launch: 'Feb, 2024',
@@ -139,6 +151,9 @@ export const SHOWCASE: readonly ShowcaseItem[] = [
     background: '#E5392F',
   },
   {
+    id: '',
+    href: null,
+    detail: null,
     name: ['신한 SoL증권', '모바일 웹 리뉴얼 3'],
     client: '신한투자증권',
     launch: 'Mar, 2024',
@@ -157,6 +172,12 @@ export const SHOWCASE: readonly ShowcaseItem[] = [
 export const toShowcase = (rows: Portfolio[]): ShowcaseItem[] => {
   if (!rows.length) return [...SHOWCASE];
   return rows.slice(0, MAX_SHOWCASE).map((r, i) => ({
+    id: r.id,
+    /* 카드 클릭 -> 아래에서 올라오는 상세 시트. /projects 목록과 **같은 규칙**이다
+       (data/projectsPage.ts 의 toCards): 상세 HTML 이 등록된 행만 링크가 되고,
+       실제로 시트를 여는 것은 ProjectSheet 의 document 클릭 가로채기다. */
+    href: detailSrc(r.html_file) ? `/projects/${r.id}` : null,
+    detail: detailSrc(r.html_file),
     name: titleLines(r.title),
     client: (r.client ?? '').trim(),
     launch: (r.launch ?? '').trim(),

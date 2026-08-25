@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ProjectCard } from '@/data/projectsPage';
 
+/* 시트가 실제로 쓰는 것은 이 셋뿐이다 — /projects 목록의 ProjectCard 도, 홈 쇼케이스의
+   ShowcaseItem 도 그대로 넘길 수 있게 좁혀서 받는다. */
+export type SheetCard = Pick<ProjectCard, 'id' | 'href' | 'detail'>;
+
 type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; destroy?: () => void };
 /* ===== project-detail SHEET =====
    Clicking a project card on /projects no longer navigates: the detail rises from the bottom in a
@@ -50,7 +54,7 @@ const CLOSE_FALLBACK_MS = 600;
 /** /projects/<id> — 목록 주소와 상세 주소를 가르는 유일한 기준 (popstate 판정·엔트리 판정이 같이 쓴다) */
 const DETAIL_PATH = /^\/projects\/([^/]+)\/?$/;
 
-export default function ProjectSheet({ cards }: { cards: ProjectCard[] }) {
+export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
   const [mounted, setMounted] = useState(false);
   const [src, setSrc] = useState<string | null>(null); // iframe src of the detail being shown
   const [open, setOpen] = useState(false); // sheet is up (drives the slide)

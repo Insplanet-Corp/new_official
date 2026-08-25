@@ -32,10 +32,16 @@ type ButtonAsButton = ButtonOwnProps &
 
 /* href 를 넘기면 <button> 대신 next/link 로 렌더한다.
    이동용 버튼을 <Link><Button/></Link> 로 감싸면 <a> 안에 <button> 이 중첩돼
-   HTML 스펙 위반 + 키보드 포커스가 두 번 잡히므로, 이동은 이 형태를 쓸 것. */
+   HTML 스펙 위반 + 키보드 포커스가 두 번 잡히므로, 이동은 이 형태를 쓸 것.
+
+   ⚠️ reload 를 주면 next/link 대신 맨 <a> 로 렌더해서 **문서를 새로 로드**한다.
+   어드민 → 마케팅 페이지 이동에는 반드시 이걸 쓸 것 — 마케팅 쪽은 레거시 런타임
+   (public/js/main.js)이 문서 로드 시점에 한 번 바인딩하는 구조라 클라이언트 라우팅으로
+   들어가면 화면이 죽는다. 자세한 이유는 LegacyRuntime.tsx 주석 참고. */
 type ButtonAsLink = ButtonOwnProps &
   Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, OwnKeys> & {
     href: string;
+    reload?: boolean;
   };
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
@@ -62,12 +68,14 @@ const Button = (props: ButtonProps) => {
     radius = "none",
     width = "fit-content",
     href,
+    reload,
     className,
     style,
     ...rest
   } = props as ButtonOwnProps &
     Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, OwnKeys> & {
       href?: string;
+      reload?: boolean;
     };
 
   const shared = {
@@ -96,6 +104,20 @@ const Button = (props: ButtonProps) => {
   );
 
   if (href !== undefined) {
+    // reload: next/link 를 거치지 않는 맨 <a> — 브라우저가 문서를 새로 받는다
+    if (reload) {
+      return (
+        <a
+          href={href}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? -1 : undefined}
+          {...shared}
+          {...(rest as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+        >
+          {content}
+        </a>
+      );
+    }
     return (
       <Link
         href={href}

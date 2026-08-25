@@ -15,7 +15,20 @@ import type { ShowcaseItem } from '@/data/home';
       시작한다. 그 값을 빼서 트랙의 실제 스크롤 좌표로 맞춘다. */
 export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  /** 지금 화면에 있는 카드 — 닷과 아래 정보 슬라이드를 고른다 (스크롤이 진실) */
   const [active, setActive] = useState(0);
+
+  /* 화살표가 "다음에 갈 곳" 을 세는 기준. active 를 그대로 쓰면 안 된다 —
+     scrollTo({behavior:'smooth'}) 는 400ms 가량 걸리는데 active 는 그게 끝나야
+     갱신되므로, 연타하면 두 번째 클릭이 **같은 카드**를 다시 요청한다(실제로 겪음).
+     그래서 목표는 따로 들고, 스크롤이 **멎은 뒤에만** 실제 위치로 맞춘다
+     (부드러운 스크롤이 지나가는 중간 카드로 목표가 되감기지 않게). */
+  const [target, setTarget] = useState(0);
+  const targetRef = useRef(0);
+  const setTargetBoth = (i: number) => {
+    targetRef.current = i;
+    setTarget(i);
+  };
 
   useEffect(() => {
     const track = trackRef.current;
@@ -25,6 +38,7 @@ export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
     const base = cards[0].offsetLeft;
 
     let ticking = false;
+    let settle: ReturnType<typeof setTimeout> | null = null;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
@@ -40,10 +54,15 @@ export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
           }
         });
         setActive(best);
+        if (settle) clearTimeout(settle);
+        settle = setTimeout(() => setTargetBoth(best), 140);
       });
     };
     track.addEventListener('scroll', onScroll, { passive: true });
-    return () => track.removeEventListener('scroll', onScroll);
+    return () => {
+      track.removeEventListener('scroll', onScroll);
+      if (settle) clearTimeout(settle);
+    };
   }, [items.length]);
 
   const goTo = (i: number) => {
@@ -51,8 +70,15 @@ export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
     if (!track) return;
     const cards = [...track.querySelectorAll<HTMLElement>('.m-proj-card')];
     if (!cards[i]) return;
+    setTargetBoth(i);
     track.scrollTo({ left: cards[i].offsetLeft - cards[0].offsetLeft, behavior: 'smooth' });
   };
+
+  /* 마우스로도 넘길 수 있게 좌우 화살표를 둔다 — 손가락으로는 트랙을 밀면 되지만
+     포인터에는 그런 수단이 없었다. 캐러셀에 호버할 때만 나타나고(style.css 의 :hover),
+     터치 기기에서는 @media (hover:hover) 밖이라 아예 그려지지 않는다. */
+  const last = items.length - 1;
+  const step = (dir: 1 | -1) => goTo(Math.max(0, Math.min(last, targetRef.current + dir)));
 
   return (
     <section className="m-proj">
@@ -60,13 +86,71 @@ export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
       <div className="m-proj-carousel">
         {/* data-lenis-prevent: 가로 스와이프를 Lenis 가 세로 스크롤로 먹지 않게 한다 */}
         <div className="m-proj-track" data-lenis-prevent ref={trackRef}>
-          {items.map((p, i) => (
-            <div className="m-proj-card" style={{ background: p.background }} key={i}>
-              {/* src="" 는 현재 페이지를 다시 받아온다 — 비어 있으면 아예 그리지 않는다 */}
-              {p.image ? <img src={p.image} alt="" loading="lazy" /> : null}
-            </div>
-          ))}
+          {items.map((p, i) => {
+            // src="" 는 현재 페이지를 다시 받아온다 — 비어 있으면 아예 그리지 않는다
+            const art = p.image ? (
+              <img src={p.image} alt="" loading="lazy" draggable={false} />
+            ) : null;
+            /* 상세가 등록된 카드만 링크가 된다. 클릭을 시트로 바꾸는 것은 여기가 아니라
+               ProjectSheet 다 — document 클릭에서 a[href^="/projects/"] 를 가로챈다
+               (/projects 목록·PC 패널과 완전히 같은 경로).
+               ⚠️ draggable=false — 안 주면 마우스로 트랙을 밀 때 브라우저의 링크 끌기가
+               먼저 잡혀서 가로 스크롤이 안 된다. */
+            return p.href ? (
+              <a
+                className="m-proj-card"
+                style={{ background: p.background }}
+                href={p.href}
+                draggable={false}
+                aria-label={`${p.name.join(' ')} 프로젝트 상세 보기`}
+                key={i}
+              >
+                {art}
+              </a>
+            ) : (
+              <div className="m-proj-card" style={{ background: p.background }} key={i}>
+                {art}
+              </div>
+            );
+          })}
         </div>
+        {/* ⚠️ 화살표는 카드 바깥(.m-proj-carousel 직속)에 둔다 — 카드 안에 넣으면
+            Cursor.tsx 의 VIEW_SEL(.m-proj-card)에 걸려 화살표 위에서도 "View Project"
+            커서가 뜬다. */}
+        <button
+          type="button"
+          className="m-proj-nav m-proj-nav--prev"
+          onClick={() => step(-1)}
+          disabled={target === 0}
+          aria-label="이전 프로젝트"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M15 5l-7 7 7 7"
+              fill="none"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="m-proj-nav m-proj-nav--next"
+          onClick={() => step(1)}
+          disabled={target === last}
+          aria-label="다음 프로젝트"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M9 5l7 7-7 7"
+              fill="none"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
         <div className="m-proj-dots" aria-hidden="true">
           {items.map((_, i) => (
             <span

@@ -3,7 +3,10 @@
 export default function ContactCta() {
   return (
     <section className="contact-cta">
-      <canvas className="cta-glow" aria-hidden="true" />
+      {/* ⚠️ 이 캔버스는 사이트에 **하나뿐**이어야 한다 — cta-glow.js 가 querySelector 로
+          첫 번째만 잡아 WebGL 컨텍스트를 만든다. 모바일 CTA(.m-cta)도 같은 글로우를 쓰지만
+          노드를 따로 두지 않고, ResponsiveSlot(app/page.tsx)이 폭에 따라 이 노드를 옮긴다. */}
+      <canvas id="cta-glow" className="cta-glow" aria-hidden="true" />
       <div className="cta-inner">
         <h2 className="cta-title">Say Hello!</h2>
         <div className="cta-row">

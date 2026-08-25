@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   devIndicators: false,
 
+  /* ⚠️ 다른 컴퓨터에서 http://<이 맥의 LAN IP>:5599 로 접속할 때 필요하다.
+     Next 16 의 dev 서버는 localhost 가 아닌 host 로 들어온 /_next/* 요청 중
+     Origin 헤더가 붙는 것(= HMR 웹소켓 업그레이드)을 403 으로 막는다
+     (server/lib/router-utils/block-cross-site-dev.ts). 스크립트·CSS 는 GET 이라
+     Origin 이 없어 200 으로 잘 내려오므로 **화면은 그대로 뜨고**, 웹소켓만 죽는데
+     Turbopack dev 런타임이 그 연결 위에서 앱 엔트리를 실행해서 결과적으로
+     하이드레이션이 끝나지 않는다 → LegacyRuntime 이 /js/main.js 를 못 붙이고
+     클릭·스크롤 리빌이 전부 죽은 정적 화면이 된다(콘솔엔 WebSocket failed 한 줄뿐).
+     와일드카드는 점 단위 세그먼트로만 매칭된다 — '192.168.**' 은 무효, '192.168.*.*' 로 쓸 것.
+     dev 전용 설정이라 배포(next start)에는 영향이 없다. */
+  allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.16.*.*', '172.17.*.*', '*.local'],
+
   async headers() {
     return [
       {

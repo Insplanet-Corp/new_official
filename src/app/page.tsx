@@ -14,6 +14,7 @@ import MobileInsight from '@/components/mobile/MobileInsight';
 import MobilePartners from '@/components/mobile/MobilePartners';
 import MobileProjects from '@/components/mobile/MobileProjects';
 import MobileServices from '@/components/mobile/MobileServices';
+import ProjectSheet from '@/components/projects/ProjectSheet';
 import { MAX_SHOWCASE, toShowcase } from '@/data/home';
 import type { Portfolio } from '@/lib/portfolios';
 import { supabase } from '@/lib/supabase';
@@ -95,8 +96,17 @@ export default async function HomePage() {
         {/* 모바일 푸터. PageShell 이 그리는 데스크톱 .footer 는 이게 있는 페이지에서만 숨는다 */}
         <MobileFooter />
 
-        {/* 셰이더 노드 하나를 지금 보이는 프레임으로 옮긴다 */}
+        {/* Our Projects 카드/패널 클릭 -> 아래에서 올라오는 상세 시트.
+            /projects 목록과 **같은 컴포넌트**다 — document 클릭에서 a[href^="/projects/"] 를
+            가로채고, 주소를 /projects/<id> 로 pushState 한 뒤 iframe 을 올린다.
+            ⚠️ 이 리스너가 main.js 의 전역 링크 가로채기보다 **먼저** 등록돼야 한다.
+            React effect(마운트 시)가 main.js(엔터 페이드 뒤 지연 주입)보다 앞서고,
+            main.js 는 맨 앞에서 defaultPrevented 를 확인하므로 지금 구조에서는 안전하다. */}
+        <ProjectSheet cards={showcase} />
+
+        {/* WebGL 노드는 각각 하나뿐이다 — 지금 보이는 프레임으로 옮긴다 */}
         <ResponsiveSlot id="insight-shader" desktop=".insight-card" mobile=".m-insight-frame" />
+        <ResponsiveSlot id="cta-glow" desktop=".contact-cta" mobile=".m-cta" />
       </PageShell>
     </>
   );

@@ -21,8 +21,13 @@ const GROW_SEL = [
   '.ps-close',
 ].join(',');
 
-/* Panels that turn the cursor into the solid "View Project" button. */
-const VIEW_SEL = '.proj-visual,.pj-card';
+/* Panels that turn the cursor into the solid "View Project" button.
+   .m-proj-card 는 홈 모바일 캐러셀의 카드다 — PC 패널(.proj-visual)과 같은 상세 시트를
+   열므로 커서도 같아야 한다. 실제 폰은 coarse 포인터라 커서 자체가 꺼져 있고, 이 값은
+   좁은 창의 데스크톱 브라우저에서만 의미가 있다.
+   ⚠️ 캐러셀 화살표(.m-proj-nav)는 카드 바깥(.m-proj-carousel 직속)이라 여기 안 걸린다 —
+   화살표 위에서는 평범한 커서가 유지된다. 화살표를 카드 안으로 옮기면 깨진다. */
+const VIEW_SEL = '.proj-visual,.pj-card,.m-proj-card';
 
 /* smooth follow (no momentum): moves fast when far, decelerates to a soft stick as it nears. */
 const FOLLOW = 0.13;
