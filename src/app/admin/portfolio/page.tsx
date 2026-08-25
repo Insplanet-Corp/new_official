@@ -1,8 +1,9 @@
 "use client";
 
-import type { DragEvent } from "react";
+import type { DragEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import {
@@ -65,6 +66,7 @@ const moveBefore = (
 };
 
 export default function PortfolioListPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,6 +202,32 @@ export default function PortfolioListPage() {
     void persistOrder(rowsRef.current);
   };
 
+  /* ---- 행 전체를 눌러도 상세로 --------------------------------------------
+     <tr> 는 <Link> 로 감쌀 수 없다(테이블 안에서 <a> 가 행을 감싸는 마크업은
+     스펙 위반이고 브라우저가 테이블 밖으로 끄집어낸다). 그래서 router.push 다.
+
+     ⚠️ 제목의 <Link> 는 그대로 둔다 — 키보드 포커스·스크린리더·새 탭으로 열기가
+     거기에 달려 있다. 대신 링크를 직접 눌렀을 때 두 번 이동하지 않게 아래에서 거른다. */
+  const detailHref = (id: string) => `/admin/portfolio/${id}`;
+
+  const onRowClick = (e: ReactMouseEvent<HTMLTableRowElement>, id: string) => {
+    // 링크·손잡이·폼 컨트롤을 직접 눌렀으면 그쪽에 맡긴다
+    if (
+      (e.target as HTMLElement).closest(
+        "a, button, input, select, [draggable='true']",
+      )
+    )
+      return;
+    // 글자를 긁어 복사하려던 것이면 이동하지 않는다
+    if (window.getSelection()?.toString()) return;
+    // ⌘/Ctrl 클릭은 새 탭 — 링크에서 기대하는 동작을 행에서도 맞춰 준다
+    if (e.metaKey || e.ctrlKey) {
+      window.open(detailHref(id), "_blank", "noopener");
+      return;
+    }
+    router.push(detailHref(id));
+  };
+
   return (
     <>
       <PageHead
@@ -323,11 +351,13 @@ export default function PortfolioListPage() {
                 {visible.map((r) => (
                   <tr
                     key={r.id}
-                    className={dragId === r.id ? kit.rowDragging : undefined}
+                    className={`${kit.rowLink}${dragId === r.id ? ` ${kit.rowDragging}` : ""}`}
                     onDragOver={
                       reorderable ? (e) => onDragOverRow(e, r.id) : undefined
                     }
                     onDrop={reorderable ? (e) => e.preventDefault() : undefined}
+                    onClick={(e) => onRowClick(e, r.id)}
+                    onMouseEnter={() => router.prefetch(detailHref(r.id))}
                   >
                     <td className={kit.dragCell}>
                       {reorderable ? (
