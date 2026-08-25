@@ -253,16 +253,24 @@ export function Check({
   label,
   checked,
   onChange,
+  disabled,
 }: {
   label: string;
   checked: boolean;
   onChange?: (next: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
-    <Text as="label" size="2" fontSize="13.5px" className={s.choice}>
+    <Text
+      as="label"
+      size="2"
+      fontSize="13.5px"
+      className={`${s.choice}${disabled ? ` ${s.choiceOff}` : ""}`}
+    >
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange?.(e.target.checked)}
       />
       {label}

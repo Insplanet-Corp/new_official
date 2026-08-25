@@ -115,7 +115,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     currentTab !== undefined &&
     !permissions.includes(currentTab.href);
 
-  /* /admin 은 서버에서 첫 탭(/admin/main)으로 보낸다. 그 탭에 권한이 없는
+  /* /admin 은 서버에서 첫 탭(ADMIN_TABS[0])으로 보낸다. 그 탭에 권한이 없는
      계정은 로그인하자마자 "권한 없음" 을 보게 되므로, 접근 가능한 첫 탭으로
      한 번 더 돌린다. 사용자가 직접 친 다른 경로는 그대로 막는다. */
   useEffect(() => {

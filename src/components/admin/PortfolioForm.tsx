@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Actions,
@@ -23,6 +23,7 @@ import { describeError } from "@/lib/pgError";
 import { refreshProjectCount } from "@/lib/projectCountActions";
 import {
   EMPTY_DRAFT,
+  MAX_MAIN,
   type PortfolioDraft,
   toRow,
   validate,
@@ -55,6 +56,43 @@ export default function PortfolioForm({
   const isOngoing = v.status === "ongoing";
   const isDone = v.status === "done";
 
+  /* ---- 메인 등록 상한 -----------------------------------------------------
+     홈 슬라이드는 MAX_MAIN(3)장이다. 4건째를 걸어 두고 "왜 안 나오지" 하는 것보다
+     아예 못 걸게 막는 편이 낫다(사용자 결정) — 체크박스를 비활성으로 둔다.
+
+     ⚠️ 지금 편집 중인 행은 빼고 센다. 안 그러면 이미 메인인 행을 수정하러
+     들어왔을 때 자기 자신 때문에 상한에 걸려 체크를 풀 수도 없게 된다.
+     null = 아직 못 셌음 — 그때는 막지 않는다(조회 실패로 화면을 잠그지 않는다). */
+  const [otherMains, setOtherMains] = useState<number | null>(null);
+
+  const countOtherMains = useCallback(async (): Promise<number | null> => {
+    let q = supabase
+      .from("portfolios")
+      .select("id", { count: "exact", head: true })
+      .eq("is_main", true);
+    if (portfolioId) q = q.neq("id", portfolioId);
+    const { count, error: err } = await q;
+    if (err) {
+      console.error("[portfolio] 메인 건수 조회 실패:", err.message, err.code);
+      return null;
+    }
+    return count ?? 0;
+  }, [portfolioId]);
+
+  useEffect(() => {
+    let alive = true;
+    countOtherMains().then((n) => {
+      if (alive) setOtherMains(n);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [countOtherMains]);
+
+  /* 이미 메인인 행은 언제나 체크를 풀 수 있어야 하므로 v.is_main 이면 안 막는다 */
+  const mainFull =
+    !v.is_main && otherMains !== null && otherMains >= MAX_MAIN;
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
@@ -67,6 +105,22 @@ export default function PortfolioForm({
 
     setSaving(true);
     setError(null);
+
+    /* 폼을 연 뒤 다른 창에서 메인을 채웠을 수 있다 — 저장 직전에 다시 센다.
+       완전한 방어는 아니다(이 확인과 저장 사이에도 틈이 있다). 진짜 상한은
+       015 의 DB 트리거가 잡는다 — 그때는 아래 insert/update 가 에러를 낸다. */
+    if (v.is_main) {
+      const n = await countOtherMains();
+      if (n !== null && n >= MAX_MAIN) {
+        setOtherMains(n);
+        setSaving(false);
+        setError(
+          `메인은 최대 ${MAX_MAIN}건까지입니다. 이미 ${n}건이 등록돼 있어 저장하지 않았습니다.`,
+        );
+        return;
+      }
+    }
+
     const row = toRow(v);
 
     const { error: err } =
@@ -175,10 +229,18 @@ export default function PortfolioForm({
           />
         </Row>
 
-        <Row label="메인" hint="체크하면 메인 화면에 노출됩니다. 전용 썸네일이 필요합니다.">
+        <Row
+          label="메인"
+          hint={
+            mainFull
+              ? `메인은 최대 ${MAX_MAIN}건까지입니다. 다른 포트폴리오의 메인 체크를 먼저 풀어 주세요.`
+              : "체크하면 메인 화면에 노출됩니다. 전용 썸네일이 필요합니다."
+          }
+        >
           <Check
             label="메인 노출"
             checked={v.is_main}
+            disabled={mainFull}
             onChange={(x) => set("is_main", x)}
           />
         </Row>
@@ -294,19 +356,20 @@ export default function PortfolioForm({
         </Row>
 
         <Row
-          label="상세화면 HTML"
+          label="상세화면 폴더명"
           required={isDone}
           hint={
             <>
-              퍼블리셔 산출물 폴더를 <code>public/portfolio/</code> 에 넣고 그
-              경로를 적습니다. 카드를 누르면 이 화면으로 이동합니다.
+              퍼블리셔 산출물 폴더를 <code>public/portfolio/</code> 에 넣고{" "}
+              <b>폴더 이름만</b> 적습니다 — <code>index.html</code> 은 규칙으로
+              붙습니다. 카드를 누르면 이 화면으로 이동합니다.
             </>
           }
         >
           <Input
             value={v.html_file}
             onChange={(x) => set("html_file", x)}
-            placeholder="/heyyoung-1024/index.html"
+            placeholder="kb-app"
           />
         </Row>
 
