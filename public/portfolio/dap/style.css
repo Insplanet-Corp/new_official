@@ -164,7 +164,7 @@ body {
   transform: translateY(0);
 }
 .works-content.show .section-header .section-description {
-  opacity: 1;
+  opacity: 0.8;
   transform: translateY(0);
 }
 
@@ -241,7 +241,7 @@ body {
   transition-delay: 1.5s;
 }
 
-.section02.show .section-images li {
+.section02.in .section-images li {
   opacity: 1;
   transform: translateY(0);
 }
@@ -252,12 +252,13 @@ body {
   background-color: rgba(21, 7, 40, 1);
   overflow: hidden;
 }
+.section03 .section-header {
+  max-width: 490px;
+}
 .section03 .section-images {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
   padding: 200px 0 0;
   gap: 360px;
 }
@@ -280,14 +281,11 @@ body {
 }
 .section03 .section-images li img {
   box-shadow: 28px 28px 56px rgba(0, 0, 0, 0.25);
-  max-width: 650px;
-  width: 100%;
-  position: relative;
-  z-index: 2;
   opacity: 0;
   transform: translateX(200px);
   transition: all ease-out 0.8s;
   transition-delay: 1.25s;
+  width: 100%;
 }
 .section03 .section-images li div {
   display: flex;
@@ -304,7 +302,7 @@ body {
   transition-delay: 0.75s;
 }
 .section03 .section-images li div b {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: bold;
   color: #fff;
 }
@@ -317,7 +315,6 @@ body {
 /* 지그재그 레이아웃 (홀수, 짝수) */
 .section03 .section-images li:nth-of-type(odd) {
   flex-direction: row-reverse;
-  justify-content: flex-start;
 }
 .section03 .section-images li:nth-of-type(odd) span {
   left: 10%;
@@ -331,9 +328,6 @@ body {
   transform: translateX(200px);
 }
 
-.section03 .section-images li:nth-of-type(even) {
-  justify-content: flex-end;
-}
 .section03 .section-images li:nth-of-type(even) span {
   right: 10%;
   transform: translateX(-200px) translateY(-50%);
@@ -436,6 +430,13 @@ body {
     max-width: 280px;
     gap: 8px;
     text-align: center;
+    font-size: 14px;
+  }
+  .section03 .section-images li div b {
+    font-size: 14px;
+  }
+  .section03 .section-images li div p {
+    font-size: 14px;
   }
   .section03 .section-images li span {
     font-size: 150px;

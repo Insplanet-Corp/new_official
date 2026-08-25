@@ -137,6 +137,9 @@ body {
 .work-container .works-content {
   margin: 0;
 }
+.work-container img {
+  width: 100%;
+}
 .works-section {
   position: relative;
   width: 100%;
@@ -144,24 +147,26 @@ body {
   flex-direction: column;
   align-items: center;
   overflow: hidden;
-  padding: 120px 20px;
+  padding: 176px 24px;
+}
+.works-desc {
+  margin: 0 auto;
+  max-width: 1184px;
+  width: 100%;
 }
 
 .works-desc-title {
-  font-size: 48px;
+  font-size: 40px;
   font-weight: bold;
   line-height: 1.3;
-  color: #111;
-  text-align: center;
-  margin-bottom: 24px;
+  color: #191919;
+  margin-bottom: 20px;
 }
 .works-desc-text {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.6;
-  color: #444;
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
+  color: #191919;
+  opacity: 0.8;
 }
 
 .works-figure img {
@@ -186,7 +191,7 @@ body {
     transform 0.8s ease-out;
 }
 .works-content.show [style*="--delay"] {
-  opacity: 1;
+  opacity: 0.8;
   transform: translateY(0);
   transition-delay: var(--delay);
 }
@@ -198,17 +203,18 @@ body {
 
 /* ========================= SECTION 01 ========================= */
 .section01 {
-  background-color: #0b1760;
+  background-color: #1b2042;
+  padding-bottom: 196px;
 }
 .section01 .works-desc-title {
   color: #fff;
 }
 .section01 .works-desc-text {
-  color: #ddd;
+  color: #fff;
 }
 .section01 .works-figure {
-  margin: 128px auto 0;
-  max-width: 1183px;
+  margin: 148px auto 0;
+  max-width: 1184px;
   width: 100%;
 }
 
@@ -220,16 +226,15 @@ body {
 }
 
 /* ========================= SECTION 02 ========================= */
+.section02 {
+  background-color: #fff;
+}
 .section02 .works-figure {
-  margin-top: 40px;
   width: 100%;
 }
 @media (min-width: 768px) {
-  .section02 .works-figure {
-    margin-top: 142px;
-  }
   .section02 .works-figure-content {
-    max-width: 1302px;
+    max-width: 1280px;
     margin: 0 auto;
     gap: 16px;
     align-items: flex-start;
@@ -244,30 +249,32 @@ body {
 
 /* ========================= SECTION 03 ========================= */
 .section03 {
-  background-color: #f1f4f9;
+  background-color: #2A3FEC;
 }
 .section03 .works-desc {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 137px;
-  max-width: 1140px;
-  margin: 0 auto;
-  width: 100%;
+  gap: 32px;
 }
 .section03 .works-desc-title {
-  min-width: 222px;
+  color: #fff;
+  min-width: 424px;
   text-align: left;
   margin: 0;
 }
 .section03 .works-desc-text {
-  margin-right: 80px;
+  color: #fff;
   text-align: left;
+  opacity: 0.8;
 }
 
-@media (min-width: 768px) {
+/* PC 배치. ⚠️ 경계가 768 이면 안 된다 — .only-pc/.only-mobile 스와핑과
+   .works-section 여백 재정렬이 1023 에서 갈리므로, 768~1023 구간에서
+   "모바일 이미지에 PC 의 translateX(±394px)" 가 걸려 카드가 화면 밖으로 나간다. */
+@media (min-width: 1024px) {
   .section03 .works-figure {
-    margin: 128px auto 0;
+    margin: 100px auto 0;
     opacity: 0;
     transform: translateY(200px);
     transition:
@@ -299,51 +306,78 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .works-content.show .section03 .works-figure-content .figure-cms01,
   .works-content.show .section03 .works-figure-content .figure-cms03 {
     transform: translateX(0);
   }
 }
 
-@media (max-width: 767px) {
+/* 모바일 CMS 카드 캐러셀 (3단 자동 슬라이드, 가운데 정렬).
+   카드는 240×346 고정 — 모바일 원본(720×1038)과 같은 비율이라 늘어나지 않는다.
+   ⚠️ 폭·이동량을 뷰포트(vw)로 잡으면 안 된다. 이 슬라이더의 "창"은 뷰포트가 아니라
+   .pd-secs(좌우 16px) 안쪽의 .works-section 이다. 예전 값(카드 66.66vw / 트랙 300vw)이
+   어긋난 이유가 이것이고, 거기에 .works-section 의 align-items:center 가 300vw 트랙을
+   가운데로 밀어 첫 카드가 화면 왼쪽 밖(x=-375px)에 서 있었다.
+   창은 파란 배경(.section03) 끝까지 넓힌다 — 좌우 패딩 32px 을 음수 마진으로 되돌리는데,
+   안 되돌리면 창이 64px 좁아져서 2번 카드가 가운데 왔을 때 1·3번이 3.5px 밖에 안 보인다.
+   (음수 마진이 먹는 건 .works-section 이 align-items:center 라 마진 박스 기준으로
+   가운데 정렬하기 때문. 좌우 패딩 값을 바꾸면 --sec-pad-x 도 같이 고칠 것.) */
+@media (max-width: 1023px) {
   .section03 .works-figure {
-    --sliderPos: 66.666;
-    --sliderCnt: 3;
-    margin: 40px 0 0;
-    display: flex;
-    justify-content: flex-start;
-    width: 300vw;
+    --sec-pad-x: 32px; /* .works-section 의 좌우 패딩과 같아야 한다 */
+    --card-w: 240px;
+    --card-h: 346px;
+    --slider-gap: 16px;
+    --slider-step: calc(var(--card-w) + var(--slider-gap));
+    /* n 번째 카드를 창 한가운데 놓는 트랙 위치 */
+    --slider-home: calc(50% - var(--card-w) / 2);
+    margin: 40px calc(var(--sec-pad-x) * -1) 0;
+    width: calc(100% + var(--sec-pad-x) * 2);
     overflow: hidden;
   }
   .section03 .works-figure-content {
     position: relative;
-    gap: 16px;
+    left: var(--slider-home);
+    /* 트랙 폭 = 창 폭. left 의 50% 와 창이 같은 기준을 보게 하려고 100% 로 둔다
+       (카드는 이 폭을 넘겨 흘러나가고, 넘친 만큼은 창이 잘라낸다). */
+    width: 100%;
+    display: flex;
+    /* 공통 .works-figure-content 의 justify-content:center 를 끈다.
+       켜져 있으면 창보다 넓은 트랙이 절반만큼 왼쪽으로 밀린다. */
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: var(--slider-gap);
     animation: 9s slider infinite;
     animation-play-state: paused;
-    display: flex;
   }
   .section03 .works-figure-content:hover {
     animation-play-state: paused;
   }
-  .section03 .works-figure-content li img {
-    width: 66.66667vw;
+  .section03 .works-figure-content li {
+    flex: 0 0 var(--card-w);
   }
+  .section03 .works-figure-content li img {
+    width: var(--card-w);
+    height: var(--card-h);
+    object-fit: cover;
+  }
+  /* 매 정지 구간마다 그 카드가 창 한가운데 — 2번일 때 1·3번이 좌우로 걸쳐 보인다. */
   @keyframes slider {
     0%,
     30% {
-      left: 0;
+      left: var(--slider-home);
     }
     33%,
     63% {
-      left: calc(var(--sliderPos) * -1vw);
+      left: calc(var(--slider-home) - var(--slider-step));
     }
     66%,
     95% {
-      left: calc(var(--sliderPos) * -2vw);
+      left: calc(var(--slider-home) - var(--slider-step) * 2);
     }
     100% {
-      left: 0;
+      left: var(--slider-home);
     }
   }
   .works-content.show .section03 .works-figure-content {
@@ -351,11 +385,23 @@ body {
   }
 }
 
+/* 카드가 240px 고정이라 트랙(240*3 + 16*2 = 752px)이 창에 통째로 들어가는 폭에서는
+   슬라이드가 의미 없이 좌우로 흔들리기만 한다. 창 = 뷰포트 - .pd-secs 32px 이므로
+   784px 부터 다 들어간다 — 그 구간은 2번 카드를 가운데 둔 채 세워 둔다. */
+@media (min-width: 784px) and (max-width: 1023px) {
+  .section03 .works-figure-content,
+  .works-content.show .section03 .works-figure-content {
+    animation: none;
+    left: calc(var(--slider-home) - var(--slider-step));
+  }
+}
+
 /* ========================= SECTION 04 ========================= */
 .section04 {
   position: relative;
   overflow: hidden;
-  padding-bottom: 250px;
+  padding-top: 132px;
+  padding-bottom: 144px;
   background:
     linear-gradient(
       180deg,
@@ -369,7 +415,10 @@ body {
 .section04 .works-desc {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
+}
+.section04 .works-desc-title {
+  margin-bottom: 0;
 }
 @media (min-width: 768px) {
   .section04 .works-figure {
@@ -406,14 +455,11 @@ body {
 .section05 .works-desc {
   display: flex;
   flex-direction: row;
-  gap: 75px;
-  align-items: center;
-  max-width: 1140px;
-  margin: 0 auto;
-  width: 100%;
+  gap: 32px;
+  align-items: flex-start;
 }
 .section05 .works-desc-title {
-  width: 100%;
+  min-width: 424px;
   color: #fff;
   text-align: left;
 }
@@ -422,7 +468,7 @@ body {
   text-align: left;
 }
 .section05 .works-figure {
-  margin-top: 128px;
+  margin-top: 138px;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -443,6 +489,9 @@ body {
 }
 
 /* ========================= SECTION 06 ========================= */
+.section06 {
+  background-color: #fff;
+}
 .section06 .works-figure {
   max-width: 1140px;
   margin: 0 auto;
@@ -458,14 +507,13 @@ body {
   margin: 128px auto;
   display: flex;
   flex-direction: row;
-  gap: 50px;
-  align-items: center;
-  max-width: 1140px;
+  gap: 32px;
+  align-items: flex-start;
 }
 .section06 .works-desc-title {
   text-align: left;
   margin: 0;
-  min-width: 300px;
+  min-width: 424px;
 }
 .section06 .works-desc-text {
   text-align: left;
@@ -483,12 +531,7 @@ body {
   .section06 .works-desc {
     margin: 40px auto;
     flex-direction: column;
-    text-align: center;
     gap: 24px;
-  }
-  .section06 .works-desc-title,
-  .section06 .works-desc-text {
-    text-align: center;
   }
 }
 
@@ -500,20 +543,17 @@ body {
 .section07 .works-desc {
   display: flex;
   flex-direction: row;
-  gap: 50px;
-  align-items: center;
-  max-width: 1140px;
-  margin: 0 auto;
-  width: 100%;
+  gap: 32px;
+  align-items: flex-start;
 }
 .section07 .works-desc-title {
   color: #fff;
   text-align: left;
   margin: 0;
-  min-width: 300px;
+  min-width: 424px;
 }
 .section07 .works-desc-text {
-  color: #ddd;
+  color: #fff;
   text-align: left;
 }
 .section07 .works-figure img {
@@ -577,6 +617,9 @@ body {
   text-align: center;
   color: #fff;
   margin: 0;
+}
+.section08 .works-desc-text {
+  margin-top: 20px;
 }
 
 @media (max-width: 767px) {
@@ -750,6 +793,9 @@ body {
   .works-section {
     padding: 48px 32px;
   }
+  .works-section.section04 {
+    padding: 48px 32px 0;
+  }
   .work-container .works-desc-title {
     font-size: 24px;
     line-height: 30px;
@@ -766,17 +812,20 @@ body {
   .section07 .works-desc,
   .section08 .works-desc {
     flex-direction: column !important;
-    text-align: center;
     gap: 32px !important;
     margin: 0 auto;
     width: 100%;
-    align-items: center;
+  }
+  .section01 .works-desc-title {
+    margin-bottom: 32px;
+  }
+  .section05 .works-desc-title {
+    margin-bottom: 0;
   }
   .section03 .works-desc-title,
   .section05 .works-desc-title,
   .section06 .works-desc-title,
   .section07 .works-desc-title {
-    text-align: center !important;
     width: 100%;
     min-width: unset;
   }
@@ -784,7 +833,6 @@ body {
   .section05 .works-desc-text,
   .section06 .works-desc-text,
   .section07 .works-desc-text {
-    text-align: center !important;
     margin: 0;
   }
   .section08 {

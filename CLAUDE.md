@@ -130,12 +130,24 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 `_template/` 을 복사한다. ⚠️ **폴더명을 바꾸면 `portfolios.html_file`(DB, `<슬러그>/index.html`
 형식) 이 깨진다** — 폴더명과 어드민 등록값을 항상 같이 바꿀 것.
 
-**문서 종류가 둘이다**: kb-app 은 `<project-detail>` 커스텀 엘리먼트(히어로+Overview+본문밴드+
-푸터를 전부 그림, `_shared/works.js`)로 통일된 반면, onNuri·shinhan·dap 은 자립형 문서로
-`.pd-*` 디자인 시스템을 안 쓴다(`_shared/*.css` 를 연결하면 오히려 충돌한다). 새 상세를
-`<project-detail>` 템플릿으로 통일할지는 프로젝트별 문구(EN 제목·Client·Launch·Overview·
-platform URL)가 갖춰져야 가능 — 본문 이미지까지 Figma 렌더 이미지로 바꾸는 건 권장하지 않는다
-(디자이너가 다시 뽑아야 하는 사실상 재작업).
+**히어로+Overview+푸터는 이제 전부 `<project-detail>` 이 그린다** (`_shared/works.js`).
+2026-08-25 기준 `public/portfolio/*/index.html` 37개 전부가 이 커스텀 엘리먼트로 감싸져 있다
+(예전엔 "onNuri·shinhan·dap 은 `.pd-*` 를 안 쓰는 자립형 문서" 라고 적혀 있었으나 더는 사실이
+아니다). 다만 **본문(`.works-*`)은 여전히 문서마다 제각각인 자체 CSS** 다 — 공통은 껍데기뿐이다.
+
+⚠️ **그래서 본문에서 "화면 폭" 은 뷰포트가 아니다.** `<project-detail>` 의 `.pd-secs` 가 좌우
+16px 을 먹고 그 안에서 문서 자체 섹션이 또 좌우 패딩을 먹는다. 본문 CSS 가 `vw` 로 폭·이동량을
+잡으면 그 차이만큼 조용히 어긋난다 — shinhan section03 의 모바일 CMS 캐러셀이 실제로 그랬다
+(카드 `66.66vw` + 트랙 `300vw` 에 부모의 `align-items:center` 가 겹쳐 첫 카드가 화면 왼쪽 밖
+`x=-375px` 에 서 있었고, 이동량에 `gap` 이 빠져 장을 넘길수록 16px 씩 더 밀렸다).
+→ **캐러셀 계산은 창(`.works-figure`) 폭 기준 `%` 로 하고 트랙(`ul`)을 `width:100%` 로 둘 것**
+— 그래야 `li` 의 `flex-basis %` 와 `left %` 가 같은 기준을 본다. 이동량엔 `gap` 을 포함시키고,
+공통 `.works-figure-content{justify-content:center}` 를 `flex-start` 로 꺼야 트랙이 안 밀린다.
+
+⚠️ **shinhan `style.css` 는 문서 안에서 브레이크포인트가 두 개로 갈려 있다** — `.only-pc`/
+`.only-mobile` 스와핑과 `.works-section` 여백 재정렬은 **1023**, 나머지 섹션 레이아웃 규칙은
+**767**. 그래서 768~1023 구간이 "모바일 이미지 + PC 레이아웃" 이 된다. section03 은 1023/1024 로
+맞춰 고쳤지만 **section01·02·04~08 은 아직 767/768 그대로다** (미확인 — 눈으로 안 봤다).
 
 ### 반드시 지킬 규칙
 
