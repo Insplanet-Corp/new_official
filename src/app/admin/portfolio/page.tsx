@@ -1,8 +1,9 @@
 "use client";
 
-import type { DragEvent } from "react";
+import type { DragEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import {
@@ -49,6 +50,34 @@ const SORT_MISSING =
 /** PostgREST: 없는 컬럼으로 정렬/조회했을 때 */
 const UNDEFINED_COLUMN = "42703";
 
+/* ---- 드래그 중 가장자리 자동 스크롤 ----------------------------------------
+   목록이 40건이 넘어가면 화면 밖으로 끌어야 하는데, HTML5 드래그는 스크롤을
+   대신 해 주지 않는다. 포인터가 화면 위/아래 끝에 닿으면 그쪽으로 굴린다.
+
+   어드민은 Lenis(부드러운 스크롤)를 안 쓴다 — LegacyRuntime 은 마케팅 페이지의
+   PageShell 에서만 로드된다. 그래서 window.scrollBy 로 충분하다. */
+/** 가장자리로 치는 두께(px) */
+const EDGE = 110;
+/** 한 프레임에 굴릴 최대 픽셀 — 60fps 에서 대략 1300px/s */
+const EDGE_SPEED = 22;
+
+/** 마지막 포인터 y. 컴포넌트 밖에 두는 이유는 아래 trackPointer 주석 참고 */
+let lastPointerY = 0;
+/* add/removeEventListener 가 같은 함수 참조여야 떼진다. 컴포넌트 안에서 만들면
+   렌더마다 새 함수가 되어 리스너가 쌓인다. */
+const trackPointer = (e: globalThis.DragEvent) => {
+  lastPointerY = e.clientY;
+};
+
+/** 포인터의 뷰포트 y -> 이번 프레임에 굴릴 픽셀. 가운데면 0 */
+const edgeVelocity = (y: number): number => {
+  const h = window.innerHeight;
+  const near = (d: number) => Math.min(1, Math.max(0, 1 - d / EDGE));
+  if (y < EDGE) return -EDGE_SPEED * near(y);
+  if (y > h - EDGE) return EDGE_SPEED * near(h - y);
+  return 0;
+};
+
 /** 배열에서 fromId 를 뽑아 toId 자리에 끼운다. 드래그 중 실시간 미리보기용 */
 const moveBefore = (
   list: Portfolio[],
@@ -65,6 +94,7 @@ const moveBefore = (
 };
 
 export default function PortfolioListPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +118,11 @@ export default function PortfolioListPage() {
      (setRows 의 updater 안에서 옮기면 순수하지 않은 updater 가 된다 —
      StrictMode 가 두 번 호출하면서 순서가 두 번 밀린다) */
   const rowsRef = useRef<Portfolio[]>([]);
+
+  /* 자동 스크롤용. 좌표는 dragover 로 계속 갱신하고(lastPointerY), 실제로 굴리는
+     건 rAF 다 — dragover 는 포인터가 멈춰 있으면 뜸해져서(브라우저마다 다르다)
+     그것만 보고 굴리면 끝에 붙여 놔도 스크롤이 뚝뚝 끊긴다. */
+  const rafId = useRef(0);
 
   useEffect(() => {
     let alive = true;
@@ -170,9 +205,34 @@ export default function PortfolioListPage() {
     setRows(renumbered);
   }, []);
 
+  const stopAutoScroll = useCallback(() => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = 0;
+    document.removeEventListener("dragover", trackPointer);
+  }, []);
+
+  const startAutoScroll = () => {
+    if (rafId.current) return;
+    /* 문서 전체에서 좌표를 받는다 — 행 위가 아니라 표 바깥(고정 헤더·여백)으로
+       끌고 갔을 때도 계속 굴러야 한다. preventDefault 는 하지 않는다:
+       좌표만 필요하고, 드롭 허용 여부는 행의 onDragOver 가 정한다. */
+    document.addEventListener("dragover", trackPointer);
+    const tick = () => {
+      const v = edgeVelocity(lastPointerY);
+      if (v) window.scrollBy(0, v);
+      rafId.current = requestAnimationFrame(tick);
+    };
+    rafId.current = requestAnimationFrame(tick);
+  };
+
+  // 드래그 도중에 페이지를 떠나면 rAF 가 남는다
+  useEffect(() => stopAutoScroll, [stopAutoScroll]);
+
   const onDragStart = (e: DragEvent<HTMLElement>, id: string) => {
     setDragId(id);
     dirty.current = false;
+    lastPointerY = e.clientY;
+    startAutoScroll();
     e.dataTransfer.effectAllowed = "move";
     // Firefox 는 데이터가 없으면 드래그를 시작하지 않는다
     e.dataTransfer.setData("text/plain", id);
@@ -194,10 +254,37 @@ export default function PortfolioListPage() {
   };
 
   const onDragEnd = () => {
+    stopAutoScroll();
     setDragId(null);
     if (!dirty.current) return;
     dirty.current = false;
     void persistOrder(rowsRef.current);
+  };
+
+  /* ---- 행 전체를 눌러도 상세로 --------------------------------------------
+     <tr> 는 <Link> 로 감쌀 수 없다(테이블 안에서 <a> 가 행을 감싸는 마크업은
+     스펙 위반이고 브라우저가 테이블 밖으로 끄집어낸다). 그래서 router.push 다.
+
+     ⚠️ 제목의 <Link> 는 그대로 둔다 — 키보드 포커스·스크린리더·새 탭으로 열기가
+     거기에 달려 있다. 대신 링크를 직접 눌렀을 때 두 번 이동하지 않게 아래에서 거른다. */
+  const detailHref = (id: string) => `/admin/portfolio/${id}`;
+
+  const onRowClick = (e: ReactMouseEvent<HTMLTableRowElement>, id: string) => {
+    // 링크·손잡이·폼 컨트롤을 직접 눌렀으면 그쪽에 맡긴다
+    if (
+      (e.target as HTMLElement).closest(
+        "a, button, input, select, [draggable='true']",
+      )
+    )
+      return;
+    // 글자를 긁어 복사하려던 것이면 이동하지 않는다
+    if (window.getSelection()?.toString()) return;
+    // ⌘/Ctrl 클릭은 새 탭 — 링크에서 기대하는 동작을 행에서도 맞춰 준다
+    if (e.metaKey || e.ctrlKey) {
+      window.open(detailHref(id), "_blank", "noopener");
+      return;
+    }
+    router.push(detailHref(id));
   };
 
   return (
@@ -323,11 +410,13 @@ export default function PortfolioListPage() {
                 {visible.map((r) => (
                   <tr
                     key={r.id}
-                    className={dragId === r.id ? kit.rowDragging : undefined}
+                    className={`${kit.rowLink}${dragId === r.id ? ` ${kit.rowDragging}` : ""}`}
                     onDragOver={
                       reorderable ? (e) => onDragOverRow(e, r.id) : undefined
                     }
                     onDrop={reorderable ? (e) => e.preventDefault() : undefined}
+                    onClick={(e) => onRowClick(e, r.id)}
+                    onMouseEnter={() => router.prefetch(detailHref(r.id))}
                   >
                     <td className={kit.dragCell}>
                       {reorderable ? (
