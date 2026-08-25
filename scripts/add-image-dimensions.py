@@ -14,7 +14,7 @@
 
   .pd-sec 안의 섹션 이미지  ->  width/height 속성
       project-detail.css 가 `.pd-sec img{width:100%;height:auto}` 로 못박아 둬서
-      속성은 비율로만 쓰인다. <picture> 로 합칠 때 <source> 에도 같은 치수가 필요하다.
+      속성은 비율로만 쓰인다.
 
   그 밖의 이미지            ->  style="aspect-ratio: W / H"
       ⚠️ width/height 속성은 "표현 힌트" 라 CSS 처럼 먹는다. 문서 CSS 가 width 만

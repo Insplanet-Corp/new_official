@@ -30,12 +30,6 @@
   }
 }
 
-/* PC/모바일 이미지를 <picture> 한 장으로 합친 섹션 (scripts/merge-pc-mobile-sections.py).
-   picture 는 기본이 inline 이라 블록 이미지를 감싸면 아래에 줄 간격만큼 빈틈이 생긴다. */
-.pd-sec picture {
-  display: block;
-}
-
 /* ⚠️ <img> 의 width/height 속성은 "표현 힌트(presentational hint)" 라서 CSS 처럼 먹는다.
    비율만 알려 주려고 넣었는데(자리 예약 → CLAUDE.md 23번의 lazy 교착 방지),
    문서 CSS 가 width 만 정해 둔 이미지에서는 height 힌트가 그대로 살아남아 늘어난다.

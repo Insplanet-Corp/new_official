@@ -69,14 +69,14 @@ classList add/toggle/remove 40여 곳, `#ci-logo #full-menu #lets-talk #head-tit
 `src/components/{button,badge,avatar,icon,text,layouts}` 의 공용 컴포넌트로 어드민 전 화면을
 교체했다. **어드민에서 버튼·배지·아바타·아이콘·타이포·flex 를 CSS 클래스로 새로 만들지 말 것.**
 
-| 쓸 것                | 대신 지운 것                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `<Button>`           | `kit.btn` `btnPrimary` `btnGhost` `btnSm` 등                                        |
-| `<Badge>`            | `ui.tsx` 의 `Badge`/`BadgeTone`, `ui.module.css` 의 `.badge*`, `kit.brandTag`       |
-| `<Avatar>`           | `kit.avatar`                                                                        |
-| `<Icon>`             | 손으로 그려 넣었던 인라인 SVG                                                       |
-| `<Text>` `<Heading>` | `.title` `.desc` `.statLabel` `.emptyTitle` … 폰트 크기/굵기 전용 클래스            |
-| `<Flex>`             | `.pageHead` `.pageActions` `.actions` `.inline` 같은 flex 전용 클래스               |
+| 쓸 것                | 대신 지운 것                                                                  |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `<Button>`           | `kit.btn` `btnPrimary` `btnGhost` `btnSm` 등                                  |
+| `<Badge>`            | `ui.tsx` 의 `Badge`/`BadgeTone`, `ui.module.css` 의 `.badge*`, `kit.brandTag` |
+| `<Avatar>`           | `kit.avatar`                                                                  |
+| `<Icon>`             | 손으로 그려 넣었던 인라인 SVG                                                 |
+| `<Text>` `<Heading>` | `.title` `.desc` `.statLabel` `.emptyTitle` … 폰트 크기/굵기 전용 클래스      |
+| `<Flex>`             | `.pageHead` `.pageActions` `.actions` `.inline` 같은 flex 전용 클래스         |
 
 색 규칙 — **primary(등록·저장·수정·로그인) = `color="BLUE" variant="solid"`**,
 secondary(목록·취소·조회·파일찾기) = `color="GRAY" variant="outline"`, 삭제 = `color="RED" variant="outline"`.
@@ -177,32 +177,6 @@ platform URL)가 갖춰져야 가능 — 본문 이미지까지 Figma 렌더 이
   Overview 마크업이 컴포넌트 속성으로 옮겨졌다. 가져올 건 `.pd-sec` 섹션 목록(과 img
   width/height)뿐이고, `_shared/project-detail.css` 는 정적 사이트 쪽이 계속 바뀌므로
   **매번 동기화할 것**(1024 앵커·모바일 상세·히어로 높이 등 이미 3번 어긋났었다).
-
-### 이미지 성능 (프로젝트 20여 개 등록 후 렉 발생, `scripts/*.py|sh`)
-
-원인은 픽셀 수(디코드 = 가로×세로×4바이트)였다. 세 가지로 해결:
-
-1. **목록 카드** — Storage 이미지 변환(`.../render/image/public/...` + `width·height·resize=cover`,
-   `src/lib/images.ts`)으로 9.9MB → 70KB. ⚠️ height 없이 width 만 주면 오히려 커진다.
-   ⚠️ **Supabase 유료 플랜 기능이다** — 플랜이 바뀌면 깨진다, 그때는 `storageRender` 가 `src`
-   를 그대로 돌려주게 한 줄만 바꾸면 된다. 근본 해결(업로드 시 리사이즈)은 아직 안 했다.
-2. **상세 로컬 이미지** — `scripts/optimize-portfolio-images.sh` 로 hero 2560·PC 2000·모바일
-   900px 로 축소(파일명·포맷 유지, HTML 안 고쳐도 됨). PNG→JPEG 전환은 안 함(알파 존재,
-   99.99%는 불투명이라 여지는 있음). WebP 는 인코더가 없어 미결정.
-3. **`display:none` 이미지도 lazy 여도 그대로 받힌다** — PC/모바일 두 벌을 숨김으로 들고
-   다니는 구조라 숨은 쪽까지 전부 요청됐다. → `scripts/merge-pc-mobile-sections.py` 가
-   `<picture><source media>` 한 장으로 합쳐 명세로 확실히 하나만 받게 함(문서마다 PC/모바일
-   섹션 배치가 달라 손으로 페어링 로직을 나눴다).
-4. **`<img width height>` 는 표현 힌트라 CSS 처럼 실제로 먹는다** — lazy 교착 방지용으로
-   무작정 넣으면 아이콘류가 늘어난다. → `scripts/add-image-dimensions.py` 가 `.pd-sec` 안
-   (height:auto 보장)은 width/height 속성으로, 그 밖은 `style="aspect-ratio"` 로 나눠 넣는다.
-
-**미해결**: onNuri·shinhan·dap 은 외부 CDN(`cdn.jsdelivr.net`)에서 MICEGothic 을 받는다 —
-CDN 장애 시 이 문서들만 폰트가 바뀐다. 자체 호스팅 이전 미결정. 세 문서의 공통 CSS 앞부분
-(`_shared/works.css` 로 승격 여지, 손으로 병합 필요)과 좌우 거터(kb-app 48px vs 나머지 0)
-통일도 사용자 결정 대기.
-
----
 
 ## 지금까지 한 일 (요약)
 
@@ -309,7 +283,7 @@ CDN 장애 시 이 문서들만 폰트가 바뀐다. 자체 호스팅 이전 미
   다 들어와 있었다(PC `.ct-*`/`.rc-*` 와 완전히 분리된 프리픽스).
 - **PC 의 `ChipGroup`/`FilteredInput`/`FileRow` 를 그대로 재사용하지 않고 `Mobile*` 버전을
   새로 만들었다** — 두 트리를 클래스명으로 완전히 분리해 둔 기존 관례(`.ma-*`/`.mc-*`/`.mp-*`
-  vs `.ct-*`)를 따른 것. prop 으로 클래스 프리픽스를 넘기는 방법도 있었지만, 다른 Mobile*
+  vs `.ct-*`)를 따른 것. prop 으로 클래스 프리픽스를 넘기는 방법도 있었지만, 다른 Mobile\*
   컴포넌트들(`MobileAbout` 등)도 PC 컴포넌트를 참조하지 않는 독립 트리라 그 패턴을 유지했다.
 - **`jumpToField`(`lib/formGating.ts`)에 `flashClass` 옵션을 추가했다**(기본값 `'ct-flash'`) —
   PC/모바일이 필수값 미입력 시 펄스시키는 CSS 클래스가 다르다(`.ct-flash` vs `.mc-flash`).
@@ -371,19 +345,19 @@ CDN 장애 시 이 문서들만 폰트가 바뀐다. 자체 호스팅 이전 미
 
 ### Supabase 마이그레이션 실행 상태
 
-| 파일                                      | 실행됨?                                       |
-| ----------------------------------------- | ---------------------------------------------- |
-| `001_admin_users.sql`                     | ✅                                             |
-| `002_admin_users_sync.sql`                | ⚠️ **미확인**                                  |
-| `003_fix_admin_users_rls_recursion.sql`   | ✅                                             |
-| `004_portfolios.sql`                      | ✅                                             |
-| `005_portfolios_seed.sql`                 | ✅                                             |
-| `006_portfolio_storage.sql`               | ✅                                             |
-| `007_drop_legacy_portfolio_policies.sql`  | ⚠️ **미확인**                                  |
-| `008_portfolio_detail_html.sql`           | ✅                                             |
-| `009_portfolio_seed_thumbs.sql`           | ❌ **미실행**                                   |
-| `010_portfolio_main.sql`                  | ✅ 사용자 실행 확인                            |
-| `011_portfolio_main_meta.sql`             | ❌ **미실행** — 안 돌리면 메인 저장이 막힌다     |
+| 파일                                     | 실행됨?                                      |
+| ---------------------------------------- | -------------------------------------------- |
+| `001_admin_users.sql`                    | ✅                                           |
+| `002_admin_users_sync.sql`               | ⚠️ **미확인**                                |
+| `003_fix_admin_users_rls_recursion.sql`  | ✅                                           |
+| `004_portfolios.sql`                     | ✅                                           |
+| `005_portfolios_seed.sql`                | ✅                                           |
+| `006_portfolio_storage.sql`              | ✅                                           |
+| `007_drop_legacy_portfolio_policies.sql` | ⚠️ **미확인**                                |
+| `008_portfolio_detail_html.sql`          | ✅                                           |
+| `009_portfolio_seed_thumbs.sql`          | ❌ **미실행**                                |
+| `010_portfolio_main.sql`                 | ✅ 사용자 실행 확인                          |
+| `011_portfolio_main_meta.sql`            | ❌ **미실행** — 안 돌리면 메인 저장이 막힌다 |
 
 anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부를 확인할 수 없다.
 **002 와 007 실행 여부부터 확인할 것.** 002 를 빠뜨리면 새 계정마다 "프로필 없음" 문제를
@@ -413,7 +387,7 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 | 포트폴리오관리 | `portfolios` ✅  | **연동 완료** — CRUD + Storage 업로드 + `/projects` 공개  |
 | 사용자관리     | `admin_users` ✅ | **연동 완료** — 목록·상세·수정·등록·메뉴권한              |
 | 견적문의관리   | `quotes` ✅      | **연동 완료** — 목록·필터·상태변경·상세 (데이터 0건)      |
-| 리크루트관리   | `recruits`       | 테이블 없음                                                |
+| 리크루트관리   | `recruits`       | 테이블 없음                                               |
 | 메인관리       | 없음             | 스키마 설계부터. 폼은 스켈레톤(업로드만 동작, 저장 안 됨) |
 
 **⚠️ `pageviews` 는 이 저장소와 무관한 고아 테이블이다** — 코드·마이그레이션·git 히스토리

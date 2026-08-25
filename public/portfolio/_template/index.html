@@ -10,12 +10,6 @@
     <link rel="stylesheet" href="../_shared/footer.css" />
   </head>
   <body>
-    <!-- 히어로 · Overview · 본문 밴드 · 푸터를 <project-detail> 이 전부 그린다.
-         속성 문구만 바꾸고 본문은 아래 .work-container 안에 넣으면 된다.
-         | 는 줄바꿈 — 제목류(ko/en/overview-title)는 모바일에서만, overview-text 는 항상. 
-         
-         class="color-type-black" 는 hero 영역 폰트 컬러 #3E3F44 인 경우에 추가. ci도 #3E3F44로 바뀜. -->
-
     <project-detail
       ko="한글 프로젝트명"
       en="English|Title"
@@ -27,14 +21,13 @@
       overview-text="프로젝트 설명 첫 줄|둘째 줄"
       platform=""
     >
-      <figure class="pd-sec">
-        <picture>
-          <source media="(max-width: 1023px)" srcset="img/">
-          <img src="img/" alt="" />
-        </picture>
+      <figure class="pd-sec pd-sec--pc">
+        <img src="img/sec-01.png" alt="" />
       </figure>
-      
-      
+
+      <figure class="pd-sec pd-sec--m">
+        <img src="img/m-sec-01.png" alt="" />
+      </figure>
     </project-detail>
 
     <script src="/portfolio/_shared/bridge.js"></script>
