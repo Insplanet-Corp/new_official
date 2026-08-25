@@ -112,3 +112,115 @@
     { passive: true },
   );
 })();
+
+/* ===== 자석 + 스프링 hover (.pd-close / .pd-btn) =====
+
+   부모 js/main.js 의 #full-menu·#ci-logo 등에 걸린 것과 같은 효과를 상세 안에서 낸다.
+
+   ⚠️ 부모의 그 코드는 여기까지 못 온다 — 이 문서는 sandbox iframe 안이고 출처가
+   불투명해서 부모가 contentDocument 를 읽지 못한다(allow-same-origin 은 세션 토큰이
+   열리므로 금지). 그래서 같은 스프링을 이 문서 안에서 한 번 더 돌린다.
+   상수는 main.js 와 같은 값으로 맞춰 놨다 — 한쪽만 바꾸면 감각이 갈린다.
+
+   ⚠️ 이 블록은 위 브리지 IIFE **밖**에 있어야 한다. 브리지는 `parent === window` 면
+   즉시 return 하는데, 이 효과는 부모와 무관하다 — 안에 넣으면 주소창으로 상세를 직접
+   열었을 때만 죽는다.
+
+   ⚠️ 움직이는 것은 버튼 자신뿐이다. .pd-close 의 셰브론은 project-detail.css 의
+   pd-close-pass keyframe 이 따로 굴린다 — 둘 다 transform 이라 같은 요소에 걸면
+   서로 잡아먹는다.
+
+   ⚠️ 요소를 미리 잡아 두지 않고 document 위임으로 찾는다. .pd-close/.pd-btn 은
+   works.js 의 <project-detail> 이 그리는데 그 스크립트가 이 파일 **뒤**에 로드되므로,
+   여기서 querySelector 를 하면 조용히 null 이다. */
+(function () {
+  if (!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+
+  var SEL = '.pd-close,.pd-btn';
+  var STRENGTH = 0.5, // 커서 쪽으로 끌리는 정도
+    STIFF = 0.12, // 탄성 — 키우면 크게 흔들린다
+    DAMP = 0.78, // 감쇠 — 낮추면 빨리 멎는다
+    MAX = 20; // 끌림 상한(px)
+
+  var active = []; // 스프링이 아직 돌고 있는 것들
+  var hot = null; // 지금 포인터가 올라가 있는 것
+  var raf = 0;
+
+  function clamp(v) {
+    return Math.max(-MAX, Math.min(MAX, v));
+  }
+
+  function stateOf(el) {
+    if (!el.__mag) el.__mag = { el: el, tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0 };
+    return el.__mag;
+  }
+
+  /* 멈춰 있는 동안에는 rAF 를 돌리지 않는다 — 상세를 열어 둔 내내 프레임을 태울 이유가 없다 */
+  function wake(it) {
+    if (active.indexOf(it) === -1) active.push(it);
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+
+  function release(it) {
+    if (!it) return;
+    it.tx = 0;
+    it.ty = 0;
+    wake(it);
+  }
+
+  function frame() {
+    raf = 0;
+    for (var i = active.length - 1; i >= 0; i--) {
+      var it = active[i];
+      if (!it.el.isConnected) {
+        active.splice(i, 1); // 문서에서 빠진 요소(재렌더 등)는 그냥 버린다
+        continue;
+      }
+      it.vx = (it.vx + (it.tx - it.x) * STIFF) * DAMP;
+      it.x += it.vx;
+      it.vy = (it.vy + (it.ty - it.y) * STIFF) * DAMP;
+      it.y += it.vy;
+      if (
+        it.tx === 0 &&
+        it.ty === 0 &&
+        Math.abs(it.x) < 0.01 &&
+        Math.abs(it.y) < 0.01 &&
+        Math.abs(it.vx) < 0.01 &&
+        Math.abs(it.vy) < 0.01
+      ) {
+        it.x = it.y = it.vx = it.vy = 0;
+        it.el.style.transform = ''; // 완전히 제자리면 인라인 스타일을 지운다
+        active.splice(i, 1);
+        continue;
+      }
+      it.el.style.transform = 'translate(' + it.x.toFixed(2) + 'px,' + it.y.toFixed(2) + 'px)';
+    }
+    if (active.length) raf = requestAnimationFrame(frame);
+  }
+
+  document.addEventListener(
+    'mousemove',
+    function (e) {
+      var el = e.target && e.target.closest ? e.target.closest(SEL) : null;
+      if (hot && hot.el !== el) {
+        release(hot); // 다른 요소로 옮겨갔거나 빈 곳으로 나갔다
+        hot = null;
+      }
+      if (!el) return;
+      hot = stateOf(el);
+      var r = el.getBoundingClientRect();
+      // 지금 걸려 있는 translate 를 빼고 원래 중심을 구한다 — 안 그러면 목표가 스스로를 밀어낸다
+      hot.tx = clamp((e.clientX - (r.left + r.width / 2 - hot.x)) * STRENGTH);
+      hot.ty = clamp((e.clientY - (r.top + r.height / 2 - hot.y)) * STRENGTH);
+      wake(hot);
+    },
+    { passive: true },
+  );
+
+  /* 포인터가 문서 밖으로 나가면 mousemove 가 더 오지 않는다 — 밀린 자리에 굳지 않게 풀어 준다 */
+  document.addEventListener('mouseleave', function () {
+    release(hot);
+    hot = null;
+  });
+})();
