@@ -417,6 +417,22 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   - ⚠️ **드래그 중 배열은 `useRef` 가 진실이다.** `dragover` 는 한 프레임에 여러 번 들어오는데
     그 사이에 리렌더가 없을 수 있다. `setRows` 의 updater 안에서 옮기면 순수하지 않은 updater 가
     되어 StrictMode 가 두 번 호출하면서 순서가 두 번 밀린다.
+  - **행 아무 데나 눌러도 상세로 간다**(`onRowClick`). `<tr>` 은 `<Link>` 로 감쌀 수 없어서
+    (테이블 안에서 `<a>` 가 행을 감싸는 마크업은 스펙 위반이고 브라우저가 `<a>` 를 표 밖으로
+    끄집어낸다) `router.push` 를 쓴다. **제목의 `<Link>` 는 남겨 둔다** — 키보드 포커스·
+    스크린리더·새 탭이 거기 달려 있다. 대신 `a, button, input, select, [draggable='true']`
+    안에서 시작한 클릭은 걸러 **두 번 이동하지 않게** 한다(드래그 손잡이도 여기 걸린다).
+    ⌘/Ctrl 클릭은 `window.open` 으로 새 탭, 글자를 긁던 중(`getSelection()`)이면 이동 안 함.
+  - **드래그 중 화면 끝에 닿으면 자동으로 스크롤한다**(`EDGE` 110px, 프레임당 최대 22px).
+    ⚠️ **좌표는 `dragover`, 굴리는 건 `rAF` 로 나눠야 한다.** `dragover` 만 보고 굴리면
+    포인터를 끝에 붙여 놓고 가만히 뒀을 때 이벤트가 뜸해져(브라우저마다 다르다) 스크롤이
+    뚝뚝 끊긴다. 리스너는 **document** 에 건다 — 표 바깥(고정 헤더·여백)으로 끌고 가도
+    계속 굴러야 한다. `preventDefault` 는 하지 않는다(좌표만 필요하고, 드롭 허용 여부는
+    행의 `onDragOver` 가 정한다).
+    ⚠️ `add/removeEventListener` 가 **같은 함수 참조**여야 떼진다 — `trackPointer` 를
+    컴포넌트 밖에 둔 이유다. 안에서 만들면 렌더마다 새 함수가 되어 리스너가 쌓인다.
+    어드민은 Lenis 를 안 쓰므로(`LegacyRuntime` 은 마케팅 `PageShell` 전용) `window.scrollBy`
+    로 충분하다.
   - 저장은 `dragend` 에 **한 번**, `reorder_portfolios(uuid[])` RPC 로 한 문장에 끝낸다.
     행마다 UPDATE 를 날리면 맨 아래를 맨 위로 끌었을 때 수십 번 왕복한다.
     ⚠️ **`security invoker` 다** — 004 의 쓰기 RLS 가 그대로 적용된다. `definer` 로 바꾸면
@@ -486,7 +502,7 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 | `012_portfolio_sort_order.sql`           | ✅ 사용자 실행 확인 (2026-08-25)             |
 | `013_drop_admin_main_permission.sql`     | ❌ **미실행**                                |
 | `014_portfolio_html_folder.sql`          | ✅ 사용자 실행 확인 (2026-08-25)             |
-| `015_portfolio_main_limit.sql`           | ❌ **미실행** — 메인 3건 상한 DB 방어선       |
+| `015_portfolio_main_limit.sql`           | ✅ 사용자 실행 확인 (2026-08-25)             |
 
 **실행 여부는 anon 키로 REST 를 찔러서 확인한다** (`curl "$URL/rest/v1/portfolios?select=<컬럼>&limit=1"`
 — 컬럼이 없으면 42703). 이 방법으로 011 이 "미실행" 이 아니라 이미 반영돼 있었음을 확인했다.
@@ -542,8 +558,8 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 
 ### 바로 이어서 할 만한 것
 
-- **`013`, `015` 실행** — 013 은 유령 권한(`/admin/main`) 정리, 015 는 메인 3건 상한의
-  DB 방어선. (`012`·`014` 는 2026-08-25 사용자 실행 확인)
+- **`013` 실행** — 유령 권한(`/admin/main`) 정리. 남은 유일한 미실행 마이그레이션이다.
+  (`012`·`014`·`015` 는 2026-08-25 사용자 실행 확인)
 - **실데이터 입력** — 담당자에게 실제 포트폴리오 목록과 이미지를 받아야 한다.
 - **`quotes` 에 메뉴권한 RLS** — `portfolios` 는 걸었지만 `quotes` 는 아직 메뉴권한과 무관하게 열려 있다.
 - **카드 클릭 → 상세 HTML 이동** — 컬럼은 있고 링크는 미연결(사용자가 "추후"로 보류)
