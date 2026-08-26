@@ -1,0 +1,24 @@
+/* 사이트 전역 SEO 상수. 메타데이터·robots·sitemap·JSON-LD 가 전부 여기를 본다.
+
+   ⚠️ SITE_URL 은 **www 를 포함한 최종 주소**여야 한다. insplanet.co.kr 은 www 로 308
+   리다이렉트되므로, canonical/OG/sitemap 이 www 없는 주소를 가리키면 검색엔진이 매번
+   리다이렉트를 한 번 더 타고 신호가 두 주소로 흩어진다. */
+export const SITE_URL = 'https://www.insplanet.co.kr';
+export const SITE_NAME = 'Insplanet';
+export const SITE_NAME_KO = '인스플래닛';
+
+/* 검색결과에 그대로 노출되는 문장이다. 길이는 한글 기준 80자 안팎이 잘리지 않는다. */
+export const SITE_DESCRIPTION =
+  '비즈니스의 본질을 꿰뚫는 통찰과 정교한 기술력으로 아이디어를 현실로 만듭니다. 금융·모빌리티·공공 분야의 웹·앱 UI/UX 설계와 프론트엔드 구축을 수행하는 디지털 프로덕트 전문 기업입니다.';
+
+/* AEO — AI 검색이 "이 회사가 뭐 하는 곳인가"에 답할 때 근거로 삼는 문장들.
+   페이지 본문에 흩어져 있는 정보를 한 줄로 요약해 JSON-LD 로 같이 내보낸다. */
+export const SERVICES = [
+  'UI/UX 디자인',
+  '웹 · 모바일 프론트엔드 구축',
+  '디자인 시스템 · 퍼블리싱',
+  'CMS · 관리자 시스템 구축',
+  '연간 유지보수',
+] as const;
+
+export const OG_IMAGE = `${SITE_URL}/assets/og-default.png`;

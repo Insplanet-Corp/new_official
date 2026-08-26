@@ -11,7 +11,17 @@ import MobileAbout from '@/components/mobile/MobileAbout';
 import '@/styles/about.css';
 import '@/styles/mobile-pages.css';
 
-export const metadata: Metadata = { title: 'Insplanet — Who We Are' };
+/* title 은 루트 레이아웃의 template 이 " — Insplanet" 을 붙인다. description 은 검색결과에
+   그대로 노출되므로 페이지마다 다르게 쓴다 — 같은 문장을 돌려쓰면 중복 콘텐츠로 본다. */
+const description =
+  '기술보다 사람을, 속도보다 본질을 먼저 생각합니다. 인스플래닛이 일하는 방식과 금융·모빌리티·공공 분야에서 쌓아 온 경험을 소개합니다.';
+
+export const metadata: Metadata = {
+  title: 'Who We Are',
+  description,
+  alternates: { canonical: '/about' },
+  openGraph: { title: 'Who We Are — Insplanet', description, url: '/about' },
+};
 
 export default function AboutPage() {
   return (

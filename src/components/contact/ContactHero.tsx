@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { trackDownload } from '@/lib/analytics';
 import { BRIEF_PDF } from '@/data/site';
 import useHeroReveal from '@/lib/hooks/useHeroReveal';
 
@@ -34,7 +35,7 @@ export default function ContactHero() {
                   가치 실현의 순간까지 가장 든든한 파트너가 되어드리겠습니다.
                 </p>
               </div>
-              <a className="ct-brief" href={BRIEF_PDF} download>
+              <a className="ct-brief" href={BRIEF_PDF} download onClick={() => void trackDownload('brochure')}>
                 <span>Company Brief Download</span>
                 <span className="ct-brief-ico" aria-hidden="true">
                   <svg width="11.31" height="11.31" viewBox="0 0 13 13" fill="none">

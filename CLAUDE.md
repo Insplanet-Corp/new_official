@@ -163,6 +163,38 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 **767**. 그래서 768~1023 구간이 "모바일 이미지 + PC 레이아웃" 이 된다. section03 은 1023/1024 로
 맞춰 고쳤지만 **section01·02·04~08 은 아직 767/768 그대로다** (미확인 — 눈으로 안 봤다).
 
+**`_shared/style.css` 를 슬림화 (2026-08-26) — 137KB → 14KB**
+
+- 이 파일은 원래 마케팅 `src/styles/style.css` 의 **통째 사본**이었다(5,223줄 vs 5,334줄,
+  줄 단위 차이 161줄 = 97% 동일). 정적 사이트에서 상세 산출물을 가져올 때 사이트
+  스타일시트가 그대로 딸려온 것.
+- 실측: 셀렉터 688개 중 상세 문서(`<project-detail>` + 각 프로젝트 본문)가 실제로 쓰는 것은
+  **12KB뿐, 나머지 86%는 죽어 있었다.** 클래스 334개 중 상세 HTML·각 프로젝트 CSS/JS·
+  `_shared/*.js` 어디에도 안 나오는 것이 314개(`.projects` `.menu-*` `.ct-*` `.m-*` `#stage`
+  `.ps-sheet` … 전부 **부모 페이지의 것**이라 iframe 안에서는 아무 데도 안 붙는다).
+- 남긴 기준 — ① **요소 셀렉터(`*` `html` `body` `img` …)는 전부**: 리셋·박스모델·기본 폰트가
+  여기 있어 빠지면 여백이 통째로 달라진다 ② 코퍼스에 실제로 등장하는 클래스/아이디만
+  ③ 참조되지 않는 `@keyframes` 9개 제거.
+- ⚠️ **`html.lenis` / `.lenis.lenis-smooth` 블록은 반드시 남아야 한다** — `bridge.js` 가
+  iframe 안에서 Lenis 를 띄우는 짝이다(위 항목 참고). 슬림본에도 들어 있다.
+- ⚠️ **정적 사이트에서 상세를 다시 가져올 때 이 파일을 원본 style.css 로 덮지 말 것.**
+  덮으면 137KB 사본이 되돌아온다. 파일 맨 위 주석에도 같은 경고를 넣어 뒀다.
+- **검증 방법(다시 쓸 것)**: 같은 문서 안에서 `<link>` 의 href 만 바꿔치기해 **A/B 를 한
+  로드에서** 했다 — 상세를 같은 출처 iframe 으로 띄우고(`contentDocument` 접근 가능),
+  트랜지션/애니메이션을 끈 뒤 모든 요소의 computed style 40개 속성을 스냅샷 → href 를
+  슬림본으로 교체 → 다시 스냅샷 → 요소 단위 비교. 페이지를 다시 로드하지 않으므로
+  이미지 로딩·rAF 정지 같은 환경 차이가 끼어들지 않는다.
+- **확인함**: `_shared/style.css` 를 쓰는 상세 **33개 전부**에서 차이 **0개**
+  (요소 71~100개 × 40속성). 교체 후 스타일시트 규칙 수 688→70, `body` margin 0 ·
+  `border-box` · 기본 폰트 유지, 문서 높이 동일(예: wmall 3693px), 히어로 렌더 정상.
+- ℹ️ 곁가지: **`public/portfolio/kb-platform/` 은 빈 폴더**였다(index.html 자체가 없음).
+  아래 "어느 행도 안 쓰고 있다" 항목의 그 폴더다 — 지워도 되는지 담당자 확인 필요.
+- ℹ️ 같은 분석을 **마케팅 `src/styles/style.css` 에도 돌렸는데 지울 게 없다**(701개 규칙 중
+  죽은 것 1KB). 후보로 잡힌 `.insight-num--02/03` `.m-insight-num--02/03` 은 `Insight.tsx` 가
+  `` `insight-num--0${i+1}` `` 로 **조립**하는 이름이라 grep 에 안 걸리는 오탐이고(2번 함정),
+  `.is-tapped` 는 모바일 탭 애니메이션이다. 진짜 미사용은 `.ps-error` 하나뿐 —
+  **마케팅 쪽은 다시 파지 말 것.**
+
 ### 반드시 지킬 규칙
 
 - **iframe 은 내용 높이가 아니라 뷰포트 크기로 고정한다** (`.pd-hero{height:100vh}` 등 CSS가
@@ -667,6 +699,66 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   세션이 없어 못 봤다.
 
 ---
+
+**배포 전환 준비 — SEO/AEO · 회사소개서 · 방문자 분석 (2026-08-26)**
+
+- **회사소개서 PDF 를 저장소에서 Supabase Storage 로 옮겼다.** 어드민 `/admin/brief` 에서
+  올리면 배포 없이 교체된다. 고정 경로 `brief/insplanet_brief.pdf` 에 `upsert` 로 덮어쓰므로
+  URL 이 안 변하고(사이트는 `BRIEF_PDF` 상수 하나) 옛 파일이 쌓이지도 않는다(016).
+  - ⚠️ **교차 출처에서는 `<a download>` 가 무시된다** — URL 의 `?download=` 파라미터가
+    `Content-Disposition: attachment` 를 만든다. **빼면 다운로드가 아니라 PDF 가 열린다.**
+  - ⚠️ 원본 194.6MB(5120x2880 무손실 PNG 168장)를 Ghostscript 로 **13.9MB** 로 줄였다
+    (150dpi + JPEG QFactor 1.3). GitHub 은 100MB 넘는 파일을 거부하므로 압축이 필수였다.
+    `/screen`(72dpi)은 같은 14MB인데 목업 안 작은 글씨가 뭉갠다 — 해상도를 낮추지 말고
+    **JPEG 압축을 높이는 쪽**이 옳다.
+  - **확인함**: 같은 경로에 덮어쓰면 Supabase 가 **CDN 캐시를 즉시 무효화한다**(max-age 3600
+    파일을 덮어쓴 직후 새 내용이 나왔다). 그래서 cacheControl 을 짧게 둘 이유가 없다.
+
+- **SEO/AEO 를 새로 붙였다.** 옛 사이트(Vue SPA)에는 아무것도 없었다 — 전 페이지 title
+  'INSPLANET' 하나, description·OG 없음, robots/sitemap 없음, 본문이 `<div id="app">` 로 비어
+  있고 아무 주소나 200 을 돌려줬다.
+  - `data/seo.ts`(상수) · 루트 `metadata`(metadataBase·OG·트위터·robots) · 페이지별
+    description/canonical · `robots.ts` · `sitemap.ts`(고정 4 + 상세 37 = 41개) ·
+    `SiteJsonLd`(Organization/WebSite/ProfessionalService) · `public/llms.txt` ·
+    OG 이미지(`public/assets/og-default.png`, footer_logo.svg 를 sharp 로 1200x630 렌더).
+  - **`/work` · `/work/:slug` → `/projects` 308 리다이렉트**(next.config). 옛 라우트는 번들에서
+    직접 확인했다. 상세는 옛 슬러그(`/work/bizpay`)와 새 UUID 사이 대응표가 없어 목록으로 보낸다.
+  - 실적 썸네일 `alt` 가 전부 비어 있었다 → 프로젝트명·고객사로 채웠다.
+  - **남은 것**: 프로젝트 상세가 sandbox iframe 안이라 크롤러가 거의 못 읽는다.
+    `/projects/<id>` 에 서버 렌더 텍스트를 두는 작업이 필요하다.
+
+- **방문자 분석을 옛 사이트에서 이식했다** (`/admin/analytics`).
+  - ⚠️ **기록은 우리 코드가 하지 않는다** — Supabase Edge Function `track` 이 service_role 로
+    넣는다. 그 함수가 요청 IP 를 보고 사무실 IP(`internal_ips`)면 기록하지 않는다(IP 는 비교에만
+    쓰고 저장하지 않음). **함수는 Supabase 에 배포돼 있어 저장소를 갈아끼워도 남는다** —
+    옛 저장소(`Develop/Company/official`)에 소스가 있다.
+  - ⚠️ **배포된 함수가 옛 저장소 소스보다 새롭다** — 로컬 소스에 없는 봇 필터가 있다
+    (curl 로 부르면 `{"skipped":"bot"}`). 함수를 고칠 일이 생기면 대시보드의 배포본을 먼저 볼 것.
+  - ⚠️ 집계는 서버가 아니라 브라우저에서 센다(REST 에 group by 가 없다). 지금 865건이라
+    괜찮지만 수만 건이 되면 RPC 로 옮겨야 한다.
+  - `lib/analytics.ts` + `Analytics.tsx`(루트 레이아웃)가 pathname 변화마다 기록한다.
+    같은 경로 연속 기록은 막는다 — 시트를 닫으면 `/projects` 로 돌아오는데 그것까지 세면
+    목록 조회수가 부풀려진다.
+  - 회사소개서 링크 4곳에 `trackDownload('brochure')` 를 붙였다. 안 붙이면 그 수치가 계속 0 이다.
+  - **확인함**: 브라우저에서 `track` 호출이 실제로 나가고 visitor_id 가 생성됨.
+    **확인 못 함**: 어드민 화면의 실제 렌더 — 세션이 없어 게이트를 못 넘는다.
+    또 사무실 IP(115.91.159.217)가 `internal_ips` 에 등록돼 있어 이 자리에서는 기록이 안 남는다
+    (의도된 동작).
+
+- **옛 사이트 테이블 정리(017)** — `contacts`(테스트 2건뿐) · `brochure_history` 삭제.
+  ⚠️ **도메인 교체 뒤에 실행할 것** — 지금 라이브 사이트가 `contacts` 에 쓰고 있다.
+  `pageviews` · `internal_ips` · `downloads` 는 **남긴다**(위 분석 화면이 쓴다).
+
+- **Supabase 무료 플랜 실측** (전송량 5GB/월 기준):
+  홈 0.23MB(21,800회) · `/projects` 1.02MB(5,000회) · 재방문 0바이트(304) · 소개서 13.9MB(368회).
+  ⚠️ **원본 URL 로 재면 안 된다** — DB 의 `object/public/...` 은 5K PNG(17.8MB)이고, 페이지는
+  `render/image/...?width=..` 리사이즈 URL 을 쓴다(`lib/images.ts`). 게다가 `Accept: image/webp`
+  를 안 보내면 PNG 776KB 가 오는데 브라우저는 WebP 35KB 를 받는다. 처음에 이 둘을 다 틀리게 재서
+  "홈이 43MB" 라는 잘못된 경고를 했다.
+  ⚠️ 이미지 변환은 유료 기능이고 폴백이 없다 — 막히면 이미지가 커지는 게 아니라 **안 나온다.**
+- **Vercel cron `/api/keepalive`** — 무료 Supabase 는 7일간 요청이 없으면 일시정지되고
+  **자동으로 안 깨어난다**(대시보드에서 사람이 재개). 하루 한 번 DB 를 찌른다.
+  ⚠️ 정적 응답만 돌려주면 의미가 없다 — 실제 DB 조회를 해야 한다.
 
 ## 현재 상태
 

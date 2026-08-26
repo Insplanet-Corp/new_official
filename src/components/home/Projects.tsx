@@ -28,7 +28,8 @@ export default function Projects({ items }: { items: ShowcaseItem[] }) {
                 <img
                   className="proj-img"
                   src={p.image}
-                  alt=""
+                  /* 검색·AI 크롤러가 이 실적을 읽는 유일한 텍스트다 */
+                  alt={`${p.name.join(' ')}${p.client ? ` — ${p.client}` : ''}`}
                   loading="lazy"
                   crossOrigin="anonymous"
                 />

@@ -21,6 +21,23 @@ const nextConfig: NextConfig = {
      dev 전용 설정이라 배포(next start)에는 영향이 없다. */
   allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.16.*.*', '172.17.*.*', '*.local'],
 
+  /* 옛 사이트(insplanet.co.kr, Vue SPA)에서 넘어오는 주소를 새 구조로 보낸다.
+
+     옛 라우트는 번들에서 확인했다 — `/`, `/contact`, `/work`, `/work/:workId`,
+     `/admin`, `/admin/login`. 이 중 `/work` 계열만 새 사이트에서 이름이 다르다.
+
+     ⚠️ 301(영구)이어야 검색엔진이 색인을 새 주소로 옮긴다. `permanent: true` 가 308 을
+        내보내는데, 308 은 301 과 같은 "영구" 신호이고 메서드를 보존하는 최신 코드다.
+     ⚠️ 상세는 1:1 로 못 옮긴다 — 옛 주소는 `/work/bizpay` 처럼 손으로 정한 슬러그이고
+        새 주소는 `/projects/<uuid>` 라 대응표가 없다. 목록으로 보낸다. 링크 가치가
+        분산되지만 404 로 버리는 것보다 낫다. 나중에 슬러그 컬럼을 두면 그때 개별 매핑할 것. */
+  async redirects() {
+    return [
+      { source: '/work', destination: '/projects', permanent: true },
+      { source: '/work/:slug', destination: '/projects', permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {

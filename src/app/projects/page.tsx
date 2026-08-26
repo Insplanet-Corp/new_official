@@ -10,7 +10,15 @@ import { supabase } from '@/lib/supabase';
 import '@/styles/projects.css';
 import '@/styles/mobile-pages.css';
 
-export const metadata: Metadata = { title: 'Insplanet — Projects' };
+const description =
+  '인스플래닛이 수행한 프로젝트입니다. 신한은행 · LG CNS · KB · 공공기관 등 금융 · 모빌리티 · 공공 분야의 웹 · 앱 UI/UX 설계와 프론트엔드 구축 사례를 확인하세요.';
+
+export const metadata: Metadata = {
+  title: 'Projects',
+  description,
+  alternates: { canonical: '/projects' },
+  openGraph: { title: 'Projects — Insplanet', description, url: '/projects' },
+};
 
 /* 요청마다 DB 를 읽는다 — 어드민에서 고치면 새로고침 즉시 반영된다.
 

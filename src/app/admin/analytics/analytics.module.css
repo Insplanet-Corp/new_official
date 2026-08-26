@@ -1,0 +1,77 @@
+/* 방문자 분석 화면 전용. 색은 admin theme 토큰(CSS 커스텀 프로퍼티)을 상속받아 쓴다 —
+   theme.module.css 를 import 하지 않아도 var(--ink) 등이 그대로 먹는다. */
+
+.head {
+  padding: 18px 20px 0;
+}
+
+/* ── 일별 추이 막대 ─────────────────────────────────────────────
+   막대 개수가 기간에 따라 7~90 으로 변한다. flex 로 균등 분할하면 90일에서도
+   자동으로 얇아진다(고정 폭을 주면 넘친다). */
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 180px;
+  padding: 20px;
+}
+.barCell {
+  flex: 1 1 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  min-width: 2px;
+}
+.bar {
+  width: 100%;
+  min-height: 2px; /* 0 인 날도 바닥선이 보이게 */
+  border-radius: 3px 3px 0 0;
+  background: var(--brand, #2563eb);
+}
+.axis {
+  padding: 0 20px 18px;
+}
+
+/* ── 순위 카드 두 개를 나란히 ───────────────────────────────── */
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+@media (max-width: 1023px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rank {
+  list-style: none;
+  margin: 0;
+  padding: 8px 20px 18px;
+}
+.rankRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+/* 막대는 배경으로 깔고 글자를 그 위에 올린다 — 경로가 길어도 안 밀린다 */
+.rankBar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--brand, #2563eb) 12%, transparent);
+  border-radius: 6px;
+}
+.rankName {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rankCount {
+  position: relative;
+  flex: 0 0 auto;
+}

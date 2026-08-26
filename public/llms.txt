@@ -1,0 +1,28 @@
+# Insplanet (인스플래닛)
+
+> 비즈니스의 본질을 꿰뚫는 통찰과 정교한 기술력으로 아이디어를 현실로 만드는
+> 디지털 프로덕트 전문 기업. 금융·모빌리티·공공 분야의 웹·앱 UI/UX 설계와
+> 프론트엔드 구축을 수행합니다.
+
+## 회사 정보
+- 상호: 인스플래닛 (Insplanet)
+- 주소: 서울특별시 중구 퇴계로27길 49, 2층 (저동2가, 센트럴에스빌딩)
+- 이메일: hello@insplanet.co.kr
+- 전화: 02.2088.5084 / 팩스: 02.2088.5184
+
+## 제공 서비스
+- UI/UX 디자인
+- 웹 · 모바일 프론트엔드 구축
+- 디자인 시스템 · 퍼블리싱
+- CMS · 관리자 시스템 구축
+- 연간 유지보수
+
+## 주요 페이지
+- [홈](https://www.insplanet.co.kr/): 회사 소개와 대표 프로젝트
+- [About](https://www.insplanet.co.kr/about): 일하는 방식과 팀
+- [Projects](https://www.insplanet.co.kr/projects): 수행 프로젝트 목록과 상세
+- [Contact](https://www.insplanet.co.kr/contact): 프로젝트 문의 · 채용 지원 · 회사소개서 다운로드
+
+## 참고
+- 프로젝트 상세는 /projects/<id> 주소로 직접 열립니다.
+- 회사소개서(PDF)는 Contact 페이지와 전체메뉴의 Company Brief Download 버튼에서 받을 수 있습니다.

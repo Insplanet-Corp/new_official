@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import PageShell from '@/components/PageShell';
 import ResponsiveSlot from '@/components/ResponsiveSlot';
 import BeyondSwap from '@/components/home/BeyondSwap';
@@ -19,6 +20,10 @@ import { MAX_SHOWCASE, toShowcase } from '@/data/home';
 import type { Portfolio } from '@/lib/portfolios';
 import { supabase } from '@/lib/supabase';
 import '@/styles/home-responsive.css';
+
+/* 홈은 루트 레이아웃의 기본 title/description 을 그대로 쓴다(사이트 대표 문구라 같은 게 맞다).
+   canonical 만 명시한다 — 쿼리스트링이 붙은 주소가 따로 색인되는 것을 막는다. */
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 /* 어드민에서 [메인] 을 체크하면 바로 반영되도록 요청마다 읽는다.
    ISR 로 두면 만료 후 첫 요청도 옛 화면을 주고 뒤에서 다시 만들어, 어드민에서

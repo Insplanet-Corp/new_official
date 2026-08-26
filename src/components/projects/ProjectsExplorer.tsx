@@ -149,7 +149,9 @@ export default function ProjectsExplorer({
                   src={cardSrc(card.image)}
                   srcSet={cardSrcSet(card.image)}
                   sizes={CARD_SIZES}
-                  alt=""
+                  /* 검색·AI 크롤러가 실적을 읽는 유일한 텍스트다 — 비워 두면 41장이
+                     전부 이름 없는 이미지가 된다. 제목이 두 줄로 쪼개져 있어 합친다. */
+                  alt={`${card.lines.join(' ')} 프로젝트 썸네일`}
                   loading="lazy"
                   decoding="async"
                 />

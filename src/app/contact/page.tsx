@@ -7,7 +7,15 @@ import MobileContact from '@/components/mobile/MobileContact';
 import '@/styles/contact.css';
 import '@/styles/mobile-pages.css';
 
-export const metadata: Metadata = { title: 'Insplanet — Contact' };
+const description =
+  '프로젝트 문의와 채용 지원을 받습니다. 회사소개서(Company Brief)도 이곳에서 내려받을 수 있습니다. 서울 중구 퇴계로27길 49, 2층.';
+
+export const metadata: Metadata = {
+  title: 'Contact',
+  description,
+  alternates: { canonical: '/contact' },
+  openGraph: { title: 'Contact — Insplanet', description, url: '/contact' },
+};
 
 export default function ContactPage() {
   return (

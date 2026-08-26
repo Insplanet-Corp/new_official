@@ -194,7 +194,8 @@ export default function MobileProjectsPage({
                   src={cardSrc(card.image)}
                   srcSet={cardSrcSet(card.image)}
                   sizes={MP_CARD_SIZES}
-                  alt=""
+                  /* 검색·AI 크롤러가 실적을 읽는 유일한 텍스트다 — PC 카드와 같은 규칙 */
+                  alt={`${card.lines.join(' ')} 프로젝트 썸네일`}
                   /* ⚠️ loading="lazy" 를 빼지 말 것. ≥1024 에서 이 트리는 display:none 인데,
                      레이아웃 박스가 없는 lazy 이미지는 지연 대상으로 남아 아예 받지 않는다 —
                      PC 에서 모바일 썸네일을 통째로 내려받는 것을 이 한 줄이 막는다(34번). */

@@ -89,7 +89,12 @@ export default function MobileProjects({ items }: { items: ShowcaseItem[] }) {
           {items.map((p, i) => {
             // src="" 는 현재 페이지를 다시 받아온다 — 비어 있으면 아예 그리지 않는다
             const art = p.image ? (
-              <img src={p.image} alt="" loading="lazy" draggable={false} />
+              <img
+                src={p.image}
+                alt={`${p.name.join(' ')}${p.client ? ` — ${p.client}` : ''}`}
+                loading="lazy"
+                draggable={false}
+              />
             ) : null;
             /* 상세가 등록된 카드만 링크가 된다. 클릭을 시트로 바꾸는 것은 여기가 아니라
                ProjectSheet 다 — document 클릭에서 a[href^="/projects/"] 를 가로챈다
