@@ -6,7 +6,9 @@ node_modules
 
 # next.js
 .next
-.next-buildcheck
+# 검증용 빌드 디렉터리(BUILD_DIR=…)까지 전부. 커밋되면 tsconfig 의 include 가
+# 낡은 validator.ts 를 잡아 next build 는 통과하는데 typecheck 만 깨진다.
+.next-*
 out
 build
 next-env.d.ts

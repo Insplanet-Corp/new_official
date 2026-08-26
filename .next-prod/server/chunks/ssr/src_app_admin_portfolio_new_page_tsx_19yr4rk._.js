@@ -1,3 +1,0 @@
-module.exports=[68616,a=>{"use strict";var b=a.i(87924),c=a.i(42559),d=a.i(38018),e=a.i(59189);a.s(["default",0,function(){return(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(d.SubHead,{eyebrow:"Portfolio",title:"포트폴리오관리 – 등록",desc:"진행 또는 종료 프로젝트를 등록합니다.",actions:(0,b.jsx)(e.default,{href:"/admin/portfolio",label:"목록",variant:"outline",color:"GRAY",size:"2",radius:"medium"})}),(0,b.jsx)(c.default,{mode:"create"})]})}])}];
-
-//# sourceMappingURL=src_app_admin_portfolio_new_page_tsx_19yr4rk._.js.map
