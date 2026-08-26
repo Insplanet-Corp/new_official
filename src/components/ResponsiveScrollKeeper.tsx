@@ -156,7 +156,7 @@ export default function ResponsiveScrollKeeper() {
         return;
       }
       wasDesktop = nowDesktop;
-      // TEMP A/B: releaseChapterLock();
+      releaseChapterLock();
       const from = nowDesktop ? 'm' : 'pc'; // 방금 떠나온 쪽
       const a = saved[from];
       if (!a) return;

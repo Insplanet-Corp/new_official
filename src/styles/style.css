@@ -2705,7 +2705,30 @@ html.ps-busy .mp-card a {
     border-color: transparent;
     background: #1a1a1a;
   }
-  /* info: 3 slides stacked in the same grid cell (grid-area:1/1), crossfade via .is-active */
+  /* info: 슬라이드 3장을 같은 그리드 칸(grid-area:1/1)에 쌓아 두고 .is-active 한 장만 보인다.
+
+     ⚠️ **여기에 opacity 트랜지션(또는 애니메이션)을 걸지 말 것.** 원래는 0.35s 크로스페이드였는데
+     실제 iPhone 15 Pro / iOS 18.7 Safari 26.6 에서 **방금 떠난 슬라이드가 새 슬라이드 제목·Client
+     위에 겹쳐 그려졌다.** 폰에서 계산값을 직접 찍어서 확인한 것:
+
+         #0 op=0          vis=hidden
+         #1 op=0.459116   vis=hidden   ← 그런데 화면에 그려지고 있다
+         #2 ACTIVE op=0.540884 vis=visible
+
+     즉 `visibility:hidden` 은 제대로 계산돼 있는데 **페인트에 반영되지 않는다.** opacity
+     트랜지션이 도는 동안 WebKit 이 그 요소를 가속 레이어로 올려 두고 visibility 를 무시하는
+     것으로 보인다. 그래서 `visibility` 를 얹는 것만으로는 폰에서 안 잡혔다(1차 시도 실패).
+     트랜지션을 지우면 가속 레이어가 안 생겨 그 경로를 아예 안 탄다 — 같은 React 렌더에서
+     같이 바뀌지만 트랜지션이 없는 `.m-proj-dots` 는 폰에서도 멀쩡했다.
+
+     ⚠️ **데스크톱에서 멀쩡한 것을 근거로 삼지 말 것.** 데스크톱 Chrome·Safari 도, iOS
+     시뮬레이터(iPhone 16 Pro / iOS 18.3)도 재현되지 않는다 — 진짜 터치 모멘텀 스크롤이
+     아니기 때문이다. 실기기에서만 난다.
+
+     `visibility` 는 남겨 둔다 — opacity 만으로 숨기면 어떤 이유로든 값이 중간에 멎었을 때
+     그대로 보이지만 visibility 는 애니메이션되지 않는다. 레이아웃(그리드 행 높이 = 가장 긴
+     슬라이드)은 그대로라 See More 버튼이 안 튀고, 스크린리더가 안 보이는 슬라이드까지 다
+     읽던 것도 없어진다. */
   .m-proj-info {
     position: relative;
     display: grid;
@@ -2714,10 +2737,11 @@ html.ps-busy .mp-card a {
   .m-proj-slide {
     grid-area: 1/1;
     opacity: 0;
-    transition: opacity 0.35s ease;
+    visibility: hidden;
   }
   .m-proj-slide.is-active {
     opacity: 1;
+    visibility: visible;
   }
   .m-proj-name {
     margin: 0;
@@ -2768,11 +2792,6 @@ html.ps-busy .mp-card a {
   .m-proj-more-ico img {
     width: 100%;
     height: 100%;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .m-proj-slide {
-      transition: none;
-    }
   }
 
   /* --- chapter 07 (mobile): Say Hello CTA — black full-viewport, PC's WebGL horizon glow reused

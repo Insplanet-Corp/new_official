@@ -946,7 +946,7 @@
   // where the section isn't even rendered. If the section isn't drawn, this chapter owns nothing —
   // put every piece of its state back. Safe to run on every resize: all of it is idempotent.
   addEventListener('resize', ()=>{
-    if(true) return; // TEMP A/B: 픽스 비활성화
+    if(sec.offsetHeight>0) return;                          // still the desktop chapter -> the pin is legitimate
     exitArmed=false; swipeFired=false; cool=false;
     window.__projUnlock();                                  // no-op unless locked (restarts Lenis, clears the pin)
   });

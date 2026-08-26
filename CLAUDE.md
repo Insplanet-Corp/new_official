@@ -466,6 +466,37 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   - **확인 못 함**: 휠로 5단계 실제로 넘기는 동작(브라우저 패널 rAF 정지 한계), 실제 메인
     등록분 렌더(등록 0건).
 
+**1024 경계를 넘나들면 스크롤이 죽던 버그 (2026-08-25)**
+
+- 증상: 창을 키웠다 줄였다 하다 보면 **갑자기 페이지 스크롤이 통째로 안 된다.**
+- 원인: PC "Our Projects" 챕터의 **스크롤 잠금**. 섹션이 화면을 채우면 main.js 가
+  `locked=true` 로 들어가 wheel 을 preventDefault 하고(**비-passive 리스너**) `Lenis.stop()`
+  을 부른 뒤, 휠 한 번에 프로젝트 한 장씩만 넘긴다. 그런데 **그 IIFE 에는 resize 처리가
+  전혀 없었다** — 잠긴 채로 창을 1024 아래로 줄이면 `.projects` 는 `display:none` 이 되어
+  화면에서 사라지는데 잠금은 그대로 남아, 모바일 화면에서 스크롤이 완전히 죽는다.
+  반응형 전환(34번) 이전에는 한 문서가 한쪽 마크업만 들고 있었으므로 생길 수 없던 조합이다.
+- 고친 곳 **두 군데**(둘 다 필요하다):
+  1. `public/js/main.js` — 챕터 IIFE 끝에 resize 핸들러를 붙여 **섹션이 안 그려지면
+     (`sec.offsetHeight===0`) 상태를 전부 되돌린다**: `exitArmed` `swipeFired` `cool` 를 끄고
+     `__projUnlock()` 을 부른다. ⚠️ `__projUnlock()` 만으로는 부족하다 — 그 함수는
+     `if(!locked) return` 이라 **`exitArmed` 를 못 지운다.** `exitArmed` 는 위로 당기는
+     touchmove 에서 `lockAt()` 을 다시 부르므로, 섹션이 없는 폭에서 잠금을 **되살릴 수 있다.**
+     ⚠️ 정적 사이트에서 `main.js` 를 다시 가져오면 사라진다 — 슬라이드 3장 블록·메뉴 IIFE 와
+     같이 재적용할 것.
+  2. `ResponsiveScrollKeeper` — 경계를 넘을 때 `__projUnlock()` 을 **먼저** 부른다. 이쪽
+     리스너가 main.js 것보다 앞서 등록되므로, 안 풀고 `jump()` 하면 잠긴 main.js 의 onScroll 이
+     섹션 상단으로 되돌려 버려 챕터 유지 자체가 안 먹는다.
+- ⚠️ **관측 함정** — "휠이 먹히는가" 로 잠금을 판정하면 안 된다. **Lenis 가 `smoothWheel` 을
+  위해 항상 wheel 을 preventDefault 한다.** 처음에 이걸로 재현했다고 착각해서 엉뚱한 A/B 를
+  돌렸다. 올바른 관측점은 **`window.__lenis.isStopped`** 다(`lockAt` 이 `L().stop()` 을 부른다).
+- **확인함**(dev, 브라우저 패널): 픽스 둘 다 끈 상태에서 데스크톱 잠금 → 900px 로 넘어가면
+  `isStopped:true` 가 남고 `scrollTo` 가 9799→9799 로 **전혀 안 움직임**(재현). 픽스를 되돌리면
+  같은 시나리오에서 `isStopped:false` + 스크롤 정상, **2왕복(PC→모바일→PC→모바일)** 모두 정상.
+  데스크톱으로 돌아왔을 때 챕터에 다시 잠기는 것은 의도된 동작이다.
+  ⚠️ 이 패널은 탭이 hidden 이라 rAF 가 얼어 있어 `onScroll`(rAF 스로틀)이 안 돈다 —
+  잠금을 걸려면 `dispatchEvent(new Event('resize'))` 를 써야 한다(라인 996 이 rAF 없이 부른다).
+  **확인 못 함**: 사람이 실제로 창을 잡고 흔드는 조작.
+
 **홈 Our Projects — 상세 시트 + 모바일 화살표 (2026-08-25)**
 
 - **홈에서도 프로젝트를 누르면 상세가 아래에서 올라온다.** `/projects` 목록이 쓰던
@@ -816,3 +847,36 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
     ℹ️ **덤으로 찾은 것(안 고침)**: 모바일에서 `#scroll-hint` 가 **항상 `is-hidden`** 이다.
     `main.js` 의 "푸터 보이면 SCROLL 숨김" IIFE 가 데스크톱 `.footer` 를 보는데 모바일에서는
     그게 `display:none` 이라 `rect.top=0` → 항상 숨김 판정. `.m-footer` 를 같이 봐야 한다.
+17. **⚠️ iOS Safari 는 opacity 트랜지션이 도는 요소의 `visibility:hidden` 을 페인트에
+    반영하지 않는다 — 실기기에서만 난다** (2026-08-26 수정) —
+    모바일 홈 Our Projects 의 아래 정보(`.m-proj-slide` 3장)는 같은 그리드 칸에 쌓아 두고
+    `.is-active` 만 보이게 하는 크로스페이드였다. 사용자 iPhone 15 Pro(iOS 18.7 / Safari 26.6)
+    에서 **방금 떠난 슬라이드가 새 슬라이드 제목·Client 위에 그대로 겹쳐** 보였다.
+    폰 화면에 계산값을 직접 찍어서 잡았다:
+
+        #0 op=0          vis=hidden
+        #1 op=0.459116   vis=hidden   ← 그런데 화면에 그려지고 있다
+        #2 ACTIVE op=1 에 가까움 vis=visible
+
+    `visibility:hidden` 이 **제대로 계산돼 있는데도 페인트에서 안 빠진다.** opacity 트랜지션이
+    도는 동안 WebKit 이 그 요소를 가속 레이어로 올려 두고 visibility 를 무시하는 것으로 보인다.
+    → **`.m-proj-slide` 에서 transition 을 아예 없앴다**(`opacity`+`visibility` 로 즉시 전환).
+    애니메이션이 없으면 그 경로를 안 탄다 — 같은 React 렌더에서 함께 바뀌지만 트랜지션이 없는
+    `.m-proj-dots` 는 폰에서도 내내 정상이었고, 그게 원인을 가른 결정적 단서였다.
+    **확인함**: 사용자 실기기에서 정상 동작(2026-08-26). 크로스페이드는 사라지고 즉시 전환된다.
+    ⚠️ **1차 시도(`visibility:hidden` 만 추가)는 실패했다** — 위 이유로 폰에서 안 먹는다.
+    같은 패턴(한 칸에 겹쳐 두고 opacity 로 가르기)을 새로 만들 때는 **트랜지션을 걸지 말 것.**
+    ⚠️ **데스크톱에서 멀쩡한 것을 근거로 삼지 말 것.** 데스크톱 Chrome·Safari 는 물론
+    **iOS 시뮬레이터(iPhone 16 Pro / iOS 18.3)에서도 재현되지 않는다** — 진짜 터치 모멘텀
+    스크롤이 아니기 때문이다. 시뮬레이터는 `xcrun simctl boot` 후 `open_url` 로 dev 서버
+    (`http://<맥 LAN IP>:5599`)에 붙일 수 있어 레이아웃 확인에는 쓸모가 있지만, **이런 종류의
+    합성/페인트 버그는 실기기가 아니면 못 잡는다.**
+    ℹ️ **폰에서 원인을 잡은 방법** — 세션마다 다시 쓰게 될 것이다. `?debug=1` 일 때만 뜨는
+    고정 패널을 임시로 붙여 뷰포트 폭·미디어쿼리 매치·`document.styleSheets` 에서 찾은 실제
+    규칙 텍스트·각 요소의 computed opacity/visibility 를 화면에 찍었다. USB 원격 디버깅
+    (아이폰: 폰 설정→Safari→고급→웹 속성 + 맥 Safari 개발 메뉴 / 안드로이드:
+    `chrome://inspect`)보다 준비가 없고, 사용자가 스크린샷 한 장만 보내면 끝난다.
+    ⚠️ **그때 dev 서버로 검증할 때 함정 하나** — 폰 탭이 Fast Refresh 로 살아 있으면
+    **JS 만 새것이고 CSS 는 옛것인 상태**가 된다(새로고침을 눌러도 유지됐다). 규칙 텍스트를
+    찍어 두지 않았으면 "고쳤는데 안 된다" 로 한참 헤맬 뻔했다. 폰 검증은 **탭을 닫고 새 탭
+    (또는 시크릿 탭)** 에서 열 것. 배포본은 빌드마다 파일명이 바뀌므로 이 문제가 없다.
