@@ -707,10 +707,41 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   URL 이 안 변하고(사이트는 `BRIEF_PDF` 상수 하나) 옛 파일이 쌓이지도 않는다(016).
   - ⚠️ **교차 출처에서는 `<a download>` 가 무시된다** — URL 의 `?download=` 파라미터가
     `Content-Disposition: attachment` 를 만든다. **빼면 다운로드가 아니라 PDF 가 열린다.**
-  - ⚠️ 원본 194.6MB(5120x2880 무손실 PNG 168장)를 Ghostscript 로 **13.9MB** 로 줄였다
-    (150dpi + JPEG QFactor 1.3). GitHub 은 100MB 넘는 파일을 거부하므로 압축이 필수였다.
-    `/screen`(72dpi)은 같은 14MB인데 목업 안 작은 글씨가 뭉갠다 — 해상도를 낮추지 말고
-    **JPEG 압축을 높이는 쪽**이 옳다.
+  - ⚠️ 원본 194.6MB 를 Ghostscript 로 **13.9MB** 로 줄였다. GitHub 은 100MB 넘는 파일을
+    거부하므로 압축이 필수였다. **무엇이 실제로 줄였는지가 직관과 다르다** — 산출물 4벌의
+    내부를 다시 재서 확인했다(2026-08-26):
+
+    | 설정 | 크기 | 이미지 총 픽셀 | JPEG 로 바뀐 장수 |
+    | --- | --- | --- | --- |
+    | `/printer` | 41.3MB | 498MP (그대로) | 64 / 155 |
+    | `/ebook` | 32.9MB | 490MP (그대로) | 65 / 161 |
+    | `/screen` | 14.7MB | **180MP (잘림)** | 63 / 167 |
+    | **채택본** | **14.6MB** | 490MP (그대로) | **157 / 161** |
+
+    `/screen` 과 채택본은 크기가 같은데 가는 길이 정반대다 — `/screen` 은 **픽셀을 잘라서**,
+    채택본은 **픽셀을 두고 거의 전부를 JPEG 로 바꿔서** 14MB 가 됐다. 그래서 `/screen` 만
+    목업 안 작은 글씨가 뭉갠다.
+    프리셋이 32~41MB 에 머문 이유는 `AutoFilter` 가 이미지마다 사진/도형을 자동 판정해
+    **160장 중 100장쯤을 무손실로 남기기** 때문이다. 그 100장이 용량 대부분이었다.
+    → 결정적인 플래그는 dpi 가 아니라 **`-dAutoFilterColorImages=false -dColorImageFilter=/DCTEncode`**
+    ("자동 판정 끄고 전부 JPEG") 다.
+  - ⚠️ **`-dColorImageResolution=150` 은 이 파일에서 거의 발동하지 않았다** — 페이지가
+    `MediaBox [0 0 1920 1080]` = 가로 26.7인치짜리 대형 페이지라 3840px 이미지의 실효
+    해상도가 144dpi 뿐이고, Ghostscript 는 목표의 1.5배(225dpi)를 넘을 때만 줄인다.
+    **페이지가 물리적으로 크면 dpi 설정은 헛돈다** — 모르면 "150 을 줬는데 왜 안 줄지" 로 헤맨다.
+  - 명령(`-c` 가 `-f` 보다 **앞**에 와야 설정이 먹는다, 뒤집으면 조용히 무시된다):
+    ```
+    gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dNOPAUSE -dBATCH \
+       -dDownsampleColorImages=true -dColorImageResolution=150 \
+       -dAutoFilterColorImages=false -dColorImageFilter=/DCTEncode \
+       -c ".setpdfwrite << /ColorImageDict << /QFactor 1.3 /Blend 1 \
+            /HSamples [2 1 1 2] /VSamples [2 1 1 2] >> >> setdistillerparams" \
+       -sOutputFile=out.pdf -f in.pdf
+    ```
+    `QFactor` 는 **클수록 더 버린다**(0.1 최고화질 ~ 2.0 저화질). 1.3 까지 밀어도 안 띄었다.
+  - ⚠️ **`-dQUIET` 를 쓰지 말 것** — 첫 시도에서 에러가 가려져 2.5KB 짜리 빈 PDF 가 나왔는데
+    성공한 줄 알았다. 그리고 **크기만 보고 고르지 말 것**: 위 표처럼 같은 14MB 라도 화질이
+    갈린다. 목업 안 작은 글씨가 있는 페이지를 확대 렌더해 눈으로 비교해야 한다.
   - **확인함**: 같은 경로에 덮어쓰면 Supabase 가 **CDN 캐시를 즉시 무효화한다**(max-age 3600
     파일을 덮어쓴 직후 새 내용이 나왔다). 그래서 cacheControl 을 짧게 둘 이유가 없다.
 
@@ -760,6 +791,48 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   **자동으로 안 깨어난다**(대시보드에서 사람이 재개). 하루 한 번 DB 를 찌른다.
   ⚠️ 정적 응답만 돌려주면 의미가 없다 — 실제 DB 조회를 해야 한다.
 
+**리크루트관리 ↔ Careers 입사지원 연동 (2026-08-26, `018_recruits.sql`)**
+
+- Contact > Join us > 채용확인 > Careers 팝업의 **입사지원** 버튼이 이제 실제로 접수한다.
+  PC 모달(`RecruitModal`)과 모바일 시트(`MobileRecruitModal`)가 **같은 `submitRecruit`**
+  (`lib/recruits.ts`)을 쓴다 — 두 트리는 폭으로만 갈릴 뿐 접수 규칙이 다를 이유가 없다.
+  어드민 `/admin/recruit` 목록·조회가 그 행을 읽는다.
+
+- **컬럼은 폼이 받는 것만 만들었다** (사용자 결정: "어드민보다 Careers 입사지원 폼이 우선").
+  기획서 35p 목록의 **기술등급 · 경력 · 재직상태는 만들지 않았다** — 폼이 안 받으므로
+  필터를 걸면 항상 0건인 죽은 조건이고, nullable 로 미리 만들어 두면 영영 `-` 만 나오는
+  빈 칸이 된다. `adminOptions.ts` 의 `RECRUIT_GRADE`/`RECRUIT_CAREER_FILTER`/
+  `RECRUIT_EMPLOYMENT` 도 같이 지웠다. 되살리려면 **폼 → 018 → adminOptions → 두 화면**
+  순서로 같이 늘릴 것.
+- **지원분야(`field`)는 칩의 한글 문자열 그대로** 다 — `quotes.project_fields` 와 같은 규칙.
+  어드민 필터는 `RECRUIT_ROLES`(`data/contact.ts`)에서 파생시킨다. 영문 슬러그로 따로
+  정의하면 필터가 아무것도 못 거른다(견적문의에서 이미 밟은 지뢰).
+
+- ⚠️ **첨부파일 버킷 `recruit` 는 비공개다**(`public=false`). portfolio·brief 와 반대다 —
+  이력서는 개인 자료라 URL 을 아는 사람이 받을 수 있으면 안 된다. 어드민 조회 화면이
+  **누를 때마다** `createSignedUrl` 로 새 주소를 만든다(화면 열 때 한 번 만들어 두면
+  오래 열어 둔 탭에서 만료된 주소를 누르게 된다). `FileLink` 에 `onClick`/`busy` prop 을
+  추가한 이유가 이것이다.
+- ⚠️ **테이블 RLS 도 portfolios 와 반대다** — 공개 페이지가 **쓰기만** 하고 **읽지 않는다.**
+  anon 에게 select 를 열면 이름·연락처·이메일이 REST 로 통째로 새어 나간다.
+  insert 는 anon 에게 열려 있다(로그인 없이 지원한다) — 익명 업로드라 스팸 여지가 있고,
+  버킷의 `file_size_limit`(50MB)이 사실상 유일한 방어선이다.
+- ⚠️ **순서는 파일 업로드 → 행 insert** 다. 행을 먼저 넣고 경로를 채우려면 update 권한이
+  필요한데 anon 에게는 없다(018 은 insert 만 연다). 그래서 `crypto.randomUUID()` 로 id 를
+  만들어 `recruit/<id>/<파일명>` 에 올리고 그 id 로 행을 넣는다. insert 가 실패하면 파일이
+  고아로 남는다(anon 은 delete 도 못 한다) — 어드민이 대시보드에서 정리한다.
+  Storage 키는 안전한 문자로 눕히고(한글 파일명이 키로 못 쓰인다) 원래 파일명은
+  `file_name` 에 따로 저장한다. 서명 URL 의 `download` 옵션이 그 이름으로 받게 한다.
+- ⚠️ **접수 성공 뒤 비우는 순서는 `form.reset()` → `resetRecruit()` → `onClose()`** 다.
+  닫히면서 도는 `useRecruitDraftSync` cleanup 이 **이미 비워진** DOM 을 담아야 값이 안
+  되살아난다. `reset()` 은 파일 입력도 비우지만 파일명 칸은 안 따라오므로
+  `change` 를 직접 쏜다(RecruitContext 의 복원 로직과 같은 이유).
+
+- **확인함**: 타입체크 통과, dev(5599)에서 `/contact`·`/admin/recruit` 200.
+  anon REST 로 `recruits` 가 아직 **404**(018 미실행)인 것도 확인했다.
+  **확인 못 함**: 실제 접수 왕복(테이블이 없어 아직 못 넣는다)과 어드민 목록·조회·첨부
+  다운로드 — 어드민 세션이 없어 게이트를 못 넘는다. **018 을 돌린 뒤 사람이 확인할 것.**
+
 ## 현재 상태
 
 ```
@@ -790,6 +863,9 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 | `013_drop_admin_main_permission.sql`     | ❌ **미실행**                                |
 | `014_portfolio_html_folder.sql`          | ✅ 사용자 실행 확인 (2026-08-25)             |
 | `015_portfolio_main_limit.sql`           | ✅ 사용자 실행 확인 (2026-08-25)             |
+| `016_brief_storage.sql`                  | ⚠️ **미확인**                                |
+| `017_drop_legacy_site_tables.sql`        | ❌ **미실행** (도메인 교체 뒤에 실행할 것)   |
+| `018_recruits.sql`                       | ❌ **미실행** — anon REST 로 확인함(404)     |
 
 **실행 여부는 anon 키로 REST 를 찔러서 확인한다** (`curl "$URL/rest/v1/portfolios?select=<컬럼>&limit=1"`
 — 컬럼이 없으면 42703). 이 방법으로 011 이 "미실행" 이 아니라 이미 반영돼 있었음을 확인했다.
@@ -824,6 +900,9 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
   012 를 돌려 이 저장소 기준 본문으로 맞춘 뒤 확인할 것.
 - `/projects` 2행 이후 스크롤 reveal (브라우저 패널 IO/rAF 정지 한계로 첫 행만 확인)
 - 견적문의 실제 렌더 (`quotes` 데이터 0건)
+- **Careers 입사지원 실제 접수 왕복** — 018 미실행이라 아직 넣을 수 없다. 돌린 뒤
+  ① 지원 → 어드민 목록에 뜨는지 ② 첨부파일 서명 URL 다운로드 ③ 권한 없는 계정에서
+  빈 목록이 되는지 확인할 것
 - 상세 iframe 안 폰트 렌더링, 진행 바 rAF 애니메이션, 모바일 홈 리빌 (전부 브라우저 패널
   백그라운드 한계 — 사람이 실제 브라우저에서 봐야 한다)
 
@@ -834,7 +913,7 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 | 포트폴리오관리 | `portfolios` ✅  | **연동 완료** — CRUD + Storage 업로드 + `/projects` 공개  |
 | 사용자관리     | `admin_users` ✅ | **연동 완료** — 목록·상세·수정·등록·메뉴권한              |
 | 견적문의관리   | `quotes` ✅      | **연동 완료** — 목록·필터·상태변경·상세 (데이터 0건)      |
-| 리크루트관리   | `recruits`       | 테이블 없음                                               |
+| 리크루트관리   | `recruits` ✅    | **연동 완료** — Careers 입사지원 접수 + 목록·조회 (018 실행 필요) |
 
 **⚠️ `pageviews` 는 이 저장소와 무관한 고아 테이블이다** — 코드·마이그레이션·git 히스토리
 어디에도 안 쓰인다. 삭제할지 방문 추적을 실제로 붙일지 결정 필요.
@@ -845,7 +924,11 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 
 ### 바로 이어서 할 만한 것
 
-- **`013` 실행** — 유령 권한(`/admin/main`) 정리. 남은 유일한 미실행 마이그레이션이다.
+- **`018` 실행** — 리크루트(입사지원) 테이블 + 비공개 Storage 버킷. **이걸 돌리기 전까지
+  Careers 입사지원 버튼은 "저장소가 준비되지 않았습니다" 로 실패한다.** 돌린 뒤 기존
+  어드민 계정에 사용자관리에서 **'리크루트관리' 권한을 체크**해 줘야 목록이 보인다
+  (RLS 가 permissions 배열을 직접 본다 — 권한이 없으면 에러 없이 **빈 목록**이 온다).
+- **`013` 실행** — 유령 권한(`/admin/main`) 정리.
   (`012`·`014`·`015` 는 2026-08-25 사용자 실행 확인)
 - **실데이터 입력** — 담당자에게 실제 포트폴리오 목록과 이미지를 받아야 한다.
 - **`quotes` 에 메뉴권한 RLS** — `portfolios` 는 걸었지만 `quotes` 는 아직 메뉴권한과 무관하게 열려 있다.

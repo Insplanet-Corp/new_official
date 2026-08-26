@@ -355,6 +355,9 @@
   font-weight: 700;
   font-size: calc(20px + 12 * var(--v));
   line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* ≥2240: switch to the 4-column grid (the 2560 design) — reset the 3-col stagger, apply the 4-col one.

@@ -2,7 +2,7 @@
    화면마다 흩어지면 문구가 어긋나므로 여기 한 곳에만 둔다.
    앞의 '전체'는 목록 화면의 조회 조건에서만 쓰고, 등록/수정 화면에서는 뺀다. */
 
-import { PROJECT_FIELDS } from '@/data/contact';
+import { PROJECT_FIELDS, RECRUIT_ROLES } from '@/data/contact';
 
 export type Option = { value: string; label: string };
 
@@ -61,38 +61,18 @@ export const QUOTE_STATUS: Option[] = [
 ];
 export const QUOTE_STATUS_FILTER = withAll(QUOTE_STATUS);
 
-/* ---- 리크루트관리 (기획서 35p) ------------------------------------------- */
-export const RECRUIT_FIELD: Option[] = [
-  { value: 'planning', label: '기획' },
-  { value: 'design', label: '디자인' },
-  { value: 'publishing', label: '퍼블리싱' },
-  { value: 'dev', label: '개발' },
-  { value: 'ai', label: 'AI' },
-  { value: 'etc', label: '기타' },
-];
+/* ---- 리크루트관리 (기획서 35p) -------------------------------------------
+   ⚠️ 견적문의와 같은 규칙이다 — 값을 여기서 새로 정의하면 안 된다. Careers
+   입사지원 팝업이 칩에 적힌 한글 문자열을 그대로 recruits.field 에 넣으므로
+   ("디자이너", "기타" …), 어드민 필터도 같은 문자열이어야 매칭된다.
+   그래서 RECRUIT_ROLES(data/contact.ts)에서 파생시킨다.
+
+   ⚠️ 기획서 35p 에 있던 기술등급 · 경력 · 재직상태 선택지는 **없앴다**
+   (2026-08-26 사용자 결정: "어드민보다 Careers 입사지원 폼이 우선").
+   폼이 그 값을 받지 않으므로 필터를 걸면 항상 0건이 되는 죽은 조건이었다.
+   폼에 그 항목이 생기면 018 마이그레이션에 컬럼을 더하고 여기도 같이 살릴 것. */
+export const RECRUIT_FIELD: Option[] = RECRUIT_ROLES.map((r) => ({ value: r, label: r }));
 export const RECRUIT_FIELD_FILTER = withAll(RECRUIT_FIELD);
-
-export const RECRUIT_GRADE: Option[] = [
-  { value: 'junior', label: '초급' },
-  { value: 'mid', label: '중급' },
-  { value: 'senior', label: '고급' },
-  { value: 'expert', label: '특급' },
-];
-export const RECRUIT_GRADE_FILTER = withAll(RECRUIT_GRADE);
-
-/** 경력 : 전체, 신입, 1~30년 */
-export const RECRUIT_CAREER_FILTER: Option[] = [
-  { value: 'all', label: '전체' },
-  { value: '0', label: '신입' },
-  ...Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}년` })),
-];
-
-export const RECRUIT_EMPLOYMENT: Option[] = [
-  { value: 'seeking', label: '구직중' },
-  { value: 'employed', label: '재직중' },
-  { value: 'leaving', label: '퇴사예정' },
-];
-export const RECRUIT_EMPLOYMENT_FILTER = withAll(RECRUIT_EMPLOYMENT);
 
 /* 값 -> 라벨 (목록/조회 화면 표시용) */
 export const labelOf = (opts: Option[], value: string | null | undefined) =>

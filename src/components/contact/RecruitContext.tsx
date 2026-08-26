@@ -59,6 +59,9 @@ type RecruitState = {
   role: string[];
   toggleRole: (option: string) => void;
   draft: RefObject<Draft>;
+  /** 접수 성공 뒤 폼을 비운다. 칩(state)과 공유 draft 를 함께 비워야 한다 —
+      draft 만 비우면 반대편 트리가 옛 값을 들고 있다가 경계를 넘을 때 되살린다. */
+  resetRecruit: () => void;
 };
 
 const Ctx = createContext<RecruitState | null>(null);
@@ -152,10 +155,18 @@ export function RecruitProvider({ children }: { children: ReactNode }) {
     (option: string) => setRole((cur) => (cur.includes(option) ? [] : [option])),
     [],
   );
+  /* ⚠️ DOM 입력값은 여기서 못 지운다 — uncontrolled 라 각 모달이 자기 <form>.reset() 을
+     불러야 한다. 여기는 **공유 상태만** 비운다. 순서는 각 모달에서
+     "DOM reset → resetRecruit() → onClose()" 다: 닫히면서 도는 draft 동기화 cleanup 이
+     이미 비워진 DOM 을 담게 되므로 값이 되살아나지 않는다. */
+  const resetRecruit = useCallback(() => {
+    setRole([]);
+    draft.current = { ...EMPTY };
+  }, []);
 
   const value = useMemo(
-    () => ({ open, isDesktop, openRecruit, closeRecruit, role, toggleRole, draft }),
-    [open, isDesktop, openRecruit, closeRecruit, role, toggleRole],
+    () => ({ open, isDesktop, openRecruit, closeRecruit, role, toggleRole, draft, resetRecruit }),
+    [open, isDesktop, openRecruit, closeRecruit, role, toggleRole, resetRecruit],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -8,6 +8,7 @@ import MobileFileRow from '@/components/mobile/MobileFileRow';
 import MobileFilteredInput from '@/components/mobile/MobileFilteredInput';
 import { RECRUIT_ROLES } from '@/data/contact';
 import { allFilled, firstMissing, jumpToField, type RequiredField } from '@/lib/formGating';
+import { submitRecruit } from '@/lib/recruits';
 
 type LenisLike = { stop?: () => void; start?: () => void };
 
@@ -30,11 +31,13 @@ export default function MobileRecruitModal({
   active: boolean;
   onClose: () => void;
 }) {
-  const { role, toggleRole } = useRecruit();
+  const { role, toggleRole, resetRecruit } = useRecruit();
   const [ready, setReady] = useState(false);
+  const [sending, setSending] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const formRef = useRef<HTMLFormElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<HTMLDivElement>(null);
@@ -122,14 +125,39 @@ export default function MobileRecruitModal({
   /* 폭 경계를 넘을 때 입력값·첨부파일을 PC 모달과 주고받는다 (RecruitContext 참고) */
   useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
 
-  const onSubmit = (e: React.FormEvent) => {
+  /* 접수 — PC 모달(RecruitModal)과 **같은** submitRecruit 을 쓴다. 두 트리는 폭으로만
+     갈릴 뿐 접수 규칙이 다를 이유가 없다. 성공 뒤 비우는 순서(DOM reset → resetRecruit →
+     onClose)도 PC 와 같다 — 이유는 RecruitContext 의 resetRecruit 주석 참고. */
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const bad = firstMissing(requiredFields());
     if (bad) {
       jumpToField(bad, { focusDelay: 420, flashClass: 'mc-flash' });
       return;
     }
-    // all required fields filled — actual send wired by the publisher (같은 이유로 PC 도 아직 없다)
+    if (sending) return;
+    setSending(true);
+    const { error } = await submitRecruit({
+      role,
+      name: name.current?.value ?? '',
+      phone: phone.current?.value ?? '',
+      email: email.current?.value ?? '',
+      url: url.current?.value ?? '',
+      file: fileInput.current?.files?.[0] ?? null,
+    });
+    setSending(false);
+
+    if (error) {
+      alert(`지원서 접수 중 오류가 발생했습니다.\n${error}`);
+      return;
+    }
+    alert('지원서가 접수되었습니다. 검토 후 연락드리겠습니다!');
+
+    formRef.current?.reset();
+    fileInput.current?.dispatchEvent(new Event('change', { bubbles: true }));
+    resetRecruit();
+    setReady(false);
+    onClose();
   };
 
   if (!mounted) return null;
@@ -145,6 +173,7 @@ export default function MobileRecruitModal({
     >
       <form
         className="mr-form"
+        ref={formRef}
         onSubmit={onSubmit}
         onInput={refresh}
         onChange={refresh}
@@ -231,8 +260,12 @@ export default function MobileRecruitModal({
           </div>
         </div>
         <div className="mr-footer">
-          <button type="submit" className={ready ? 'mc-submit mr-submit is-ready' : 'mc-submit mr-submit'}>
-            <span>입사지원</span>
+          <button
+            type="submit"
+            className={ready ? 'mc-submit mr-submit is-ready' : 'mc-submit mr-submit'}
+            disabled={sending}
+          >
+            <span>{sending ? '접수 중…' : '입사지원'}</span>
             <span className="mc-arrow" aria-hidden="true">
               <img src="/assets/icon_arrow.svg" alt="" />
             </span>

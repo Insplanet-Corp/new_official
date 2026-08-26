@@ -12,6 +12,9 @@
 }
 .desc {
   max-width: 70ch;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* ===== stat row =========================================================== */

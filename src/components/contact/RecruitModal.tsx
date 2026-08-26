@@ -8,6 +8,7 @@ import FileRow from '@/components/contact/FileRow';
 import FilteredInput from '@/components/contact/FilteredInput';
 import { RECRUIT_ROLES } from '@/data/contact';
 import { allFilled, firstMissing, jumpToField, type RequiredField } from '@/lib/formGating';
+import { submitRecruit } from '@/lib/recruits';
 
 type LenisLike = { stop?: () => void; start?: () => void };
 
@@ -33,8 +34,9 @@ export default function RecruitModal({
   active: boolean;
   onClose: () => void;
 }) {
-  const { role, toggleRole } = useRecruit();
+  const { role, toggleRole, resetRecruit } = useRecruit();
   const [ready, setReady] = useState(false);
+  const [sending, setSending] = useState(false);
   // portalled into <body> so it lives outside #page-root: position:fixed must stay
   // viewport-relative regardless of the page's enter transform
   const [mounted, setMounted] = useState(false);
@@ -135,14 +137,44 @@ export default function RecruitModal({
      프로바이더가 그대로 공유한다. */
   useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
 
-  const onSubmit = (e: React.FormEvent) => {
+  /* 접수 — Supabase recruits 테이블 + 비공개 recruit 버킷(018). 모바일 시트와 **같은**
+     submitRecruit 을 쓴다. 성공하면 폼을 비우고 팝업을 닫는다.
+     ⚠️ 값을 읽는 곳은 DOM 이다 — 텍스트 입력이 uncontrolled 라 여기가 진실이다. */
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const bad = firstMissing(requiredFields());
     if (bad) {
       jumpToField(bad, { focusDelay: 420 });
       return;
     }
-    // all required filled — actual send wired by the publisher
+    if (sending) return; // 더블클릭으로 두 번 접수되는 것을 막는다
+    setSending(true);
+    const { error } = await submitRecruit({
+      role,
+      name: name.current?.value ?? '',
+      phone: phone.current?.value ?? '',
+      email: email.current?.value ?? '',
+      url: url.current?.value ?? '',
+      file: fileInput.current?.files?.[0] ?? null,
+    });
+    setSending(false);
+
+    if (error) {
+      alert(`지원서 접수 중 오류가 발생했습니다.\n${error}`);
+      return;
+    }
+    alert('지원서가 접수되었습니다. 검토 후 연락드리겠습니다!');
+
+    /* ⚠️ 순서가 중요하다. form.reset() 으로 DOM 을 먼저 비우고 resetRecruit() 로 공유
+       상태를 비운 뒤 닫는다 — 닫히면서 도는 draft 동기화 cleanup 이 **이미 비워진** DOM 을
+       담아야 값이 안 되살아난다.
+       reset() 은 파일 입력도 비우지만 파일명 칸은 안 따라온다(FileRow 가 change 로만
+       갱신한다) — 그래서 직접 쏜다. RecruitContext 의 복원 로직과 같은 이유다. */
+    cardRef.current?.reset();
+    fileInput.current?.dispatchEvent(new Event('change', { bubbles: true }));
+    resetRecruit();
+    setReady(false);
+    onClose();
   };
 
   if (!mounted) return null;
@@ -251,8 +283,12 @@ export default function RecruitModal({
         </div>
         <div className="rc-footer">
           <div className="rc-footer-slot" aria-hidden="true" />
-          <button type="submit" className={ready ? 'ct-submit is-ready' : 'ct-submit'}>
-            <span>입사지원</span>
+          <button
+            type="submit"
+            className={ready ? 'ct-submit is-ready' : 'ct-submit'}
+            disabled={sending}
+          >
+            <span>{sending ? '접수 중…' : '입사지원'}</span>
             <span className="ct-arrow" aria-hidden="true">
               <img src="/assets/icon_arrow.svg" alt="" />
             </span>

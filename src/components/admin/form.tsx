@@ -416,19 +416,40 @@ export function ThumbView({
   );
 }
 
-/* 첨부파일 다운로드 (견적문의 / 리크루트 조회) */
+/* 첨부파일 다운로드 (견적문의 / 리크루트 조회)
+
+   ⚠️ 비공개 버킷의 파일은 href 를 미리 박아 둘 수 없다 — 서명 URL 이 짧게 만료되므로
+      조회 화면을 열어 둔 채 나중에 누르면 죽은 주소가 된다. 그래서 onClick 을 받아
+      **누를 때마다 새 주소를 만들어** 쓰는 길을 열어 뒀다(리크루트가 그렇게 쓴다).
+      onClick 이 있으면 기본 이동을 막고 그 쪽에 맡긴다. */
 export function FileLink({
   name,
   href,
+  onClick,
+  busy,
 }: {
   name?: string | null;
   href?: string | null;
+  onClick?: () => void;
+  busy?: boolean;
 }) {
   if (!name) return <ReadOnly muted>{null}</ReadOnly>;
   return (
     <div className={s.readonly}>
-      <a className={s.fileLink} href={href ?? "#"} download>
-        {name}
+      <a
+        className={s.fileLink}
+        href={href ?? "#"}
+        download
+        onClick={
+          onClick
+            ? (e) => {
+                e.preventDefault();
+                onClick();
+              }
+            : undefined
+        }
+      >
+        {busy ? "준비 중…" : name}
       </a>
     </div>
   );
