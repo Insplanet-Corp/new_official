@@ -3136,16 +3136,27 @@ html.ps-busy .mp-card a {
     font-size: 14px;
     line-height: 1.5;
   }
-  .m-menu-brief-ico {
+
+  .m-menu-brief:hover {
+    background: #fff;
+    color: #3e3f44;
+  }
+  .m-menu-brief .m-menu-brief-ico {
     width: 20px;
     height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .m-menu-brief-ico img {
+  .m-menu-brief .m-menu-brief-ico img {
     width: 11.31px;
     height: 11.31px;
+    transition: filter 0.25s ease;
+  }
+
+  .m-menu-brief:hover .m-menu-brief-ico img {
+    filter: invert(1);
+    animation: download-cycle 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .m-menu-copy {
     margin: 0;
@@ -5197,6 +5208,8 @@ html.ps-busy .mp-card a {
     height: 24px;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+  .mr-close:hover svg,
   .mr-close:active svg {
     transform: rotate(90deg);
   } /* PC hover-spin → press quarter-turn on touch */

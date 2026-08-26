@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { CONTACT, MENU_NAV, MENU_PRODUCTS } from '@/data/site';
+import { BRIEF_PDF, CONTACT, MENU_NAV, MENU_PRODUCTS } from '@/data/site';
 
 /* Full-screen menu overlay (was the MENU string in js/shared-ui.js).
    Open/close, the halftone reveal and the close-then-navigate behaviour all live in
@@ -60,7 +60,7 @@ export default function MenuOverlay({ projectCount }: Props) {
               ))}
             </ul>
 
-            <a className="brief-btn" href="#">
+            <a className="brief-btn" href={BRIEF_PDF} download>
               Company Brief Download
               <span className="download-icon">
                 <img src="/assets/icon_download.svg" alt="" />
@@ -112,7 +112,7 @@ export default function MenuOverlay({ projectCount }: Props) {
         </ul>
 
         <div className="m-menu-bottom">
-          <a className="m-menu-brief" href="#">
+          <a className="m-menu-brief" href={BRIEF_PDF} download>
             Company Brief Download
             <span className="m-menu-brief-ico">
               <img src="/assets/icon_download.svg" alt="" />

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useRecruit, useRecruitDraftSync } from '@/components/contact/RecruitContext';
 import MobileChipGroup from '@/components/mobile/MobileChipGroup';
 import MobileFileRow from '@/components/mobile/MobileFileRow';
 import MobileFilteredInput from '@/components/mobile/MobileFilteredInput';
@@ -18,8 +19,18 @@ type LenisLike = { stop?: () => void; start?: () => void };
 
    #page-root 가 페이지 전환 시 transform 을 받으므로(PC RecruitModal 과 같은 이유) body 로
    포탈한다 — 그래야 position:fixed 가 뷰포트 기준을 유지한다. */
-export default function MobileRecruitModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [role, setRole] = useState<string[]>([]);
+/* ⚠️ open 과 active 의 구분은 PC RecruitModal 과 같다 — 껍데기(.is-open)는 `open` 으로만
+   그리고(그래야 경계를 넘을 때 깜박이지 않는다), 잠금·포커스·ESC·draft 동기화는 `active` 로 건다. */
+export default function MobileRecruitModal({
+  open,
+  active,
+  onClose,
+}: {
+  open: boolean;
+  active: boolean;
+  onClose: () => void;
+}) {
+  const { role, toggleRole } = useRecruit();
   const [ready, setReady] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -41,7 +52,7 @@ export default function MobileRecruitModal({ open, onClose }: { open: boolean; o
   useEffect(() => {
     const html = document.documentElement;
     const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
-    if (!open) return;
+    if (!active) return;
     lastFocus.current = document.activeElement;
     html.classList.add('rc-lock');
     lenis?.stop?.();
@@ -66,17 +77,17 @@ export default function MobileRecruitModal({ open, onClose }: { open: boolean; o
         }
       }
     };
-  }, [open]);
+  }, [active]);
 
   // close on ESC — full-screen, no backdrop, so no outside-click close
   useEffect(() => {
-    if (!open) return;
+    if (!active) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [active, onClose]);
 
   /* 지원분야·이름·연락처·이메일·파일이 모두 채워질 때까지 비활성 (포트폴리오 URL은 선택). */
   const requiredFields = useCallback((): RequiredField[] => {
@@ -108,6 +119,9 @@ export default function MobileRecruitModal({ open, onClose }: { open: boolean; o
   const refresh = useCallback(() => setReady(allFilled(requiredFields())), [requiredFields]);
   useEffect(refresh, [refresh]);
 
+  /* 폭 경계를 넘을 때 입력값·첨부파일을 PC 모달과 주고받는다 (RecruitContext 참고) */
+  useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const bad = firstMissing(requiredFields());
@@ -127,7 +141,7 @@ export default function MobileRecruitModal({ open, onClose }: { open: boolean; o
       role="dialog"
       aria-modal="true"
       aria-labelledby="mr-title"
-      aria-hidden={!open}
+      aria-hidden={!active}
     >
       <form
         className="mr-form"
@@ -166,7 +180,7 @@ export default function MobileRecruitModal({ open, onClose }: { open: boolean; o
               options={RECRUIT_ROLES}
               selected={role}
               groupRef={groupRef}
-              onToggle={(option) => setRole((cur) => (cur.includes(option) ? [] : [option]))}
+              onToggle={toggleRole}
             />
           </div>
           <div className="mr-sec mr-sec--info">

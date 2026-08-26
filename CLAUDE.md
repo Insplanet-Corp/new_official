@@ -399,6 +399,52 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   ⚠️ **`_shared/works.js` 의 히어로 `<picture>`(`hero-mobile` 속성)는 그대로 둔다** — 상세 30개가
   전부 쓰는 모바일 히어로 교체 수단이고 섹션 병합과 무관하다.
 
+**Careers 팝업을 1024 경계에서 갈아끼우기 (2026-08-26, `RecruitContext`)**
+
+- 문제: PC 모달(`.rc-modal`)과 모바일 풀스크린 시트(`.mr-popup`)가 **열림 상태와 폼 값을 각자**
+  들고 있었다. PC 에서 열어 둔 채 창을 1024 아래로 줄이면 PC 모달이 **찌그러진 채 남고**(그 폭에서
+  감추는 규칙이 없었다) 모바일 시트는 안 떴다.
+- 해결: `RecruitProvider` 가 셋을 한 곳에서 들고 두 모달에 내려준다 — 열림(`open`) ·
+  폭 판정(`isDesktop`) · 폼 값(`role` state + `draft` ref).
+  CSS 는 `contact.css` 에 `@media (max-width:1023px){.rc-modal{display:none}}` 를 추가했다
+  (`mobile-pages.css` 의 ≥1024 `.mr-popup{display:none}` 와 짝).
+
+- ⚠️ **`open` 과 `active` 를 반드시 갈라 둘 것.**
+  - `open` = 열려 있는가. **껍데기(`.is-open`)는 이 값으로만 그린다** — 감춰진 쪽도 클래스를
+    계속 달고 있어야, 폭이 바뀌어 `display:none` 이 풀리는 순간 **이미 열린 모습으로** 나타난다.
+  - `active` = 지금 폭에서 이쪽이 쓰이는가. 잠금·포커스·ESC·바깥클릭·draft 동기화는 전부 이 값.
+  - 처음엔 `open` 자체를 폭으로 잘랐는데(`open && isDesktop`), 그러면 경계를 넘는 순간 `.is-open`
+    이 **새로** 붙어 0.4s 페이드인이 처음부터 돌고 그 사이 뒤의 Join Us 가 비쳐 **깜박였다**
+    (작은 창 → 큰 창 방향에서 특히 심했다). display 가 바뀌는 전환에서는 트랜지션이 안 도는
+    성질을 이용해 해결한 것. 실측: 고치기 전 스왑 직후 `.rc-modal` 이 `opacity:0` 에서 시작,
+    고친 뒤 `opacity:1` 즉시 + 진행 중 트랜지션 0개.
+  - `active` 게이팅은 **PC 모달의 바깥클릭 닫기가 모바일 시트를 죽이던 문제**도 막는다 —
+    그 폭에서 `.rc-card` 가 `display:none` 이라 `contains()` 가 항상 false 여서, 시트 안을
+    눌러도 PC 쪽 리스너가 "카드 밖" 으로 보고 닫아 버린다.
+
+- ⚠️ **폭 판정을 두 모달이 각자 하면 안 된다.** 각자 하면 상태 갱신이 서로 다른 커밋에 떨어져,
+  나가는 쪽의 cleanup 이 들어오는 쪽의 setup **뒤에** 돌 수 있다 — ① 시트는 떠 있는데 스크롤
+  잠금이 풀리고 ② draft 가 **저장 전에 복원**돼 입력값이 통째로 날아간다. 한 곳에서 판정해야
+  두 모달이 같은 커밋에서 리렌더되고, React 가 그 커밋의 cleanup 을 전부 돌린 뒤 setup 을
+  돌리므로 "나가는 쪽 저장 → 들어오는 쪽 복원" 순서가 보장된다.
+
+- **폼 값은 상태를 끌어올리지 않고 경계에서 DOM 값을 옮긴다**(`useRecruitDraftSync`).
+  텍스트 입력은 **일부러 uncontrolled** 다 — 필터(숫자만/ASCII만)가 값을 제자리에서 고쳐 써야
+  캐럿이 안 튄다(`FilteredInput` 주석). controlled 로 바꾸면 그 성질이 깨지므로, 활성화될 때
+  복원하고 비활성화될 때 담아 두는 방식을 썼다. 지원분야 칩만 원래 state 라 프로바이더가 공유한다.
+  - ⚠️ 첨부파일은 `input.files` 를 `DataTransfer` 로 옮긴 뒤 **`change` 를 직접 쏴야 한다** —
+    파일명 칸과 `FileRow` 내부 잠금값(`officialRef`)은 그 이벤트로만 갱신되기 때문이다.
+    그래서 `FileRow`/`MobileFileRow` 를 두 군데 고쳤다: ① 파일이 비면 이름도 비운다(예전엔
+    early return 이라 안 지워졌다) ② 포커스 이동은 `e.isTrusted` 일 때만(복원이 닫기 버튼에서
+    포커스를 뺏지 않게).
+- **확인함**(dev 5599, 1440↔900 왕복): 칩·이름·연락처·이메일·URL·첨부파일이 양방향으로 그대로
+  넘어가고 제출 버튼 활성 상태도 유지됨, 모바일에서 고친 값이 PC 로 되돌아옴, 닫았다 다시 열어도
+  값 유지, 전환 내내 `rc-lock`/`lenis.isStopped` 가 true, 포커스가 `.rc-close`↔`.mr-close` 로 이동,
+  스왑 직후 진행 중 트랜지션 0개 + `opacity:1`.
+  ⚠️ 브라우저 패널은 resize/matchMedia change 를 안 줘서 `resize` 를 **직접 dispatch** 해
+  확인했다. **확인 못 함**: 사람이 실제로 창을 끌어 줄이는 조작(패널은 rAF 가 멈춰 트랜지션이
+  안 돈다 — 첫 열기의 페이드인 연출이 그대로인지는 눈으로 봐야 한다).
+
 **폭 경계를 넘을 때 스크롤 유지 (2026-08-25, `ResponsiveScrollKeeper`)**
 
 - 문제: PC/모바일 마크업을 CSS 로만 가르므로 1024 경계를 넘으면 문서 높이가 통째로 달라지는데,

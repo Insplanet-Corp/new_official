@@ -41,19 +41,29 @@ export default function MobileFileRow({
     const lock = () => {
       if (name.value !== officialRef.current) name.value = officialRef.current;
     };
-    const onPick = () => {
+    /* ⚠️ 사용자가 고른 것만 처리하는 게 아니다 — RecruitContext 의 draft 복원이 `files` 를
+       갈아끼운 뒤 `change` 를 직접 쏜다(그래야 파일명 칸과 officialRef 가 따라온다).
+       그래서 ① 파일이 비면 이름도 비우고 ② 포커스는 `isTrusted` 일 때만 옮긴다(복원 때
+       포커스를 뺏으면 닫기 버튼으로 가야 할 포커스가 파일명 칸에 앉는다). */
+    const onPick = (e: Event) => {
       const file = input.files?.[0];
-      if (!file) return;
+      if (!file) {
+        setName('');
+        onChange?.();
+        return;
+      }
       if (file.size > MAX) {
         alert('최대 50MB까지 첨부할 수 있어요.');
         clear();
         return;
       }
       setName(file.name);
-      try {
-        name.focus({ preventScroll: true });
-      } catch {
-        /* focus can throw in odd states */
+      if (e.isTrusted) {
+        try {
+          name.focus({ preventScroll: true });
+        } catch {
+          /* focus can throw in odd states */
+        }
       }
       onChange?.();
     };

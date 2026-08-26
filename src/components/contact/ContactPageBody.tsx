@@ -1,16 +1,15 @@
 'use client';
 
-import { useCallback, useState } from 'react';
 import ContactForm from '@/components/contact/ContactForm';
 import ContactHero from '@/components/contact/ContactHero';
 import JoinUs from '@/components/contact/JoinUs';
+import { useRecruit } from '@/components/contact/RecruitContext';
 import RecruitModal from '@/components/contact/RecruitModal';
 
-/* Owns the one piece of state the contact page shares across sections: whether the Careers popup
-   is open (Join Us opens it, the popup closes itself). */
+/* Join Us 가 여는 Careers 팝업의 상태는 RecruitProvider 가 들고 있다 — 모바일 트리
+   (MobileContact)와 **같은 상태**를 써야 1024 경계를 넘어도 열린 채로 유지된다. */
 export default function ContactPageBody() {
-  const [recruitOpen, setRecruitOpen] = useState(false);
-  const close = useCallback(() => setRecruitOpen(false), []);
+  const { open, isDesktop, openRecruit, closeRecruit } = useRecruit();
 
   return (
     <>
@@ -28,9 +27,11 @@ export default function ContactPageBody() {
       <main className="contact ct-rv">
         <ContactHero />
         <ContactForm />
-        <JoinUs onOpenRecruit={() => setRecruitOpen(true)} />
+        <JoinUs onOpenRecruit={openRecruit} />
       </main>
-      <RecruitModal open={recruitOpen} onClose={close} />
+      {/* ≤1023 에서는 모바일 풀스크린 시트(.mr-popup)가 대신 뜬다. open/active 를 가르는
+          이유는 RecruitModal 위 주석 참고 — 껍데기는 계속 열어 두고 동작만 폭으로 끈다 */}
+      <RecruitModal open={open} active={open && isDesktop} onClose={closeRecruit} />
     </>
   );
 }

@@ -826,6 +826,15 @@
   pointer-events: auto;
   transition: opacity 0.4s ease;
 }
+/* ≤1023 에서는 모바일 풀스크린 시트(.mr-popup, style.css)가 이 팝업을 대신한다.
+   ⚠️ display:none 이어야 한다 — visibility 트랜지션(닫힘 0.4s 지연)에 맡기면 창을 줄이는
+   순간 찌그러진 PC 모달이 잠깐 남는다. 열림 상태는 RecruitProvider 가 공유하므로 시트 쪽이
+   같은 자리에 즉시 뜬다. (짝: mobile-pages.css 의 ≥1024 `.mr-popup{display:none}`) */
+@media (max-width: 1023px) {
+  .rc-modal {
+    display: none;
+  }
+}
 .rc-modal-dim {
   position: absolute;
   inset: 0;

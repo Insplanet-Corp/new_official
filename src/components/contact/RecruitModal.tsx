@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ChipGroup from '@/components/contact/ChipGroup';
+import { useRecruit, useRecruitDraftSync } from '@/components/contact/RecruitContext';
 import FileRow from '@/components/contact/FileRow';
 import FilteredInput from '@/components/contact/FilteredInput';
 import { RECRUIT_ROLES } from '@/data/contact';
@@ -13,8 +14,26 @@ type LenisLike = { stop?: () => void; start?: () => void };
 /* Careers recruit popup — opened by the Join Us 채용확인 button. Its leaf controls reuse the contact
    .ct-* classes (locked to their 2560 sizing via --v/--g:1 on .rc-modal). Rendered outside
    #page-root so position:fixed stays viewport-relative regardless of the page's enter transform. */
-export default function RecruitModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [role, setRole] = useState<string[]>([]);
+/* ⚠️ open 과 active 는 다르다.
+   - `open`  = 팝업이 열려 있는가 (두 트리가 공유). **껍데기(.is-open)는 이 값으로만 그린다.**
+     ≤1023 에서도 클래스를 계속 달고 있어야, 창을 키워 `display:none` 이 풀리는 순간 이미
+     열린 모습으로 나타난다. `open` 을 폭으로 잘라 버리면 그 순간 `.is-open` 이 새로 붙어
+     0.4s 페이드인이 처음부터 돌고, 그 사이 뒤의 Join Us 가 비쳐 **깜박인다.**
+     (display 가 바뀌는 전환에서는 트랜지션이 안 돈다 — 그래서 즉시 나타난다.)
+   - `active` = 지금 폭에서 **이쪽이 쓰이는가**. 스크롤 잠금·포커스·ESC·바깥클릭·draft 동기화는
+     전부 이 값으로 건다. 안 그러면 감춰진 쪽이 보이는 쪽과 싸운다 — 특히 이 팝업의 바깥클릭
+     닫기는 그 폭에서 `.rc-card` 가 `display:none` 이라 `contains()` 가 항상 false 여서
+     **모바일 시트 안을 눌러도 닫아 버린다.** */
+export default function RecruitModal({
+  open,
+  active,
+  onClose,
+}: {
+  open: boolean;
+  active: boolean;
+  onClose: () => void;
+}) {
+  const { role, toggleRole } = useRecruit();
   const [ready, setReady] = useState(false);
   // portalled into <body> so it lives outside #page-root: position:fixed must stay
   // viewport-relative regardless of the page's enter transform
@@ -37,7 +56,7 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
   useEffect(() => {
     const html = document.documentElement;
     const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
-    if (!open) return;
+    if (!active) return;
     lastFocus.current = document.activeElement;
     html.classList.add('rc-lock');
     lenis?.stop?.();
@@ -61,11 +80,11 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
         }
       }
     };
-  }, [open]);
+  }, [active]);
 
   // close on ESC / on a click outside the card
   useEffect(() => {
-    if (!open) return;
+    if (!active) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -78,7 +97,7 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
       removeEventListener('keydown', onKey);
       removeEventListener('mousedown', onDown);
     };
-  }, [open, onClose]);
+  }, [active, onClose]);
 
   /* 지원분야·이름·연락처·이메일·파일이 모두 채워질 때까지 비활성 (포트폴리오 URL은 선택). */
   const requiredFields = useCallback((): RequiredField[] => {
@@ -110,6 +129,12 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
   const refresh = useCallback(() => setReady(allFilled(requiredFields())), [requiredFields]);
   useEffect(refresh, [refresh]);
 
+  /* 폭 경계를 넘을 때 입력값·첨부파일을 모바일 시트와 주고받는다. 텍스트 입력은 uncontrolled
+     라(캐럿이 튀지 않게 필터가 값을 제자리에서 고쳐 쓴다) 값의 진실은 DOM 이고, 그래서
+     상태를 끌어올리는 대신 **경계에서 DOM 값을 옮긴다.** 지원분야 칩은 원래 state 라
+     프로바이더가 그대로 공유한다. */
+  useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const bad = firstMissing(requiredFields());
@@ -129,7 +154,7 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
       role="dialog"
       aria-modal="true"
       aria-labelledby="rc-title"
-      aria-hidden={!open}
+      aria-hidden={!active}
     >
       <div className="rc-modal-dim" aria-hidden="true" />
       <form
@@ -174,9 +199,7 @@ export default function RecruitModal({ open, onClose }: { open: boolean; onClose
                   options={RECRUIT_ROLES}
                   selected={role}
                   groupRef={groupRef}
-                  onToggle={(option) =>
-                    setRole((cur) => (cur.includes(option) ? [] : [option]))
-                  }
+                  onToggle={toggleRole}
                 />
               </div>
             </div>
