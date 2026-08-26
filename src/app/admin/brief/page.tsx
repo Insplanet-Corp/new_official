@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Button from "@/components/button/Button";
 import Flex from "@/components/layouts/Flex";
 import Text from "@/components/text/Text";
+import BriefGuide from "./BriefGuide";
 
 /* 회사소개서관리 — Company Brief Download 버튼이 받아가는 PDF 를 교체한다.
 
@@ -28,6 +29,8 @@ export default function BriefPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /* 제목 옆 ⓘ 를 누르면 뜨는 "PDF 용량 줄이는 법" 안내 */
+  const [guide, setGuide] = useState(false);
 
   /* 지금 올라가 있는 파일의 크기·수정일. list 로 한 건만 집어 온다 */
   const load = useCallback(async () => {
@@ -67,7 +70,9 @@ export default function BriefPage() {
       return;
     }
     if (file.size > MAX_MB * 1024 * 1024) {
-      setErr(`${MAX_MB}MB 이하만 올릴 수 있습니다. (선택한 파일 ${mb(file.size)})`);
+      setErr(
+        `${MAX_MB}MB 이하만 올릴 수 있습니다. (선택한 파일 ${mb(file.size)})`,
+      );
       return;
     }
     setBusy(true);
@@ -95,7 +100,9 @@ export default function BriefPage() {
       );
       return;
     }
-    setMsg("회사소개서를 교체했습니다. 사이트의 Company Brief Download 버튼이 바로 새 파일을 받습니다.");
+    setMsg(
+      "회사소개서를 교체했습니다. 사이트의 Company Brief Download 버튼이 바로 새 파일을 받습니다.",
+    );
     await load();
   };
 
@@ -126,7 +133,10 @@ export default function BriefPage() {
                 {info?.updatedAt ? fmtDate(info.updatedAt) : "-"}
               </Text>
             </Row>
-            <Row label="다운로드 확인" hint="사이트의 Company Brief Download 버튼과 같은 주소입니다.">
+            <Row
+              label="다운로드 확인"
+              hint="사이트의 Company Brief Download 버튼과 같은 주소입니다."
+            >
               <Button
                 color="GRAY"
                 variant="outline"
@@ -139,7 +149,7 @@ export default function BriefPage() {
         )}
       </Section>
 
-      <Section title="새 파일로 교체">
+      <Section title="새 파일로 교체" onClick={() => setGuide(true)}>
         <Row
           label="PDF 파일"
           required
@@ -167,6 +177,8 @@ export default function BriefPage() {
           </Flex>
         </Row>
       </Section>
+
+      <BriefGuide open={guide} onClose={() => setGuide(false)} maxMb={MAX_MB} />
     </>
   );
 }

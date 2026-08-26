@@ -1,0 +1,13 @@
+/* 압축 안내 모달 본문. 색·굵기·크기는 공용 Text/Heading 이 맡고, 여기에는
+   컴포넌트로 표현할 수 없는 목록 모양만 둔다. */
+.list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  list-style: disc;
+}
+.list li {
+  margin: 0 0 4px;
+}
+.list li::marker {
+  color: var(--faint);
+}

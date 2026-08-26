@@ -4,6 +4,7 @@ interface IconProps {
   name: IconName;
   size?: number | string;
   color?: string;
+  onClick?: () => void;
   style?: React.CSSProperties;
 }
 
@@ -12,6 +13,7 @@ const Icon = ({
   size = 24,
   color = "currentColor",
   style,
+  onClick,
 }: IconProps) => {
   const icon = ICON_DATA[name];
   if (!icon) return null;
@@ -20,9 +22,10 @@ const Icon = ({
       width={size}
       height={size}
       fill={color}
-      style={style}
+      style={{ ...style, ...(onClick && { cursor: "pointer" }) }}
       aria-hidden="true"
       viewBox={icon.viewBox}
+      onClick={onClick}
     >
       {icon.paths.map((d, index) => (
         <path

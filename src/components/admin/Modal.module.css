@@ -1,0 +1,80 @@
+/* ============================================================================
+   ADMIN MODAL — 어드민 전용 다이얼로그.
+
+   ⚠️ document.body 로 포탈하지 않는다. 어드민 토큰(--surface, --line …)은
+      AdminShell 의 .root(.theme) 에서 **상속**되는 CSS 커스텀 프로퍼티라,
+      body 직속으로 옮기면 전부 미정의가 되어 배경이 투명해지고 테두리가 사라진다.
+      .root 안에 두어도 position:fixed 는 뷰포트를 기준으로 잡힌다 —
+      조상에 transform/filter/perspective 가 없기 때문이다(header 의
+      backdrop-filter 는 형제라 무관하다). 조상에 그런 속성을 새로 넣게 되면
+      이 모달이 엉뚱한 곳에 붙으므로 그때 재검토할 것.
+   ========================================================================== */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* AdminShell 헤더가 50 이다 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(23, 24, 28, 0.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 680px;
+  max-height: min(84vh, 760px);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 24px 64px rgba(23, 24, 28, 0.24);
+  overflow: hidden;
+}
+/* 패널에 포커스를 주지만(위 주석 참고) 링은 그리지 않는다 */
+.panel:focus {
+  outline: none;
+}
+
+.head {
+  flex: none;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #fafafb;
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+.close:hover {
+  background: var(--line-2);
+  color: var(--ink);
+}
+.close:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* 본문만 스크롤한다 — 머리/바닥은 항상 보인다 */
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  overscroll-behavior: contain;
+}
+
+.foot {
+  flex: none;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: #fafafb;
+}

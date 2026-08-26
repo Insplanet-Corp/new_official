@@ -8,6 +8,8 @@ import Button from "../button/Button";
 import Flex from "../layouts/Flex";
 import Heading from "../text/Heading";
 import Text from "../text/Text";
+import { Icon } from "../icon/Icon";
+import { Color } from "@/styles/theme";
 
 /* 기획서(관리자시스템_화면설계서)의 등록 / 조회 / 수정 화면 공용 조각.
    지금 단계는 "틀"이므로 저장·삭제 같은 실제 동작은 붙이지 않았다 —
@@ -459,21 +461,34 @@ export function FileLink({
 export function Section({
   title,
   children,
+  onClick,
 }: {
   title: string;
   children: ReactNode;
+  onClick?: () => void;
 }) {
   return (
     <section className={`${kit.card} ${s.section}`}>
-      <Heading
-        as="h2"
-        size="2"
-        fontSize="13px"
-        weight="700"
-        className={s.sectionHead}
-      >
-        {title}
-      </Heading>
+      <Flex row gap={12} fullWidth className={s.sectionHead} align="center">
+        <Heading
+          as="h2"
+          size="2"
+          fontSize="13px"
+          weight="700"
+          // className={s.sectionHead}
+        >
+          {title}
+        </Heading>
+        {onClick && (
+          <Icon
+            name="information"
+            color={Color.GRAY_700}
+            size="18"
+            onClick={onClick}
+          />
+        )}
+      </Flex>
+
       {children}
     </section>
   );
