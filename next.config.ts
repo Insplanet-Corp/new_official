@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   devIndicators: false,
 
+  /* ⚠️ Vercel 은 서버 번들에 "필요하다고 추적된" 파일만 넣는다 — public/ 이 통째로
+     람다에 들어가지 않는다(정적 에셋은 CDN 에서만 서빙된다). /projects/[id] 가
+     상세 HTML 을 fs 로 읽어 <project-detail> 속성(고객사·개요)을 뽑으므로
+     (src/lib/portfolioDetail.ts) 그 파일들을 명시적으로 포함시킨다.
+     **지우면 조용히 실패한다** — 화면은 멀쩡하고 검색용 description 만 일반 문구로
+     되돌아간다. 배포 후 상세 한 곳의 description 을 확인해 볼 것. */
+  outputFileTracingIncludes: {
+    '/projects/[id]': ['./public/portfolio/*/index.html'],
+  },
+
   /* ⚠️ 다른 컴퓨터에서 http://<이 맥의 LAN IP>:5599 로 접속할 때 필요하다.
      Next 16 의 dev 서버는 localhost 가 아닌 host 로 들어온 /_next/* 요청 중
      Origin 헤더가 붙는 것(= HMR 웹소켓 업그레이드)을 403 으로 막는다
@@ -50,6 +60,25 @@ const nextConfig: NextConfig = {
            sandbox 에 allow-same-origin 을 되돌리는 것보다 안전하다. */
         source: '/assets/fonts/:path*',
         headers: [{ key: 'Access-Control-Allow-Origin', value: '*' }],
+      },
+      {
+        /* ⚠️ 상세 HTML(public/portfolio/<폴더>/index.html)은 iframe 안에서만 쓰이지만
+           **그 자체로 크롤 가능한 주소**다. robots.txt 는 /admin·/api 만 막고, 구글은
+           iframe 의 src 를 따라간다. 그런데 37개 중 32개의 <title> 이 템플릿 그대로
+           'Work Container - 프로젝트명' 이라, 색인되면 똑같은 제목의 페이지가 무더기로
+           검색결과에 뜬다(2026-08-26 실측). 색인돼야 하는 것은 이걸 감싸는
+           /projects/<id> 쪽이다.
+
+           ⚠️ robots.txt 로 막으면 안 된다 — 크롤 자체가 막히면 noindex 를 읽지 못해
+              오히려 "설명 없음" 상태로 색인될 수 있다. 헤더로 막아야 한다.
+           ⚠️ 폴더 아래 이미지·CSS 까지 싸잡지 않으려고 문서 경로만 지정한다. */
+        source: '/portfolio/:folder/index.html',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+      {
+        // 폴더 주소로 들어오는 경우도 같이 막는다
+        source: '/portfolio/:folder',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
       },
     ];
   },

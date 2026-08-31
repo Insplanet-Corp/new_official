@@ -101,7 +101,7 @@ export default function BriefPage() {
       return;
     }
     setMsg(
-      "회사소개서를 교체했습니다. 사이트의 Company Brief Download 버튼이 바로 새 파일을 받습니다.",
+      "회사소개서를 교체했습니다. 사이트의 Company Brief Download 버튼이 바로 새 파일을 엽니다.",
     );
     await load();
   };
@@ -134,15 +134,17 @@ export default function BriefPage() {
               </Text>
             </Row>
             <Row
-              label="다운로드 확인"
-              hint="사이트의 Company Brief Download 버튼과 같은 주소입니다."
+              label="파일 확인"
+              hint="사이트의 Company Brief Download 버튼과 같은 주소입니다. 새 탭에서 PDF 로 열립니다."
             >
               <Button
                 color="GRAY"
                 variant="outline"
                 href={BRIEF_PDF}
                 reload
-                label="지금 파일 받아보기"
+                target="_blank"
+                rel="noopener noreferrer"
+                label="새 탭에서 열어보기"
               />
             </Row>
           </>

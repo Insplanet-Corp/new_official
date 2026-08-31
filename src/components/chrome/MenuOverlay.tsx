@@ -61,7 +61,13 @@ export default function MenuOverlay({ projectCount }: Props) {
               ))}
             </ul>
 
-            <a className="brief-btn" href={BRIEF_PDF} download onClick={() => void trackDownload('brochure')}>
+            <a
+              className="brief-btn"
+              href={BRIEF_PDF}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => void trackDownload('brochure')}
+            >
               Company Brief Download
               <span className="download-icon">
                 <img src="/assets/icon_download.svg" alt="" />
@@ -113,7 +119,13 @@ export default function MenuOverlay({ projectCount }: Props) {
         </ul>
 
         <div className="m-menu-bottom">
-          <a className="m-menu-brief" href={BRIEF_PDF} download onClick={() => void trackDownload('brochure')}>
+          <a
+            className="m-menu-brief"
+            href={BRIEF_PDF}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => void trackDownload('brochure')}
+          >
             Company Brief Download
             <span className="m-menu-brief-ico">
               <img src="/assets/icon_download.svg" alt="" />

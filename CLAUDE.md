@@ -705,8 +705,21 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 - **회사소개서 PDF 를 저장소에서 Supabase Storage 로 옮겼다.** 어드민 `/admin/brief` 에서
   올리면 배포 없이 교체된다. 고정 경로 `brief/insplanet_brief.pdf` 에 `upsert` 로 덮어쓰므로
   URL 이 안 변하고(사이트는 `BRIEF_PDF` 상수 하나) 옛 파일이 쌓이지도 않는다(016).
-  - ⚠️ **교차 출처에서는 `<a download>` 가 무시된다** — URL 의 `?download=` 파라미터가
-    `Content-Disposition: attachment` 를 만든다. **빼면 다운로드가 아니라 PDF 가 열린다.**
+  - **2026-08-26 부터 "받기" 가 아니라 "새 탭에서 열기" 다** (사용자 결정). 링크 4곳
+    (`ct-brief` · `mc-brief` · `brief-btn` · `m-menu-brief`)이 `download` 대신
+    `target="_blank" rel="noopener noreferrer"` 를 쓰고, `BRIEF_PDF` 에서 `?download=` 를 뺐다.
+    ⚠️ **`?download=` 을 다시 붙이지 말 것** — 붙이면 Supabase 가
+    `Content-Disposition: attachment` 를 내려 주고, 새 탭이 열리자마자 닫히며 파일이 받아진다.
+    실측: 파라미터 있으면 `content-disposition: attachment`, 빼면 그 헤더가 아예 없고
+    `content-type: application/pdf` 만 남는다.
+    ⚠️ **교차 출처라 `<a download>` 속성은 어차피 무시된다** — 그래서 예전에도 실제로
+    받아지게 만든 건 속성이 아니라 `?download=` 쿼리였다. 속성을 남겨 두면 파일이 다시
+    같은 출처로 옮겨졌을 때 조용히 "받기" 로 되돌아가므로 지웠다.
+    ℹ️ `main.js` 의 전역 링크 가로채기는 `target==='_blank'` 와 `download` 를 **둘 다**
+    거르므로(89행·342행) 이 교체로 가로채기 동작이 달라지지 않는다 — 4곳 모두 클릭 시
+    `defaultPrevented === false` 인 것을 실제로 확인했다.
+    ℹ️ 분석 화면의 `trackDownload('brochure')` 는 그대로 뒀다 — 이제 의미가 "받은 횟수" 가
+    아니라 **"연 횟수"** 다. 항목 이름을 바꾸면 기존 집계와 끊긴다.
   - ⚠️ 원본 194.6MB 를 Ghostscript 로 **13.9MB** 로 줄였다. GitHub 은 100MB 넘는 파일을
     거부하므로 압축이 필수였다. **무엇이 실제로 줄였는지가 직관과 다르다** — 산출물 4벌의
     내부를 다시 재서 확인했다(2026-08-26):
@@ -755,8 +768,70 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   - **`/work` · `/work/:slug` → `/projects` 308 리다이렉트**(next.config). 옛 라우트는 번들에서
     직접 확인했다. 상세는 옛 슬러그(`/work/bizpay`)와 새 UUID 사이 대응표가 없어 목록으로 보낸다.
   - 실적 썸네일 `alt` 가 전부 비어 있었다 → 프로젝트명·고객사로 채웠다.
-  - **남은 것**: 프로젝트 상세가 sandbox iframe 안이라 크롤러가 거의 못 읽는다.
-    `/projects/<id>` 에 서버 렌더 텍스트를 두는 작업이 필요하다.
+
+  **2026-08-26 보완 — 실제 출력물을 재 보고 네 군데를 고쳤다.**
+
+  - ⚠️ **`/projects/<id>` 37개가 전부 canonical 로 홈을 가리키고 있었다.** 상세가
+    `alternates` 를 안 줘서 루트의 `canonical: '/'` 를 그대로 물려받은 것 — 즉 37개가
+    "나는 홈페이지의 복사본이다" 라고 선언하는 상태였다. sitemap 은 같은 37개를 색인하라고
+    하므로 정면 충돌이고, 그대로 두면 상세가 **검색에 아예 안 잡힌다.**
+    → `generateMetadata` 에서 canonical·description·OG·트위터를 전부 직접 준다.
+    **하위 라우트에서 canonical 을 빠뜨리면 조용히 부모 것을 물려받는다** — 새 라우트를
+    만들 때마다 확인할 것.
+  - ⚠️ 같은 곳의 title 이 `Insplanet — X — Insplanet` 으로 나왔다. 루트의 `title.template`
+    이 ` — Insplanet` 을 자동으로 붙이는데 페이지가 회사명을 또 붙여서다. **템플릿이 있는
+    한 하위 페이지는 이름만 준다.**
+  - ⚠️ 홈에 `<h1>` 이 하나도 없었다(히어로가 `<div id="head-title">`). `h1` 로 바꿨다 —
+    `main.js` 는 이 요소를 `getElementById` 로만 잡고(3곳) CSS 도 전부 `#head-title`
+    선택자라 태그 변경은 안전하다. UA 기본 스타일은 `* { margin:0; padding:0 }` 과
+    `#head-title` 의 font-size/weight/family 가 이미 전부 덮는다(확인함: 144.142px /
+    600 / Cormorant Garamond / flex, 레이아웃 동일).
+  - ⚠️ **`SITE_URL` 을 하드코딩하면 미리보기 배포의 공유 카드 이미지가 빈다.** og:image 가
+    실서비스 도메인을 가리키는데 그 도메인이 아직 옛 사이트면, 이미지 요청에 옛 SPA 의
+    `index.html` 이 돌아온다(실측: 200 인데 `content-type: text/html`, 662B). 카카오는
+    이미지를 못 받아 회색 카드를 그린다. → `NEXT_PUBLIC_SITE_URL` →
+    `VERCEL_PROJECT_PRODUCTION_URL` → 하드코딩 순으로 고른다.
+    ℹ️ `SITE_URL` 은 metadata·robots·sitemap·JSON-LD 등 **서버에서만** 쓰이므로(확인함)
+    `NEXT_PUBLIC_` 없는 시스템 변수를 그대로 읽어도 된다. 클라이언트에서 import 하게 되면
+    그때는 `NEXT_PUBLIC_` 쪽만 살아남는다.
+  - **공유 카드 제목만 `INSPLANET`, 브라우저 탭·검색결과는 `Insplanet — 디지털 프로덕트
+    전문 기업`** (사용자 결정). 카드는 브랜드만, 검색결과는 무슨 회사인지 드러나야 클릭을
+    받는다. `SITE_NAME_SHARE` 상수가 그 경계다.
+  - ⚠️ 상세 description 에 **한글 조사(을/를, 와/과)를 쓰지 말 것** — 고객사·프로젝트명이
+    영문이라 받침으로 조사를 고를 수 없다("BizPay과 함께한" 이 실제로 나왔다).
+    "고객사 BizPay." 처럼 명사만 나열한다.
+  - 상세에 **프로젝트별 JSON-LD(`CreativeWork`)** 를 붙였다 — 본문이 iframe 안이라
+    크롤러가 못 읽으므로, 숨긴 텍스트보다 이쪽이 강한 신호다. `creator`/`isPartOf` 로
+    루트의 Organization·WebSite `@id` 를 참조한다.
+  **2026-08-26 · 상세 텍스트를 상세 HTML 에서 뽑아 쓴다 (`lib/portfolioDetail.ts`)**
+
+  - 상세 본문은 iframe 안이라 크롤러가 못 읽는데, **필요한 문장은 이미 그 파일 안에
+    구조화돼 있었다** — 퍼블리셔가 `<project-detail>` 속성에 적어 둔다. 37개 전수 조사:
+    `client`·`launch`·`overview-title`·`overview-text` 는 **37/37**, `ko`/`en` 은 21/37.
+    → 새로 글을 쓸 필요 없이 서버에서 읽어 description·JSON-LD·sr-only 헤더에 쓴다.
+  - ⚠️ **파싱 전에 HTML 주석을 지울 것.** 각 문서 첫머리 주석에 `<project-detail>` 이라는
+    문자열이 또 있어서, 그냥 찾으면 속성이 없는 그 가짜가 먼저 잡힌다(실제로 이걸로
+    "0/37" 이 나와 "속성이 비어 있다" 고 오판할 뻔했다).
+  - ⚠️ **Vercel 은 public/ 을 서버 번들에 안 넣는다.** 정적 에셋은 CDN 에서만 서빙되므로
+    람다에서 `fs` 로 못 읽는다. `next.config.ts` 의 `outputFileTracingIncludes` 가 짝이다 —
+    **지우면 조용히 실패한다**(화면은 멀쩡하고 description 만 일반 문구로 되돌아감).
+    실패 시 `console.warn` 을 남기게 해 뒀다. 배포 후 상세 한 곳의 description 을 확인할 것.
+  - ⚠️ **`/portfolio/<폴더>/index.html` 은 그 자체로 크롤 가능한 주소다.** robots.txt 는
+    `/admin`·`/api` 만 막고 구글은 iframe 의 src 를 따라간다. 그런데 37개 중 **32개의
+    `<title>` 이 템플릿 그대로 `Work Container - 프로젝트명`** 이라, 색인되면 같은 제목의
+    페이지가 무더기로 뜬다. → `headers()` 에서 `X-Robots-Tag: noindex`.
+    **robots.txt 로 막으면 안 된다** — 크롤 자체가 막히면 noindex 를 읽지 못해 오히려
+    "설명 없음" 으로 색인될 수 있다.
+  - ⚠️ **`portfolios.client` 와 상세 HTML 의 `client` 가 36/37 에서 어긋난다.**
+    HTML 쪽이 맞다(신한금융그룹·KB국민은행·LG CNS·완주군…). DB 는 대부분 비어 있고
+    일부는 오입력이다(CastingN → "중개 플랫폼", BizPay → "BizPay"(실제 고객사는 유니코어)).
+    상세 페이지는 HTML 값을 우선한다 — 그 페이지 히어로에 실제로 보이는 값이라
+    "화면에 없는 걸 구조화 데이터에만 넣었다" 는 문제도 없다.
+    ℹ️ **DB 의 `client` 는 홈 메인 슬라이드의 Client 칸에 그대로 나온다** — 어드민에서
+    채워 넣어야 할 값이다(지금 메인 3건만 영향).
+  - **남은 것**: 상세의 **눈에 보이는** 서버 렌더 텍스트. 지금 문서에 남는 것은 sr-only
+    헤더(제목·부제·고객사·분류·오픈·개요 전문)와 JSON-LD 다. 화면에 무엇을 어떻게
+    드러낼지는 디자인 결정이 필요해 손대지 않았다(사용자가 디자인 변경을 원치 않음).
 
 - **방문자 분석을 옛 사이트에서 이식했다** (`/admin/analytics`).
   - ⚠️ **기록은 우리 코드가 하지 않는다** — Supabase Edge Function `track` 이 service_role 로

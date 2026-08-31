@@ -127,8 +127,28 @@
      실제 복사는 works.js(컴포넌트 문서) / 문서 자체 인라인 스크립트(kb-app)가 한다. */
   addEventListener('message', function (e) {
     var d = e.data;
-    if (d && typeof d === 'object' && typeof d.pdShareUrl === 'string') {
+    if (!d || typeof d !== 'object') return;
+    if (typeof d.pdShareUrl === 'string') {
       window.__pdShareUrl = d.pdShareUrl;
+    }
+    /* 부모가 시트를 다시 열었다 — 맨 위로 되돌린다.
+       ⚠️ 부모는 닫아도 iframe 을 버리지 않는다(다시 열 때 로딩을 건너뛰려고). 그래서
+       이 문서는 계속 살아 있고 **지난번 스크롤 위치가 그대로 남아** 다시 열면 보던
+       중간부터 나온다. 부모는 불투명 출처라 contentWindow.scrollTo 도 못 부르므로
+       (allow-same-origin 금지) 되돌리는 일은 이쪽에서 한다.
+       ⚠️ Lenis 를 먼저 옮겨야 한다 — window.scrollTo 만 하면 Lenis 가 캐시한 위치가
+       옛 값이라 다음 휠 한 번에 원래 자리로 되돌아간다. */
+    if (d.pdScrollTop) {
+      var l = window.__pdLenis;
+      if (l && typeof l.scrollTo === 'function') {
+        try {
+          l.scrollTo(0, { immediate: true, force: true });
+        } catch (err) {
+          /* Lenis 가 없거나 옵션이 다르면 아래 네이티브 스크롤로 충분하다 */
+        }
+      }
+      window.scrollTo(0, 0);
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
     }
   });
 

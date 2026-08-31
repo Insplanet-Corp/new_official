@@ -63,6 +63,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
   const [barOn, setBarOn] = useState(false); // 진행 바가 보이는가
 
   const barRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
 
 
   /* 어디까지 진행했는지 — 렌더에 쓰지 않으므로 ref 로 둔다 (매 프레임 setState 를 피한다) */
@@ -186,6 +187,17 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
 
   /* ---- 열기 / 닫기 -------------------------------------------------------- */
 
+  /* 다시 열 때는 언제나 맨 위에서 시작한다.
+     ⚠️ 닫아도 iframe 을 버리지 않으므로(로딩을 건너뛰려고) 상세 문서가 계속 살아 있고
+     지난번 스크롤 위치가 그대로 남는다 — 그대로 두면 보던 중간부터 올라온다.
+     ⚠️ 여기서 contentWindow.scrollTo 를 부를 수는 없다. sandbox 라 출처가 불투명해서
+     교차 출처 취급이다(allow-same-origin 은 세션 토큰이 열리므로 금지). 되돌리는 일은
+     bridge.js 가 하고 우리는 부탁만 한다 — 안에서 도는 Lenis 도 같이 옮겨야 하므로
+     어차피 그쪽이 해야 맞다. */
+  const resetFrameScroll = useCallback(() => {
+    frameRef.current?.contentWindow?.postMessage({ pdScrollTop: true }, '*');
+  }, []);
+
   /** 로드가 끝났다 — 바를 걷고 시트를 올린다. 높이 통지와 보호 타이머가 같이 쓴다. */
   const reveal = useCallback(() => {
     if (guard.current) clearTimeout(guard.current);
@@ -236,6 +248,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
          받아 오는 동안 시트의 흰 바탕이 그대로 보인다. */
       if (ready.current === detail) {
         setSrc(detail);
+        resetFrameScroll(); // 지난번 위치가 남아 있다 — 맨 위로 되돌린다
         reveal();
         return;
       }
@@ -263,7 +276,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
         reveal();
       }, LOAD_GUARD_MS);
     },
-    [barDraw, barReal, barReset, reveal, stopTrickle, trickle],
+    [barDraw, barReal, barReset, resetFrameScroll, reveal, stopTrickle, trickle],
   );
 
   const closeSheet = useCallback(() => {
@@ -457,6 +470,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
                  로딩 없이 바로 올라오는 캐시는 그대로다. */
               <iframe
                 key={src}
+                ref={frameRef}
                 src={src}
                 title="프로젝트 상세"
                 sandbox="allow-scripts"

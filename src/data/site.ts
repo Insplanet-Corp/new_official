@@ -14,16 +14,17 @@ export const CONTACT = {
    고정 경로 `brief/insplanet_brief.pdf` 다. 어드민 '회사소개서관리'(/admin/brief)에서 올리면
    그 자리에 덮어써지고, 경로가 안 바뀌니 이 상수도 그대로다(배포 불필요, 016 마이그레이션).
 
-   ⚠️ **`?download=` 를 빼지 말 것.** 교차 출처 링크에서는 `<a download>` 속성이 **무시된다** —
-   그냥 두면 다운로드가 아니라 브라우저에서 PDF 가 열려 버린다. Supabase 는 이 쿼리를 받으면
-   `Content-Disposition: attachment` 를 내려 준다. (파일이 public/ 에 있던 시절에는 같은 출처라
-   `download` 속성만으로 됐다.)
+   ⚠️ **`?download=` 을 다시 붙이지 말 것** (2026-08-26 사용자 결정: 받아지지 말고 열려야 한다).
+   Supabase 는 그 쿼리를 받으면 `Content-Disposition: attachment` 를 내려 주고, 그러면
+   브라우저가 새 탭을 열자마자 닫으며 파일을 받아 버린다. 빼면 헤더가 아예 안 붙고
+   `content-type: application/pdf` 만 남아 브라우저 뷰어로 열린다(실측 확인).
 
-   ⚠️ 링크에 `download` 속성은 그대로 남겨 둔다 — 지금은 교차 출처라 무시되지만, `main.js` 의
-   전역 링크 가로채기가 그 속성으로 링크를 거르기 때문이다(89행·342행). 다른 출처라 어차피
-   가로채기 전에 걸러지지만, 파일 위치가 다시 바뀌어도 안전하게 남겨 둔다. */
+   ⚠️ 링크에는 `download` 대신 **`target="_blank"`** 를 쓴다. `main.js` 의 전역 링크
+   가로채기는 `target==='_blank'` 와 `download` 를 **둘 다** 거르므로(89행·342행) 어느 쪽이든
+   가로채기에서는 안전하다. 다만 `download` 를 남겨 두면 파일이 다시 같은 출처로 옮겨졌을 때
+   조용히 "받기" 로 되돌아간다 — 그래서 지웠다. */
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-export const BRIEF_PDF = `${SUPABASE}/storage/v1/object/public/brief/insplanet_brief.pdf?download=insplanet_brief.pdf`;
+export const BRIEF_PDF = `${SUPABASE}/storage/v1/object/public/brief/insplanet_brief.pdf`;
 
 /** 어드민이 덮어쓰는 고정 경로 — 어드민 화면과 이 상수가 같은 값을 봐야 한다 */
 export const BRIEF_BUCKET = 'brief';

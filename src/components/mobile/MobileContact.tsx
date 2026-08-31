@@ -55,7 +55,13 @@ export default function MobileContact() {
             비즈니스의 본질을 꿰뚫는 통찰과 정교한 기술력으로 당신의 아이디어를 현실로 만듭니다.
           </p>
         </div>
-        <a className="mc-brief" href={BRIEF_PDF} download onClick={() => void trackDownload('brochure')}>
+        <a
+          className="mc-brief"
+          href={BRIEF_PDF}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => void trackDownload('brochure')}
+        >
           Company Brief Download
           <span className="mc-brief-ico" aria-hidden="true">
             <img src="/assets/icon_download.svg" alt="" />
