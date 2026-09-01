@@ -32,6 +32,29 @@ export const metadata: Metadata = {
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: { card: 'summary_large_image', title: SITE_NAME_SHARE, images: [OG_IMAGE] },
+  /* 파비콘 — 브라우저 테마에 따라 갈린다(로고가 단색이라 한 장으로는 한쪽에서 안 보인다).
+     ⚠️ `.ico` 를 **맨 앞에** 둔다. `media` 를 안 보는 브라우저(사파리 등)는 목록에서
+     마지막 것을 집는 경향이 있어, 순서를 뒤집으면 그런 브라우저가 항상 dark 판을 쓴다.
+     ⚠️ 파일은 `public/` 에 있으므로 경로는 루트 기준(`/favicon-light.png`)이다.
+     ⚠️ `src/app/` 에 `favicon.ico`/`icon.png` 을 두는 파일 컨벤션과 섞지 말 것 —
+     그쪽이 있으면 Next 가 <link> 를 하나 더 만들어 어느 쪽이 이길지 알기 어려워진다. */
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' },
+      {
+        url: '/favicon-light.png',
+        type: 'image/png',
+        sizes: '136x136',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/favicon-dark.png',
+        type: 'image/png',
+        sizes: '136x136',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  },
   robots: {
     index: true,
     follow: true,
