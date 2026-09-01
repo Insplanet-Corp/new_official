@@ -42,6 +42,7 @@ export default function ContactForm() {
   const fileInput = useRef<HTMLInputElement>(null);
   const fileName = useRef<HTMLInputElement>(null);
   const content = useRef<HTMLTextAreaElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleChip = (key: string, option: string, multi?: boolean) => {
@@ -176,6 +177,18 @@ export default function ContactForm() {
       }
     });
   }, []);
+
+  /* ⚠️ is-ready 를 className 으로 넘기지 않고 손으로 토글한다.
+     .ct-submit 은 스크롤 리빌 대상이라 `.in` 을 IO 가 **직접 classList 로** 붙이는데,
+     className 을 state 로 만들면 ready 가 켜지는 순간 React 가 className 을 통째로 다시
+     써서 그 `.in` 을 지워 버린다. IO 는 이미 unobserve 한 뒤라 다시 붙여 주지도 않는다
+     → 필수값을 다 채우는 순간 문의하기 버튼이 opacity:0 + pointer-events:none 으로
+     사라졌다(빌드·콘솔 모두 조용하다). className 을 상수 문자열로 두면 React 가 마운트
+     이후 그 속성을 건드리지 않으므로 두 클래스가 공존한다.
+     같은 함정을 ProjectsExplorer 의 필터 바에서 이미 밟았다(거기 주석 참고). */
+  useEffect(() => {
+    submitRef.current?.classList.toggle('is-ready', ready);
+  }, [ready]);
 
   /* form areas rise + fade in as they scroll into view (same elastic rise as the svc-cards).
      Graceful: reduced motion keeps them visible via CSS; no IntersectionObserver -> unhide. */
@@ -334,10 +347,7 @@ export default function ContactForm() {
                 </label>
               </div>
 
-              <button
-                type="submit"
-                className={ready ? "ct-submit is-ready" : "ct-submit"}
-              >
+              <button type="submit" className="ct-submit" ref={submitRef}>
                 <span>문의하기</span>
                 <span className="ct-arrow" aria-hidden="true">
                   <img src="/assets/icon_arrow.svg" alt="" />

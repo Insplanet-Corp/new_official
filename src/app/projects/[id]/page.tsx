@@ -155,7 +155,9 @@ function ProjectJsonLd({
     ...(meta?.ko ? { headline: meta.ko } : {}),
     inLanguage: "ko-KR",
     creator: { "@id": `${SITE_URL}/#organization` },
-    ...(thumb ? { image: storageRender(thumb, { width: 1200 }) } : {}),
+    /* ⚠️ height 를 빼면 안 된다 — width 만 주면 원본 높이가 그대로 남아
+       5120x2880 썸네일이 1200x2880 세로 띠로 잘려 나간다(images.ts 주석 참고). */
+    ...(thumb ? { image: storageRender(thumb, { width: 1200, height: 630 }) } : {}),
     ...(client
       ? { sourceOrganization: { "@type": "Organization", name: client } }
       : {}),

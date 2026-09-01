@@ -9,7 +9,7 @@ import {
   type ProjectCard,
 } from '@/data/projectsPage';
 import { afterFonts, prefersReducedMotion, revealOnScroll } from '@/lib/dom';
-import { cardSrc, cardSrcSet, storageRender } from '@/lib/images';
+import { LOGO_RENDER, cardSrc, cardSrcSet, storageRender } from '@/lib/images';
 
 /* Projects 의 모바일 화면 (Figma official_05_projects_01_375 · node 2489:51127,
    진행중 패널은 official_05_projects_02_375 · node 2588:45051).
@@ -225,7 +225,7 @@ export default function MobileProjectsPage({
                 {row.logo ? (
                   <img
                     className="mp-ocard-logo"
-                    src={storageRender(row.logo, { width: 240 })}
+                    src={storageRender(row.logo, LOGO_RENDER)}
                     alt={row.project}
                     loading="lazy"
                     decoding="async"

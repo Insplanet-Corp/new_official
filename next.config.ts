@@ -48,8 +48,57 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  /* 회사소개서 PDF 를 짧은 주소로 연다.
+
+       /brief.pdf  ->  <SUPABASE>/storage/v1/object/public/brief/insplanet_brief.pdf
+
+     Vercel 이 리버스 프록시로 대신 받아 오므로 **주소창에도 짧은 주소가 그대로 남는다**.
+     리다이렉트로 하면 새 탭이 결국 긴 Supabase 주소로 바뀐다.
+
+     ⚠️ 확장자(.pdf)를 붙인 이유가 있다 — src/middleware.ts 의 matcher 가 점이 든 경로를
+        제외한다. 확장자가 없으면 어드민 서브도메인에서 /brief 가 /admin/brief
+        (회사소개서관리 화면)로 rewrite 돼 PDF 대신 어드민 페이지가 열린다.
+     ⚠️ 환경변수가 없으면 rewrite 를 만들지 않는다. 빈 문자열을 destination 에 넣으면
+        상대경로가 되어 자기 자신으로 무한히 돈다.
+     ⚠️ 짝은 src/data/site.ts 의 BRIEF_PDF 다 — 한쪽만 바꾸면 404. */
+  async rewrites() {
+    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabase) return [];
+    return [
+      {
+        source: '/brief.pdf',
+        destination: `${supabase}/storage/v1/object/public/brief/insplanet_brief.pdf`,
+      },
+    ];
+  },
+
   async headers() {
     return [
+      {
+        /* 회사소개서(약 18.7MB)를 Vercel CDN 에도 재워 둔다.
+
+           Storage 원본은 `cache-control: max-age=3600` 을 준다(2026-08-31 실측).
+           그래도 명시하는 이유는 두 가지다: ① 업로드 때 cacheControl 을 안 주면
+           Supabase 기본값이 `no-cache` 라 조용히 무캐시로 돌아간다(실제로 세션 중
+           한 번 그 상태였다) ② 브라우저와 CDN 의 수명을 따로 주려면 어차피 필요하다.
+
+           캐시가 없으면 열 때마다 18.7MB 가 **Supabase 무료 전송량(5GB/월 ≈ 267회)**
+           에서 빠져나간다. Vercel CDN 이 받아 두면 그 부담이 Vercel 쪽
+           (Hobby 100GB ≈ 5,300회)으로 옮겨간다.
+
+           ⚠️ 대가는 **최대 1시간의 지연**이다 — 어드민에서 파일을 교체해도 CDN 에 남은
+              옛 파일이 그때까지 나갈 수 있다. 급하면 Vercel 에서 재배포하면 된다.
+           ⚠️ 브라우저에는 캐시를 주지 않는다(must-revalidate) — 사람이 새로고침하면
+              바로 새 파일을 본다. 재워 두는 건 CDN 한 곳뿐이다.
+           ⚠️ **로컬 `next start` 에서는 이 헤더가 안 붙는다** — 프록시 응답에 상류
+              헤더가 그대로 통과한다(실측). 이 블록이 실제로 먹는지는 Vercel 에 올려
+              `curl -I` 로 확인해야 한다. */
+        source: '/brief.pdf',
+        headers: [
+          { key: 'Vercel-CDN-Cache-Control', value: 'max-age=3600' },
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+        ],
+      },
       {
         /* 프로젝트 상세(public/portfolio/*)는 allow-same-origin 없는 sandbox iframe 안에서
            돈다 — 세션 토큰 때문에 일부러 그렇게 뒀다(CLAUDE.md 15번). 그 문서의 origin 은

@@ -705,6 +705,33 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 - **회사소개서 PDF 를 저장소에서 Supabase Storage 로 옮겼다.** 어드민 `/admin/brief` 에서
   올리면 배포 없이 교체된다. 고정 경로 `brief/insplanet_brief.pdf` 에 `upsert` 로 덮어쓰므로
   URL 이 안 변하고(사이트는 `BRIEF_PDF` 상수 하나) 옛 파일이 쌓이지도 않는다(016).
+  - **주소를 짧게 바꿨다 (2026-08-31, 사용자 요청)** — 사이트가 거는 주소는 이제
+    **`/brief.pdf`** 다. `next.config.ts` 의 `rewrites()` 가 이 경로를 Storage 원본으로
+    **프록시**한다(리다이렉트가 아니라 프록시라 새 탭 주소창에도 짧은 주소가 남는다).
+    ⚠️ `next.config.ts` 의 rewrites·headers 와 `data/site.ts` 의 `BRIEF_PDF` 가 **짝**이다.
+    ⚠️ **확장자 `.pdf` 를 떼지 말 것** — `middleware.ts` 의 matcher 가 점이 든 경로를
+    제외하므로, `/brief` 로 두면 어드민 서브도메인에서 `/admin/brief`(회사소개서관리
+    화면)로 rewrite 돼 PDF 대신 어드민 페이지가 열린다.
+    ⚠️ **짧은 주소가 되면서 이 링크가 "같은 출처" 가 됐다.** 예전에는 다른 출처라
+    `main.js` 의 전역 링크 가로채기가 자동으로 걸러 줬는데 이제 아니다 — 지금 안 걸리는
+    유일한 이유는 `target==='_blank'` 검사가 origin 검사보다 **앞**에 있기 때문이다.
+    `target` 을 빼면 main.js 가 클릭을 가로채 페이지 전환 연출을 태우고 화면이 blank 가 된다.
+    같은 이유로 `download` 속성도 다시 붙이면 안 된다 — 이제는 실제로 먹는다.
+    - **왜 프록시인가**: Storage 원본 18.7MB 를 그대로 링크하면 열 때마다 **Supabase
+      무료 전송량(5GB/월 ≈ 267회)** 에서 빠진다. Vercel CDN 에 재우면 그 부담이
+      Vercel(Hobby 100GB ≈ 5,300회)로 옮겨간다. 그래서 `Vercel-CDN-Cache-Control:
+      max-age=3600` + 브라우저에는 `must-revalidate` 를 준다. **대가는 파일 교체 후
+      최대 1시간의 지연**이다(급하면 재배포).
+    - Vercel 의 외부 rewrite 는 함수가 아니라 CDN 계층이 처리한다 — 함수 응답 4.5MB
+      제한과 무관하고, **프록시 요청 제한은 120초 타임아웃뿐**이다(문서 확인).
+    - **확인함**(로컬 프로덕션 빌드): `/brief.pdf` 가 `206` + `content-range:
+      bytes 0-4/18710784` + `content-type: application/pdf` + 매직바이트 `%PDF-` 로
+      스트리밍되고, Contact 링크가 `href="/brief.pdf" target="_blank"` 로 나온다.
+      **확인 못 함**: 위 캐시 헤더가 실제로 붙는지 — 로컬 `next start` 는 프록시 응답에
+      **상류 헤더를 그대로 통과**시킨다(실측). Vercel 에 올린 뒤 `curl -I` 로 볼 것.
+    - ℹ️ 세션 중 원본 `cache-control` 이 `no-cache` → `max-age=3600` 으로 바뀌는 걸 봤다
+      (파일 재업로드). 업로드 때 `cacheControl` 을 안 주면 Supabase 기본이 `no-cache` 라
+      조용히 무캐시가 된다 — 어드민 업로드 코드에 그 옵션이 없다.
   - **2026-08-26 부터 "받기" 가 아니라 "새 탭에서 열기" 다** (사용자 결정). 링크 4곳
     (`ct-brief` · `mc-brief` · `brief-btn` · `m-menu-brief`)이 `download` 대신
     `target="_blank" rel="noopener noreferrer"` 를 쓰고, `BRIEF_PDF` 에서 `?download=` 를 뺐다.
@@ -1176,3 +1203,33 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
     **JS 만 새것이고 CSS 는 옛것인 상태**가 된다(새로고침을 눌러도 유지됐다). 규칙 텍스트를
     찍어 두지 않았으면 "고쳤는데 안 된다" 로 한참 헤맬 뻔했다. 폰 검증은 **탭을 닫고 새 탭
     (또는 시크릿 탭)** 에서 열 것. 배포본은 빌드마다 파일명이 바뀌므로 이 문제가 없다.
+18. **⚠️ 리빌 대상(`.in`)의 className 을 React state 로 만들면 그 `.in` 이 지워진다**
+    (2026-09-01 수정) — `revealOnScroll`(`lib/dom.ts`)은 `.in` 을 **classList 로 직접** 붙이고
+    바로 `unobserve` 한다. 같은 요소의 className 을 JSX 에서 조건부로 넘기면, 그 조건이 처음
+    바뀌는 순간 React 가 className 을 통째로 다시 써서 `.in` 을 날린다 — IO 는 이미 떠났으므로
+    **영영 안 돌아온다.** 빌드·타입체크·콘솔 전부 조용하다.
+    실제 증상: `/contact` 에서 **필수값을 다 채우는 순간 문의하기 버튼이 사라졌다**
+    (`ready` → `className={ready ? 'ct-submit is-ready' : 'ct-submit'}` → `.in` 소멸 →
+    `opacity:0; pointer-events:none`). PC `ContactForm` · 모바일 `MobileContactForm` 둘 다.
+    → **className 은 상수 문자열로 두고 상태 클래스는 ref + `classList.toggle` 로 붙인다.**
+    React 는 값이 안 바뀐 className 속성을 마운트 후 건드리지 않으므로 두 클래스가 공존한다.
+    ℹ️ `ProjectsExplorer` 의 필터 바는 반대로 풀었다(리빌을 `barIn` state 로 올림) — 거기는
+    칩·토글이 클릭마다 리렌더되므로 그쪽이 맞다. **둘 중 하나로 반드시 통일할 것.**
+    ⚠️ 리빌 대상에 새 상태 클래스를 붙일 때마다 이 선택을 하고 지나가야 한다.
+    확인함(dev 5599): 수정 전 재현(`className` 을 손으로 덮으면 `opacity:0`/`pointer-events:none`),
+    수정 후 `ct-submit in is-ready` 공존 + `opacity:1` + 활성 배경(#3e3f44). 375 모바일도 동일.
+
+19. **⚠️ `storageRender` 에 `width` 만 주면 Supabase 가 이미지를 잘라서 준다** (2026-09-01 수정) —
+    비율을 지켜 주지 않는다. **원본 높이를 그대로 두고** 기본 `resize=cover` 로 **좌우를 잘라 낸다.**
+    실측: 636x240 로고에 `?width=240` → **240x240**(가운데 정사각형만 남아 심볼과 뒷글자가
+    통째로 사라짐), 5120x2880 썸네일에 `?width=1200` → 1200x2880 세로 띠.
+    응답은 200 이고 화면도 멀쩡히 뜨므로 **"로고가 잘 안 보인다" 로만 드러난다.**
+    → **height 를 반드시 같이 준다.** 로고처럼 잘리면 안 되는 것은 `resize:'contain'`
+    (`LOGO_RENDER` 상수, `lib/images.ts` — PC 표·모바일 카드가 같이 쓴다).
+    같이 고친 곳: `/projects` 진행중 표(`.pj-logo`)·모바일 카드(`.mp-ocard-logo`)·
+    상세 JSON-LD 의 `image`(`width` 만 주고 있었다).
+    ⚠️ **로고 상자의 `object-fit` 도 `cover` 가 아니라 `contain` 이어야 한다** — 사진은 잘려도
+    되지만 로고는 글자가 없어져 못 읽는다. `.pj-logo` 는 `padding:12px` 까지 겹쳐 안쪽 비율이
+    상자와 달라졌던 탓에(170/64 = 2.66 vs 146/40 = 3.65) 위아래가 4분의 1쯤 더 잘렸다 —
+    패딩을 빼니 상자 비율이 실제 CI(636/240 = 2.65)와 같아져 **3배수 에셋이 그대로 들어맞는다.**
+    확인함(dev 5599, 1440): 렌더 이미지 636x240, 상자 190x71 에 `object-fit:contain`, 패딩 0.

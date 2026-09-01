@@ -19,12 +19,18 @@
 const OBJECT = '/storage/v1/object/public/';
 const RENDER = '/storage/v1/render/image/public/';
 
-type RenderOpts = { width: number; height?: number; quality?: number };
+type RenderOpts = {
+  width: number;
+  height?: number;
+  quality?: number;
+  /** cover(기본) = 상자를 채우고 넘치는 부분은 자른다. contain = 비율을 지켜 상자 안에 담는다(안 자름). */
+  resize?: 'cover' | 'contain';
+};
 
 /** Storage 공개 URL 이면 리사이즈 URL 로 바꾼다. 그 외(로컬 /assets/… 등)는 그대로. */
 export function storageRender(
   src: string,
-  { width, height, quality = 75 }: RenderOpts,
+  { width, height, quality = 75, resize = 'cover' }: RenderOpts,
 ): string {
   if (!src) return src;
   const at = src.indexOf(OBJECT);
@@ -32,15 +38,27 @@ export function storageRender(
 
   const url = src.slice(0, at) + RENDER + src.slice(at + OBJECT.length);
   const q = new URLSearchParams({ width: String(width), quality: String(quality) });
-  /* 높이를 같이 주면 resize=cover 로 잘라서 준다 — 카드가 object-fit:cover 라
-     비율이 다르면 어차피 잘리는데, 그 잘릴 부분까지 받아 올 이유가 없다.
-     ⚠️ width 만 주면 원본 높이가 그대로 남아 오히려 더 큰 파일이 온다(실측). */
+  /* 높이를 같이 주면 그 상자에 맞춰 준다 — 카드가 object-fit:cover 라 비율이 다르면
+     어차피 잘리는데, 그 잘릴 부분까지 받아 올 이유가 없다.
+
+     ⚠️⚠️ **height 를 반드시 같이 줄 것.** width 만 주면 비율이 유지되지 않는다 —
+     원본 높이가 그대로 남고, 기본 resize=cover 가 그 높이에 맞춰 **좌우를 잘라 낸다.**
+     실측(2026-09-01): 636x240 로고에 `?width=240` → **240x240** (가운데 정사각형만 남고
+     워드마크 양옆이 잘려 나간다). 5120x2880 썸네일에 `?width=1200` → 1200x2880 세로 띠.
+     화면은 그대로 뜨고 콘솔 에러도 없어서, 로고가 "안 보인다" 로만 드러났다.
+     비율을 지켜야 하는 이미지(로고 등)는 상자 크기 + resize:'contain' 으로 부를 것. */
   if (height) {
     q.set('height', String(height));
-    q.set('resize', 'cover');
+    q.set('resize', resize);
   }
   return `${url}${url.includes('?') ? '&' : '?'}${q}`;
 }
+
+/* 진행중 목록의 고객사 CI — PC 표(.pj-logo 170x64 → 212x80)와 모바일 카드(.mp-ocard-logo
+   98x48)가 같은 파일을 쓴다. 실제로 올라온 로고는 636x240 = 212x80 의 3배수다.
+   ⚠️ resize:'contain' 이라 비율이 다른 로고를 나중에 올려도 잘리지 않는다 — 로고는
+   잘리면 글자가 사라져 못 읽는다. 상한만 걸어 5000px 짜리를 그대로 받는 일을 막는다. */
+export const LOGO_RENDER = { width: 636, height: 240, resize: 'contain' } as const;
 
 /** /projects 카드의 가로:세로 (304x409 · 416x560 — 뷰포트가 커져도 비율은 같다) */
 const CARD_RATIO = 409 / 304;

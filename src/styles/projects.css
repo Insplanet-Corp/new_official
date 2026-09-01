@@ -421,14 +421,18 @@
   box-sizing: border-box;
   width: calc(170px + 42 * var(--v));
   height: calc(64px + 16 * var(--v));
-  padding: 12px;
-} /* logo box 170x64 -> 212x80 */
+} /* logo box 170x64 -> 212x80 — 올라오는 CI 가 이 상자의 3배수(636x240)다 */
 .pj-logo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-} /* image fills the box (Figma scaleMode FILL / cover) */
+}
+/* ⚠️ cover 가 아니라 contain 이다. 여기 들어오는 것은 사진이 아니라 **로고**라
+   잘리면 글자가 없어져 못 읽는다. 예전에는 padding:12px + cover 였는데, 상자 비율
+   (170/64 = 2.66)과 안쪽 비율(146/40 = 3.65)이 달라 로고 위아래가 4분의 1쯤 잘려
+   나갔다. 패딩을 빼면 상자 비율이 실제 CI(636/240 = 2.65)와 같아져 3배수 그대로 들어맞고,
+   비율이 다른 로고가 올라와도 contain 이 상자 안에 담아 준다. */
 
 @media (prefers-reduced-motion: reduce) {
   .pj-cat,

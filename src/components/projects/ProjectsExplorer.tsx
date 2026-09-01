@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import useMagneticCards from '@/lib/hooks/useMagneticCards';
-import { CARD_SIZES, cardSrc, cardSrcSet, storageRender } from '@/lib/images';
+import { CARD_SIZES, LOGO_RENDER, cardSrc, cardSrcSet, storageRender } from '@/lib/images';
 import ProjectSheet from '@/components/projects/ProjectSheet';
 import {
   CATEGORIES,
@@ -215,7 +215,7 @@ export default function ProjectsExplorer({
                     {/* 고객사명 텍스트 필드는 기획서에 없다 — alt 는 프로젝트명으로 채운다 */}
                     {row.logo ? (
                       <img
-                        src={storageRender(row.logo, { width: 240 })}
+                        src={storageRender(row.logo, LOGO_RENDER)}
                         alt={row.project}
                         loading="lazy"
                       />

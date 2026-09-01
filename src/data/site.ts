@@ -19,12 +19,18 @@ export const CONTACT = {
    브라우저가 새 탭을 열자마자 닫으며 파일을 받아 버린다. 빼면 헤더가 아예 안 붙고
    `content-type: application/pdf` 만 남아 브라우저 뷰어로 열린다(실측 확인).
 
-   ⚠️ 링크에는 `download` 대신 **`target="_blank"`** 를 쓴다. `main.js` 의 전역 링크
-   가로채기는 `target==='_blank'` 와 `download` 를 **둘 다** 거르므로(89행·342행) 어느 쪽이든
-   가로채기에서는 안전하다. 다만 `download` 를 남겨 두면 파일이 다시 같은 출처로 옮겨졌을 때
-   조용히 "받기" 로 되돌아간다 — 그래서 지웠다. */
-const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-export const BRIEF_PDF = `${SUPABASE}/storage/v1/object/public/brief/insplanet_brief.pdf`;
+   사이트가 쓰는 주소는 **짧은 쪽**이다 — `next.config.ts` 의 rewrites 가 이 경로를
+   Storage 원본으로 프록시한다. 리다이렉트가 아니라 프록시라 주소창에도 이 주소가 그대로
+   남는다. ⚠️ 여기와 `next.config.ts` 의 rewrites/headers 가 짝이다 — 한쪽만 바꾸면 404 다.
+
+   ⚠️ 링크 4곳(`ct-brief`·`mc-brief`·`brief-btn`·`m-menu-brief`)의 **`target="_blank"` 를
+   빼지 말 것.** 짧은 주소로 바뀌면서 이 링크가 **같은 출처**가 됐다 — `main.js` 의 전역 링크
+   가로채기(89행·342행)가 예전에는 "다른 출처라서" 자동으로 걸러 줬지만 이제는 아니다.
+   지금 안 걸리는 유일한 이유가 `target==='_blank'` 검사이고, 그게 origin 검사보다 **앞**에
+   있다. 빼는 순간 main.js 가 클릭을 가로채 페이지 전환 연출을 태우고 화면이 blank 가 된다.
+   같은 이유로 `download` 속성도 다시 붙이지 말 것 — 같은 출처가 됐으니 이제는 실제로
+   먹어서 조용히 "받기" 로 되돌아간다. */
+export const BRIEF_PDF = "/brief.pdf";
 
 /** 어드민이 덮어쓰는 고정 경로 — 어드민 화면과 이 상수가 같은 값을 봐야 한다 */
 export const BRIEF_BUCKET = "brief";

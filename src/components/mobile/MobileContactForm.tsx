@@ -35,6 +35,7 @@ export default function MobileContactForm() {
   const fileInput = useRef<HTMLInputElement>(null);
   const fileName = useRef<HTMLInputElement>(null);
   const content = useRef<HTMLTextAreaElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   const toggleChip = (key: string, option: string, multi?: boolean) => {
     setSelected((prev) => {
@@ -147,6 +148,14 @@ export default function MobileContactForm() {
       }
     });
   }, []);
+
+  /* ⚠️ is-ready 를 className 으로 넘기지 않고 손으로 토글한다 — PC ContactForm 과 같은 이유다.
+     .mc-submit 은 아래 스크롤 리빌 대상이라 `.in` 이 classList 로 직접 붙는데, className 을
+     state 로 만들면 ready 가 켜지는 순간 React 가 className 을 다시 써서 그 `.in` 을 지운다.
+     → 필수값을 다 채우는 순간 제출 버튼이 opacity:0 으로 사라진다. */
+  useEffect(() => {
+    submitRef.current?.classList.toggle('is-ready', ready);
+  }, [ready]);
 
   /* form areas rise + fade in as they scroll into view — spans both <section class="mc-form">
      steps (step 1's chips + step 2's fields), same as the static build's document-wide selector. */
@@ -282,7 +291,7 @@ export default function MobileContactForm() {
               </label>
             </div>
 
-            <button type="submit" className={ready ? 'mc-submit is-ready' : 'mc-submit'}>
+            <button type="submit" className="mc-submit" ref={submitRef}>
               <span>문의하기</span>
               <span className="mc-arrow" aria-hidden="true">
                 <img src="/assets/icon_arrow.svg" alt="" />

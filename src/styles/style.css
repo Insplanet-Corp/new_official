@@ -4312,8 +4312,12 @@ html.ps-busy .mp-card a {
     flex: none;
     width: 98px;
     height: 48px;
-    object-fit: cover;
-  }
+    object-fit: contain;
+    object-position: left center;
+  } /* ⚠️ PC .pj-logo 와 같은 이유로 cover 가 아니라 contain 이다 — 로고는 잘리면 글자가
+       사라져 못 읽는다. 지금 CI(636/240 = 2.65)는 상자(98/48 = 2.04)보다 가로로 길어
+       폭에 맞춰 담기고 위아래 여백이 남는다. 세로로 긴 로고가 올라오면 좌우 여백이 남는데,
+       그때 가운데 정렬이면 옆의 분류 텍스트와 사이가 벌어져 보이므로 왼쪽에 붙인다. */
   .mp-ocard-cat {
     font-weight: 700;
     font-size: 14px;
