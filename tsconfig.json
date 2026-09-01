@@ -40,6 +40,10 @@
     ".next-prod/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    // Supabase Edge Function 은 Deno 런타임이다 — `Deno` 전역과 https:// import 를
+    // 쓰므로 이 Node 용 tsconfig 로 검사하면 무조건 실패한다. 검사는 Deno 쪽에서
+    // 한다(`supabase functions deploy` 가 배포 시 확인).
+    "supabase/functions"
   ]
 }

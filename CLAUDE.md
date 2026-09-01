@@ -935,6 +935,121 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   **확인 못 함**: 실제 접수 왕복(테이블이 없어 아직 못 넣는다)과 어드민 목록·조회·첨부
   다운로드 — 어드민 세션이 없어 게이트를 못 넘는다. **018 을 돌린 뒤 사람이 확인할 것.**
 
+**이용약관 · 개인정보처리방침 팝업 (2026-09-01, `LegalModal`)**
+
+- 정적 사이트가 최근에 붙인 두 팝업(`../insplanet` 커밋 `ca6747d`·`18af344`)을 옮겼다.
+  Contact 동의 문구의 **이용약관 / 개인정보처리방침 링크**로 열리는 정적 문서 팝업이다.
+- ⚠️ **여기만 트리가 한 벌이다.** 정적 사이트는 PC(`.tm-modal`)와 모바일(`.mt-popup`) 두 벌에
+  같은 전문을 두 번 적어 뒀지만, 여기서는 `.tm-*` 한 벌을 `contact.css` 의 ≤1023 블록이
+  풀스크린 시트로 바꾼다(카드→전체화면, 딤 제거, 타이틀 64→40, 소제목 18→16, 챕터 간격
+  64→40, X 64→48 박스). 두 벌로 안 가른 이유 —
+  ① 약관·방침 **전문**이라 두 벌이면 `/contact` 문서에 장문이 통째로 두 번 실린다
+  ② 레거시 런타임(`public/js`)이 잡는 이름이 하나도 없는 새 마크업이라, 두 벌로 가를 때
+  생기는 함정(전역 플래그 싸움·포탈된 쪽을 반대 폭에서 감추기)이 아예 없다.
+  → 그래서 `RecruitModal` 이 필요로 했던 **open/active 구분도 여기서는 필요 없고**, 폭
+  경계를 넘어도 열린 채로 그대로 있다(CSS 만 바뀐다).
+- **본문은 `data/legal.ts` 데이터** 다(문단 배열 + `li`/`brk` 플래그). 정적 사이트 HTML 에서
+  스크립트로 뽑아 옮겼으므로, 문구를 고칠 때는 정적 사이트도 같이 고쳐야 갈리지 않는다.
+- ⚠️ **동의 문구의 링크는 `<label>` 안에 있다** — `preventDefault` 를 빠뜨리면 팝업을 여는
+  동시에 동의 체크박스가 토글된다(라벨 활성화가 클릭의 기본 동작이다). 같은
+  `preventDefault` 가 `main.js` 의 전역 링크 가로채기도 막아 준다(그쪽은 `href[0]==='#'`
+  에서 이미 빠지므로 이중 안전망).
+- 링크는 PC 폼·모바일 폼 두 곳에 있고 팝업은 하나라 열림 상태를 `LegalProvider` 가 든다
+  (`RecruitProvider` 와 같은 이유). 링크 마크업 자체는 `ConsentLinks` 하나를 두 폼이 쓴다 —
+  클래스를 안 달고 링크만 그리므로 `.ct-*`/`.mc-*` 프리픽스 관례를 깨지 않는다.
+- ⚠️ **껍데기(`.tm-modal`)는 늘 그려 두고 본문만 처음 열 때 붙인다.** 껍데기가 미리 있어야
+  `.is-open` 이 붙는 순간 opacity 0→1 트랜지션이 실제로 돈다 — 그 커밋에서 새로 만들어진
+  요소는 시작 상태가 없어 트랜지션 없이 즉시 나타난다. 한 번 연 문서는 그대로 남긴다
+  (닫는 0.4s 페이드 동안 글자가 먼저 사라지면 안 되므로 어차피 남아 있어야 한다).
+- ⚠️ 모바일 X 는 96 뷰박스 SVG 를 48 박스에 넣은 것이라 선이 얇아진다 — `stroke-width:2.25`
+  로 정적 사이트의 1.125px 굵기를 되돌린다(그래서 SVG 도 한 벌로 끝난다).
+- 문장 **중간**에서 끊는 줄바꿈(약관 도입문)은 `.tm-br-pc` 로 ≤1023 에서 접는다. 접히는
+  자리에 **공백을 남겨야 한다** — `display:none` 만 하면 앞뒤 단어가 붙는다.
+- **확인함**(dev 5599, 브라우저 패널): 1440 에서 카드 1188px·라운드 46.9·타이틀 78.9px
+  (`--v` 보간이 맞다), 390 에서 390×844 풀스크린·딤 없음·패딩 90/20/64·gap 40·X 48박스
+  (16/12)·타이틀 40·소제목 16·본문 14, 두 문서 10/13개 조항 전부 렌더, 링크를 눌러도
+  **동의 체크박스가 토글되지 않음**, ESC·X·카드 바깥 클릭으로 닫히고 카드 안쪽 클릭은
+  안 닫힘, 열고 닫을 때 `rc-lock`/`lenis.isStopped` 가 켜졌다 꺼짐, 열어 둔 채 390↔1440 을
+  오가도 **닫히지 않고 모습만 바뀜**, 콘솔 에러 없음(analytics CORS 는 기존 것).
+  **확인 못 함**: 페이드/슬라이드 연출 자체 — 브라우저 패널은 rAF 가 멈춰 트랜지션이 안 돈다
+  (트랜지션을 끄고 최종 상태만 확인했다). 사람이 실제 브라우저에서 볼 것.
+
+**Supabase 지역 이전 — 새 프로젝트로 갈아탐 (2026-09-01)**
+
+지역을 바꾸려고 새 Supabase 프로젝트를 만들고 옮겼다.
+`gepphbqhnuufnincxmor`(옛) → `sbukxdevjuplwjnbmvpy`(새).
+
+⚠️ **핵심 교훈 — `public` 스키마의 테이블·데이터만 넘어오고 나머지는 안 넘어온다.**
+검증은 anon/service_role 로 REST 를 직접 찔러서 했다(표나 대시보드를 믿지 말 것).
+안 넘어온 것이 넷이고, **넷 다 빌드도 콘솔도 조용하다.**
+
+1. **`auth` 스키마** — 계정 0개. 프로필(`admin_users`)만 2건 남아 **로그인 자체가 불가**.
+   덤으로 `admin_users.id → auth.users(id)` **FK 도 유실**됐다. 데이터 임포트가
+   `admin_users` 를 FK 없이 **먼저** 만들어서 001 의 `create table if not exists` 가
+   통째로 건너뛰어진 것. 002 의 `on_auth_user_created` 트리거도 없다(계정을 새로
+   만들어도 프로필이 자동 생성되지 않는 것으로 확인).
+   → 대시보드에서 계정을 만든 뒤 `update admin_users set id = <새 uid>` 로 기존
+   프로필에 이어 붙였다(권한 배열 보존).
+   ⚠️ **Auto Confirm User 를 반드시 체크할 것** — 안 하면 `Email not confirmed` 로
+   막히는데 무료 플랜은 확인 메일이 발송되지도 않아 영영 못 넘어간다.
+   ℹ️ 로그인은 `login_id` 가 아니라 **이메일**이다(`signInWithPassword({ email })`).
+   `admin_users.email` 은 표시용이고 **unique 제약이 없다**(`login_id` 에는 있다) —
+   그래서 Auth 이메일을 옛 값에 맞출 필요가 없다. 실제로 `hello@` → `jh.lim@` 로 바뀌었다.
+
+2. **Storage 버킷 3개 전부** — `GET /storage/v1/bucket` 이 `[]` 였다. `/brief.pdf` 가
+   400, 첨부파일 업로드가 `NoSuchBucket`, 썸네일 업로드 불가.
+   ⚠️ **새 프로젝트에서는 SQL Editor 의 `insert into storage.buckets` 가 안 먹는다** —
+   006·016·018 을 돌려도 버킷이 안 생긴다. **Storage API 나 대시보드로 만들 것.**
+   ⚠️ **016 의 60MB 는 만들어지지 않는다** — 프로젝트 전역 업로드 한도(50MB)를 넘어
+   `413 EntityTooLarge` 가 난다. 50MB 로 낮췄다(실제 파일 18.7MB 라 여유가 있다).
+
+3. **마이그레이션 파일이 없는 테이블의 RLS 정책** — `quotes` `pageviews` `downloads`
+   `internal_ips`. 옛 사이트가 대시보드에서 직접 만든 테이블이라 이 저장소에 정의가
+   없었고, 데이터 임포트는 테이블만 만들고 정책은 재현하지 않는다. 결과는
+   **RLS 는 켜져 있는데 정책이 0개** = 전면 차단.
+   ⚠️ 그래서 **Contact 문의하기가 통째로 실패하고 있었다**(`42501`). anon select 는
+   에러가 아니라 **빈 배열**이 와서 더 헷갈린다.
+   → `019_restore_after_region_move.sql` 이 이제 이 넷의 **정본 정의**다.
+   다음에 또 옮길 때 반드시 같이 돌릴 것.
+
+4. **Edge Function `track`** — 404. 방문자 분석이 기록되지 않는다.
+   소스를 `supabase/functions/track/` 로 이 저장소에 가져왔다(옛 저장소가 사라져도 남게).
+   ⚠️ **배포 전에 옛 프로젝트의 배포본을 내려받아 비교할 것** — 배포본에는 이 소스에
+   없는 봇 필터가 있다(`functions deploy` 전에 `functions download`, README 에 명령 있음).
+
+**이미지 89개** — DB 의 `thumb_pc`·`thumb_mobile`·`thumb_main`·`client_ci` 가 전부 옛
+프로젝트 URL 이었다. **옛 프로젝트가 아직 살아 있어 화면은 멀쩡해 보였다** — 그래서
+그냥 두면 옛 프로젝트를 지우거나 7일 미사용으로 일시정지되는 순간 전부 깨진다.
+→ 공개 URL 로 내려받아 새 버킷에 올리고(138MB) DB URL 을 치환했다.
+⚠️ **치환하면 `updated_at` 이 밀린다** — `portfolios_touch` 가 BEFORE UPDATE 라 목록의
+수정일이 전부 오늘로 바뀐다. 스냅샷했다가 되돌렸다 — **`updated_at` 만 다른 UPDATE 는
+012 의 WHEN 가드에 걸려 트리거가 안 탄다**. 그 성질을 이용한 것이라 원복 자체는 공짜다.
+(014 처럼 트리거를 껐다 켜는 방법도 있지만 그건 SQL Editor 에서만 된다.)
+
+**확인함**(2026-09-01, REST 실측): 버킷 3개 · 파일 89개(thumb-pc 37 / thumb-mobile 37 /
+thumb-main 6 / client-ci 9) · brief PDF 18.7MB(`%PDF-`) · **옛 ref 참조 0건** ·
+`updated_at` 어긋난 행 0 · `render/image` 변환 200(webp 25KB, 유료 기능이 켜져 있다) ·
+CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴리오 유출 0건 ·
+`admin_users`/`recruits` anon 읽기 차단 · `reorder_portfolios`·`has_admin_permission` 존재 ·
+012 INSERT 트리거 동작(`sort_order=0`) · dev 5599 에서 `/` `/projects` `/contact` 200 이고
+옛 ref 0건 · `/brief.pdf` 206 · 타입체크 통과.
+**확인 못 함**: **019 를 아직 안 돌렸다** — 문의 접수·분석 화면·첨부 다운로드는 그 뒤에
+사람이 봐야 한다. **Vercel 환경변수가 새 프로젝트로 바뀌었는지도 못 봤다**(로컬
+`.env.local` 만 확인). Edge Function 배포도 못 했다(CLI 미로그인).
+
+ℹ️ **캐시는 회귀가 아니다** — 새 프로젝트 Storage 가 `cache-control: no-cache` 를 주는데
+**옛 프로젝트도 똑같았다**(ETag 동일, 재요청 304 / 0바이트라 전송량 영향은 없다).
+업로드 시 `cacheControl` 을 세 가지 방식(헤더 · multipart `3600` · multipart
+`max-age=3600`)으로 줘 봤지만 **전부 무시된다.** `/brief.pdf` 의 CDN 캐시는
+`next.config.ts` 의 `Vercel-CDN-Cache-Control` 이 담당한다(여전히 Vercel 에서 확인 필요).
+
+⚠️ **`supabase` CLI 는 로그인돼 있지 않다** — `supabase login` 없이는 함수 배포도
+`db push` 도 안 된다. 그래서 019 는 사람이 SQL Editor 에 붙여넣어야 한다.
+
+⚠️ **Deno 함수를 저장소에 두면 `npm run typecheck` 가 깨진다** — `tsconfig.json` 의
+`include` 가 `**/*.ts` 라 `supabase/functions` 까지 잡아 `Cannot find name 'Deno'` 가
+난다. `exclude` 에 넣었다. 새 Edge Function 을 추가해도 같은 곳이 이미 막아 준다.
+
 ## 현재 상태
 
 ```
@@ -948,42 +1063,41 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 
 ### Supabase 마이그레이션 실행 상태
 
-| 파일                                     | 실행됨?                                      |
-| ---------------------------------------- | -------------------------------------------- |
-| `001_admin_users.sql`                    | ✅                                           |
-| `002_admin_users_sync.sql`               | ⚠️ **미확인**                                |
-| `003_fix_admin_users_rls_recursion.sql`  | ✅                                           |
-| `004_portfolios.sql`                     | ✅                                           |
-| `005_portfolios_seed.sql`                | ✅                                           |
-| `006_portfolio_storage.sql`              | ✅                                           |
-| `007_drop_legacy_portfolio_policies.sql` | ⚠️ **미확인**                                |
-| `008_portfolio_detail_html.sql`          | ✅                                           |
-| `009_portfolio_seed_thumbs.sql`          | ❌ **미실행** (썸네일이 이미 Storage URL 이라 사실상 불필요) |
-| `010_portfolio_main.sql`                 | ✅ 사용자 실행 확인                          |
-| `011_portfolio_main_meta.sql`            | ✅ **2026-08-25 확인** — `launch` 컬럼이 실제로 있다 |
-| `012_portfolio_sort_order.sql`           | ✅ 사용자 실행 확인 (2026-08-25)             |
-| `013_drop_admin_main_permission.sql`     | ❌ **미실행**                                |
-| `014_portfolio_html_folder.sql`          | ✅ 사용자 실행 확인 (2026-08-25)             |
-| `015_portfolio_main_limit.sql`           | ✅ 사용자 실행 확인 (2026-08-25)             |
-| `016_brief_storage.sql`                  | ⚠️ **미확인**                                |
-| `017_drop_legacy_site_tables.sql`        | ❌ **미실행** (도메인 교체 뒤에 실행할 것)   |
-| `018_recruits.sql`                       | ❌ **미실행** — anon REST 로 확인함(404)     |
+⚠️ **2026-09-01 지역 이전으로 프로젝트가 통째로 바뀌었다.** 아래는 **새 프로젝트
+(`sbukxdevjuplwjnbmvpy`) 기준**으로 REST 를 직접 찔러 다시 판정한 것이다. 옛 프로젝트
+기준의 판정은 더 이상 의미가 없다.
 
-**실행 여부는 anon 키로 REST 를 찔러서 확인한다** (`curl "$URL/rest/v1/portfolios?select=<컬럼>&limit=1"`
-— 컬럼이 없으면 42703). 이 방법으로 011 이 "미실행" 이 아니라 이미 반영돼 있었음을 확인했다.
-표를 믿기 전에 한 번 찔러 볼 것.
+| 파일                                     | 새 프로젝트 상태                                            |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `001_admin_users.sql`                    | ⚠️ **부분** — 테이블은 있으나 **FK 유실**. 019 가 복원      |
+| `002_admin_users_sync.sql`               | ❌ **미반영** — `on_auth_user_created` 없음. 019 가 복원     |
+| `003_fix_admin_users_rls_recursion.sql`  | ✅ `has_admin_permission` 존재 확인                          |
+| `004_portfolios.sql`                     | ✅ RLS·`portfolios_touch` 동작 확인                          |
+| `005_portfolios_seed.sql`                | ✅ (데이터 60행)                                             |
+| `006_portfolio_storage.sql`              | ⚠️ **버킷은 코드가 API 로 생성**, 정책은 019 가 재적용       |
+| `007_drop_legacy_portfolio_policies.sql` | ✅ anon 유출 0건으로 확인                                    |
+| `008_portfolio_detail_html.sql`          | ✅                                                           |
+| `009_portfolio_seed_thumbs.sql`          | ❌ 미실행 (썸네일이 이미 Storage URL 이라 불필요)            |
+| `010_portfolio_main.sql`                 | ✅                                                           |
+| `011_portfolio_main_meta.sql`            | ✅                                                           |
+| `012_portfolio_sort_order.sql`           | ✅ INSERT 트리거·`reorder_portfolios` 동작 확인              |
+| `013_drop_admin_main_permission.sql`     | ✅ 유령 권한 `'/admin/main'` 잔존 0건                        |
+| `014_portfolio_html_folder.sql`          | ✅ 41행 전부 폴더명 표기, `bassId` 대소문자도 교정된 채 넘어옴 |
+| `015_portfolio_main_limit.sql`           | ⚠️ **미확인** — 4건째를 넣어 봐야 알 수 있어 시도하지 않았다 |
+| `016_brief_storage.sql`                  | ⚠️ **버킷은 코드가 API 로 생성(50MB)**, 정책은 019 가 재적용 |
+| `017_drop_legacy_site_tables.sql`        | ⚠️ **부분** — `contacts` 는 없고 `brochure_history` 는 남음  |
+| `018_recruits.sql`                       | ⚠️ **테이블·정책은 반영**(anon insert 201 확인), **버킷만 누락** → 코드가 생성 |
+| `019_restore_after_region_move.sql`      | ❌ **미실행 — 이것부터 돌릴 것**                             |
 
-⚠️ **012 는 DB 가 코드보다 앞서 있었다.** `sort_order` 컬럼도, `reorder_portfolios(p_ids)`
-함수도 마이그레이션 파일 없이 이미 들어가 있었다(대시보드에서 만든 것으로 보인다). 값도
-`row_number() over (order by seq desc)` 그대로 1..41 이었다. 그래서 012 는 전부 멱등하게
-썼다 — 컬럼은 `if not exists`, 백필은 `where sort_order is null`, 함수는 `drop … ; create`.
-**012 를 돌려야 새로 얻는 것**: ① 등록 시 맨 위로 놓는 BEFORE INSERT 트리거(안 돌리면 새
-포트폴리오의 `sort_order` 가 NULL 이라 목록 맨 아래로 간다) ② 순서만 바꿨을 때 `updated_at`
-을 건드리지 않는 트리거 가드 ③ `not null` + 인덱스.
+**실행 여부는 anon/service_role 키로 REST 를 찔러서 확인한다.** 컬럼은
+`curl "$URL/rest/v1/<table>?select=<컬럼>&limit=1"`(없으면 42703), 테이블은 PGRST205,
+함수는 `rpc/<이름>`(404 면 없음, 42501 이면 있음), 버킷은 `GET /storage/v1/bucket`.
+**표를 믿기 전에 한 번 찔러 볼 것** — 이번에도 표와 실제가 여러 군데 어긋나 있었다.
 
-anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부를 확인할 수 없다.
-**002 와 007 실행 여부부터 확인할 것.** 002 를 빠뜨리면 새 계정마다 "프로필 없음" 문제를
-반복하고, 007 을 빠뜨리면 미공개 포트폴리오가 REST API 로 계속 새어 나간다.
+⚠️ **`create table if not exists` 는 이전 시 함정이다.** 데이터 임포트가 제약 없는
+테이블을 먼저 만들어 두면 원래 마이그레이션이 통째로 건너뛰어지고, **컬럼은 다 맞는데
+FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 존재만으로 "실행됨" 이라고
+판정하지 말 것 — 제약과 트리거를 따로 확인해야 한다.
 
 ---
 
@@ -1026,17 +1140,37 @@ anon 키로는 `admin_users` 를 못 읽어 프로필 수로 002 실행 여부�
 
 ### 바로 이어서 할 만한 것
 
-- **`018` 실행** — 리크루트(입사지원) 테이블 + 비공개 Storage 버킷. **이걸 돌리기 전까지
-  Careers 입사지원 버튼은 "저장소가 준비되지 않았습니다" 로 실패한다.** 돌린 뒤 기존
-  어드민 계정에 사용자관리에서 **'리크루트관리' 권한을 체크**해 줘야 목록이 보인다
-  (RLS 가 permissions 배열을 직접 본다 — 권한이 없으면 에러 없이 **빈 목록**이 온다).
-- **`013` 실행** — 유령 권한(`/admin/main`) 정리.
-  (`012`·`014`·`015` 는 2026-08-25 사용자 실행 확인)
+**지역 이전 마무리 (2026-09-01, 우선순위 순)**
+
+- **`019_restore_after_region_move.sql` 실행** — SQL Editor 에 통째로 붙여넣고 Run.
+  **이걸 돌리기 전까지 Contact 문의하기가 계속 실패한다**(`quotes` 정책 0개).
+  분석 화면·첨부 다운로드·회사소개서 업로드도 이 파일이 살린다.
+  ⚠️ 마지막의 FK 추가는 **고아 프로필이 하나라도 있으면 23503 으로 실패한다** —
+  파일 안 주석의 조회로 찾아 정리한 뒤 다시 돌릴 것.
+- **Vercel 환경변수 교체 확인** — 로컬 `.env.local` 만 새 프로젝트로 바뀐 것을 확인했다.
+  배포본이 아직 옛 프로젝트를 보고 있으면 **어드민 로그인이 안 되고**(옛 프로젝트에만
+  계정이 있다) 이미지도 옛 쪽에서 나간다. `NEXT_PUBLIC_SUPABASE_URL` ·
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 셋 다.
+- **Edge Function `track` 배포** — `supabase login` 후
+  `supabase functions deploy track --project-ref sbukxdevjuplwjnbmvpy --no-verify-jwt`.
+  ⚠️ **먼저 옛 프로젝트 배포본을 `functions download` 로 받아 봇 필터를 비교할 것**
+  (`supabase/functions/track/README.md` 참고). 배포 전까지 방문자 분석은 0 으로 쌓인다.
+- **019 실행 뒤 사람이 확인할 것** — ① Contact 문의 접수 왕복 ② Careers 입사지원 +
+  어드민 첨부 서명 URL 다운로드 ③ `/admin/analytics` 렌더 ④ `/admin/brief` PDF 교체.
+- **옛 프로젝트(`gepphbqhnuufnincxmor`) 정리** — 위가 전부 확인된 뒤에 지울 것.
+  지금은 아직 살아 있고, 이미지·PDF 원본이 거기 있다. **먼저 지우면 되돌릴 수 없다.**
+  ⚠️ `internal_ips` 의 사무실 IP 는 새 프로젝트로 넘어와 있다(2건).
+
+**그 밖에**
+
 - **실데이터 입력** — 담당자에게 실제 포트폴리오 목록과 이미지를 받아야 한다.
-- **`quotes` 에 메뉴권한 RLS** — `portfolios` 는 걸었지만 `quotes` 는 아직 메뉴권한과 무관하게 열려 있다.
 - **카드 클릭 → 상세 HTML 이동** — 컬럼은 있고 링크는 미연결(사용자가 "추후"로 보류)
 - **"계정 프로필이 없습니다" 화면에 자가 생성 버튼** — 라우트의 부트스트랩 경로가 게이트에
   가려 못 쓰이는 문제 해소
+- ℹ️ **`quotes` 메뉴권한 RLS 는 019 에서 해결됐다** — 예전 항목("아직 열려 있다")은
+  더 이상 유효하지 않다. 이제 `/admin/quotes` 권한이 없으면 **빈 목록**이 온다.
+- ℹ️ **`pageviews` 는 더 이상 고아 테이블이 아니다** — 방문자 분석이 실제로 쓴다(019 가
+  정책을 정의한다). 예전의 "삭제할지 결정 필요" 항목은 해소됐다.
 
 ### 기획서에 물음표로 남은 것 (담당자 확인 필요)
 
