@@ -1031,3 +1031,233 @@ html.rc-lock {
     opacity: 0.55;
   } /* dim instead */
 }
+
+/* ============================================================================
+   이용약관 · 개인정보처리방침 popup (.tm-*) — 동의 문구의 링크로 연다 (LegalModal.tsx).
+   Figma 3111:43681(레이아웃) / 3127:43715(약관 전문) / 3153:43776(방침 전문).
+
+   ⚠️ **정적 사이트는 PC(.tm-modal)와 모바일(.mt-popup) 두 벌인데 여기서는 한 벌이다.**
+   아래 ≤1023 블록이 같은 마크업을 풀스크린 시트로 바꾼다 — 카드가 화면을 꽉 채우고(라운드·
+   딤 제거), 타이틀 64→40, 소제목 18→16, 챕터 간격 64→40, X 64→48 박스.
+   두 벌로 안 가른 이유는 LegalModal.tsx 주석 참고(전문이 두 번 실린다 / 레거시 결합 없음).
+
+   PC 치수는 .rc-* 와 같은 --v/--g 보간이다:
+     value(A@1024, B@1920, C@2560) = calc(Apx + (B-A)*var(--v) + (C-B)*var(--g))
+   ============================================================================ */
+.tm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  --v: clamp(0px, calc((100vw - 1024px) / 896), 1px);
+  --g: clamp(0px, calc((100vw - 1920px) / 640), 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+}
+.tm-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.4s ease;
+}
+.tm-modal-dim {
+  position: absolute;
+  inset: 0;
+  background: #3e3f44;
+  opacity: 0.6;
+}
+.tm-card {
+  position: relative;
+  z-index: 1;
+  width: calc(928px + 560 * var(--v) + 20 * var(--g));
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  background: #fff;
+  border-radius: calc(32px + 32 * var(--v));
+  padding: calc(48px + 24 * var(--v) + 24 * var(--g));
+  padding-right: calc(24px + 24 * var(--v) + 24 * var(--g));
+  color: #3e3f44;
+  font-family: "Pretendard", sans-serif;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(24px) scale(0.985);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tm-modal.is-open .tm-card {
+  transform: none;
+}
+/* data-lenis-prevent on .tm-scroll lets the wheel scroll it — Lenis would otherwise swallow it */
+.tm-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: calc(64px + 32 * var(--g));
+  scrollbar-width: thin;
+  scrollbar-color: #c5c8dc transparent;
+} /* 24px = scrollbar gutter (rc parity) */
+.tm-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.tm-scroll::-webkit-scrollbar-thumb {
+  background: #c5c8dc;
+  border-radius: 999px;
+}
+.tm-close {
+  position: absolute;
+  z-index: 2;
+  top: calc(48px + 24 * var(--v) + 24 * var(--g));
+  right: calc(48px + 24 * var(--v) + 24 * var(--g));
+  width: calc(64px + 32 * var(--v));
+  height: calc(64px + 32 * var(--v));
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3e3f44;
+}
+.tm-close svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tm-close:hover svg {
+  transform: rotate(360deg);
+}
+
+/* head: serif title + intro (Figma: 120 serif / 32 / 20 Pretendard 1.5 @2560) */
+.tm-head {
+  display: flex;
+  flex-direction: column;
+  gap: calc(20px + 6 * var(--v) + 6 * var(--g));
+}
+.tm-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: calc(64px + 32 * var(--v) + 24 * var(--g));
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.tm-lead {
+  margin: 0;
+  font-weight: 400;
+  font-size: calc(14px + 4 * var(--v) + 2 * var(--g));
+  line-height: 1.5;
+  word-break: keep-all;
+}
+/* clauses (Figma item: 24 Bold title / 16 / 18 Medium 1.8 body, 48 between items @2560) */
+.tm-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(32px + 8 * var(--v) + 8 * var(--g));
+}
+.tm-item {
+  display: block;
+} /* bullets sit tight on their 1.8 line-height (Figma mb-0); only the title carries the gap */
+.tm-item-title {
+  margin: 0 0 calc(10px + 2 * var(--v) + 4 * var(--g));
+  font-weight: 700;
+  font-size: calc(18px + 2 * var(--v) + 4 * var(--g));
+  line-height: 1.5;
+}
+.tm-item p:not(.tm-item-title) {
+  margin: 0;
+  font-weight: 500;
+  font-size: calc(14px + 2 * var(--v) + 2 * var(--g));
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.tm-li {
+  position: relative;
+  padding-left: 1.15em;
+}
+.tm-li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+}
+.tm-break {
+  margin-top: 1.8em !important;
+} /* 약관 07 의 [AI 생성 콘텐츠 고지] · 방침 01 의 ①/② 앞 빈 줄 */
+
+/* ≤1023: 카드를 풀스크린 시트로. 정적 사이트의 .mt-popup(375 기준) 수치를 그대로 옮겼다 */
+@media (max-width: 1023px) {
+  .tm-modal {
+    padding: 0;
+  }
+  .tm-modal-dim {
+    display: none;
+  } /* 시트가 화면을 다 덮으므로 뒤가 비칠 일이 없다 */
+  .tm-card {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: 0;
+    transform: translateY(24px); /* 풀스크린이라 scale 은 가장자리가 드러난다 */
+  }
+  .tm-scroll {
+    gap: 40px;
+    padding: 90px 20px calc(64px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain; /* 시트 끝에서 뒤 페이지로 스크롤이 넘어가지 않게 */
+  }
+  .tm-close {
+    top: 16px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+  }
+  .tm-close svg path {
+    stroke-width: 2.25;
+  } /* 96 뷰박스가 48 박스로 줄며 얇아진 선을 모바일 굵기(1.125px)로 되돌린다 */
+  .tm-close:hover svg {
+    transform: none;
+  } /* 터치에는 hover 한 바퀴 대신 :active 90도 */
+  .tm-close:active svg {
+    transform: rotate(90deg);
+  }
+  .tm-title {
+    font-size: 40px;
+    line-height: 1.21;
+    letter-spacing: 0;
+  }
+  .tm-item-title {
+    font-size: 16px;
+  }
+  .tm-br-pc {
+    display: none;
+  } /* 문장 중간에서 끊는 줄바꿈은 좁은 화면에서 접는다 (LegalModal 의 Lines) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-modal {
+    transition: opacity 0.2s ease;
+  }
+  .tm-card {
+    transform: none;
+    transition: none;
+  }
+  .tm-close svg {
+    transition: none;
+  }
+  .tm-close:hover svg {
+    transform: none;
+  }
+  .tm-close:hover {
+    opacity: 0.55;
+  }
+}

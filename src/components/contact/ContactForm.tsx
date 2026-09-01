@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import ChipGroup from "@/components/contact/ChipGroup";
+import ConsentLinks from "@/components/contact/ConsentLinks";
 import FileRow from "@/components/contact/FileRow";
 import FilteredInput from "@/components/contact/FilteredInput";
 import { PROJECT_FIELDS } from "@/data/contact";
@@ -340,9 +341,9 @@ export default function ContactForm() {
                       />
                     </svg>
                   </span>
-                  {/* 링크 목적지 미정 — 정적 사이트도 href="#" 인 자리표시자다 */}
+                  {/* 두 링크는 약관/방침 팝업(LegalModal)을 연다 — 모바일 폼과 같은 컴포넌트 */}
                   <span className="ct-consent-text">
-                    <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다.
+                    <ConsentLinks />
                   </span>
                 </label>
               </div>

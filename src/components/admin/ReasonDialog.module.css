@@ -1,0 +1,25 @@
+/* 사유 입력 모달 — 개인정보 다운로드처럼 "왜 했는지" 를 반드시 받아야 하는 동작에 쓴다.
+
+   ⚠️ body 로 포탈하지 않는다. 어드민 토큰(--surface, --line …)은 theme.module.css 의
+   `.theme` 루트에 있어 **DOM 상속**으로 내려오므로, 포탈로 그 밖에 그리면 색이 전부
+   사라진다(.mr-popup 이 마케팅에서 겪은 것과 같은 함정). 어드민 본문에는 transform 이
+   걸린 조상이 없어 그 자리에서도 position:fixed 가 뷰포트 기준으로 동작한다. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(23, 24, 28, 0.45);
+}
+.panel {
+  width: min(520px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}

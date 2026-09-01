@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import ConsentLinks from '@/components/contact/ConsentLinks';
 import MobileChipGroup from '@/components/mobile/MobileChipGroup';
 import MobileFileRow from '@/components/mobile/MobileFileRow';
 import MobileFilteredInput from '@/components/mobile/MobileFilteredInput';
@@ -284,9 +285,9 @@ export default function MobileContactForm() {
                     />
                   </svg>
                 </span>
-                {/* 링크 목적지 미정 — PC 와 같이 href="#" 자리표시자다 */}
+                {/* 두 링크는 약관/방침 팝업(LegalModal)을 연다 — PC 폼과 같은 컴포넌트 */}
                 <span className="mc-consent-text">
-                  <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다.
+                  <ConsentLinks />
                 </span>
               </label>
             </div>

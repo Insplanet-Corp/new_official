@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Empty,
   Note,
@@ -19,6 +20,7 @@ import {
   QUOTE_STATUS,
 } from "@/data/adminOptions";
 import { hasField, fieldText, type Quote } from "@/lib/quotes";
+import { maskCompany, maskName, maskPhone } from "@/lib/mask";
 import { supabase } from "@/lib/supabase";
 import Badge from "@/components/badge/Badge";
 import { type ColorType } from "@/styles/theme";
@@ -28,7 +30,13 @@ import Text from "@/components/text/Text";
    조회 조건: 기업명 + 신청인 키워드(둘 다 입력 시 AND) + 시스템 종류 + 개발 구분.
 
    시스템 종류·개발 구분은 project_fields(jsonb) 안에 있어 클라이언트에서 거른다.
-   접수 건수가 많아지면 PostgREST 의 jsonb 연산자로 서버 필터링해야 한다. */
+   접수 건수가 많아지면 PostgREST 의 jsonb 연산자로 서버 필터링해야 한다.
+
+   ⚠️ **기업명·신청인·연락처를 마스킹해서 보여준다**(lib/mask.ts). 원본도, CSV 다운로드도 조회 화면에만
+   있다 — 목록에서 전체를 한 번에 받는 버튼은 **의도적으로 두지 않는다**(2026-09-01 사용자
+   결정: "전체 말고 건별로"). 한 번에 수십 건이 빠져나가는 경로를 아예 안 만드는 편이
+   개인정보 통제에도 맞다. 되살릴 일이 생기면 lib/quotesCsv.ts 의 buildQuotesCsv 는
+   여러 행을 그대로 받으므로 목록 쪽에 버튼과 사유 모달만 다시 붙이면 된다. */
 
 const STATUS_COLOR: Record<string, ColorType> = {
   pending: "BLUE",
@@ -42,6 +50,7 @@ const statusMeta = (v: string | null) =>
   };
 
 export default function QuotesListPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +110,28 @@ export default function QuotesListPage() {
       return true;
     });
   }, [rows, company, person, system, kind]);
+
+  /* ---- 행 전체를 눌러도 조회 화면으로 (포트폴리오 목록과 같은 방식) -----------
+     <tr> 는 <Link> 로 감쌀 수 없다(테이블 안에서 <a> 가 행을 감싸는 마크업은 스펙 위반이라
+     브라우저가 <a> 를 표 밖으로 끄집어낸다). 그래서 router.push 다.
+
+     ⚠️ 기업명의 <Link> 는 그대로 둔다 — 키보드 포커스·스크린리더·새 탭으로 열기가 거기에
+     달려 있다. 대신 링크나 진행상태 <select> 를 직접 눌렀을 때 두 번 처리되지 않게 거른다. */
+  const detailHref = (id: string) => `/admin/quotes/${id}`;
+
+  const onRowClick = (e: MouseEvent<HTMLTableRowElement>, id: string) => {
+    // 링크·폼 컨트롤을 직접 눌렀으면 그쪽에 맡긴다 (진행 상태 select 가 여기 걸린다)
+    if ((e.target as HTMLElement).closest("a, button, input, select, label"))
+      return;
+    // 글자를 긁어 복사하려던 것이면 이동하지 않는다
+    if (window.getSelection()?.toString()) return;
+    // ⌘/Ctrl 클릭은 새 탭 — 링크에서 기대하는 동작을 행에서도 맞춰 준다
+    if (e.metaKey || e.ctrlKey) {
+      window.open(detailHref(id), "_blank", "noopener");
+      return;
+    }
+    router.push(detailHref(id));
+  };
 
   const count = (v: string) => rows.filter((r) => r.status === v).length;
 
@@ -172,20 +203,24 @@ export default function QuotesListPage() {
               </thead>
               <tbody>
                 {visible.map((r, i) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={kit.rowLink}
+                    onClick={(e) => onRowClick(e, r.id)}
+                    onMouseEnter={() => router.prefetch(detailHref(r.id))}
+                  >
                     <td className={kit.num}>{visible.length - i}</td>
                     <td className={kit.num}>{fmtDate(r.created_at)}</td>
                     <td>
                       {/* 기업명 또는 신청인 클릭 -> 조회 화면 (기획서 31p 7번) */}
-                      <Link
-                        href={`/admin/quotes/${r.id}`}
-                        className={kit.tdStrong}
-                      >
-                        {r.company || "-"}
+                      {/* 마스킹 — 원본은 조회 화면에서 열람 기록을 남기고 본다.
+                          ⚠️ 검색은 원본(r.company/r.person)으로 계속 돌아간다 */}
+                      <Link href={detailHref(r.id)} className={kit.tdStrong}>
+                        {maskCompany(r.company) || "-"}
                       </Link>
-                      <div className={kit.tdSub}>{r.person || "-"}</div>
+                      <div className={kit.tdSub}>{maskName(r.person) || "-"}</div>
                     </td>
-                    <td className={kit.nowrap}>{r.phone || "-"}</td>
+                    <td className={kit.nowrap}>{maskPhone(r.phone) || "-"}</td>
                     <td>
                       <div className={kit.chips}>
                         {(r.project_fields?.scope ?? []).map((v) => (

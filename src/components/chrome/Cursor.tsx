@@ -30,6 +30,7 @@ const GROW_SEL = [
   ".ct-submit",
   ".ct-join-btn",
   ".rc-close",
+  ".tm-close",
 
   // contect mobile
   ".mc-brief",
