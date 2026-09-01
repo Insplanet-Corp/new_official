@@ -35,6 +35,20 @@ const getClientIp = (req: Request): string | null => {
   return req.headers.get("x-real-ip");
 };
 
+// 봇/크롤러/링크 프리뷰 User-Agent 판별 (집계에서 제외)
+// 실사용자 수를 부풀리는 검색엔진 봇·소셜 미리보기·헤드리스 브라우저 등을 걸러낸다.
+const BOT_UA =
+  // 주의: 네이버앱/다음앱 인앱 브라우저 UA 에는 "NAVER"/"Daum" 이 들어가므로
+  // bare "naver"/"daum" 으로 거르면 실사용자가 봇으로 빠진다.
+  // 크롤러만 잡도록 yeti(네이버), daumoa(다음/카카오) 처럼 좁게 매칭한다.
+  /bot|crawl|spider|slurp|mediapartners|adsbot|feedfetcher|pingdom|lighthouse|gtmetrix|pagespeed|chrome-lighthouse|headless|phantomjs|puppeteer|playwright|selenium|python-requests|axios|node-fetch|curl|wget|httpclient|okhttp|java\/|go-http|libwww|scrapy|facebookexternalhit|facebookcatalog|whatsapp|telegrambot|discordbot|slackbot|twitterbot|linkedinbot|pinterest|redditbot|applebot|embedly|quora link preview|skypeuripreview|nuzzel|vkshare|w3c_validator|kakaotalk-scrap|yeti|daumoa/i;
+
+const isBot = (req: Request): boolean => {
+  const ua = req.headers.get("user-agent") || "";
+  if (!ua) return true; // UA 없는 요청은 봇으로 간주
+  return BOT_UA.test(ua);
+};
+
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -67,8 +81,11 @@ Deno.serve(async (req) => {
     /* 빈 본문 허용 */
   }
 
-  // 어드민: 현재 호출자 IP 반환
+  // 어드민: 현재 호출자 IP 반환 (봇/내부 판정보다 먼저 — 진단용이므로 항상 응답)
   if (body.whoami === true) return json({ ip });
+
+  // 봇/크롤러/링크 프리뷰 제외 — 기록하지 않고 종료
+  if (isBot(req)) return json({ skipped: "bot" });
 
   // 내부자(사무실 IP) 제외 — 기록하지 않고 종료
   const internalIps = await getInternalIps();

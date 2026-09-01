@@ -1012,10 +1012,18 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
    → `019_restore_after_region_move.sql` 이 이제 이 넷의 **정본 정의**다.
    다음에 또 옮길 때 반드시 같이 돌릴 것.
 
-4. **Edge Function `track`** — 404. 방문자 분석이 기록되지 않는다.
-   소스를 `supabase/functions/track/` 로 이 저장소에 가져왔다(옛 저장소가 사라져도 남게).
-   ⚠️ **배포 전에 옛 프로젝트의 배포본을 내려받아 비교할 것** — 배포본에는 이 소스에
-   없는 봇 필터가 있다(`functions deploy` 전에 `functions download`, README 에 명령 있음).
+4. **Edge Function `track`** — 404. 방문자 분석이 기록되지 않았다.
+   → 새 프로젝트에 배포 완료(2026-09-01).
+   ⚠️ **CLAUDE.md 의 경고가 실제로 맞았다** — 옛 저장소(`../official`)의 소스에는
+   **봇 필터가 없고**, 옛 프로젝트에 배포돼 있던 것에는 있었다. 그대로 배포했으면
+   검색엔진 봇·소셜 링크 프리뷰가 조회수에 섞일 뻔했다.
+   `functions download` 로 배포본을 받아 **그쪽을 정본으로 채택**했고,
+   지금 `supabase/functions/track/index.ts` 가 그 내용이다(봇 UA 정규식 + `isBot`,
+   `whoami` 는 봇/내부 판정보다 **앞**에 둬서 진단용으로 항상 답한다).
+   ⚠️ 받은 파일이 **CRLF** 라 diff 가 전체 변경으로 보인다 — LF 로 정규화해서 넣었다.
+   **확인함**: `whoami` → 사무실 IP(115.91.159.217) 반환, curl UA → `{"skipped":"bot"}`,
+   브라우저 UA → `{"skipped":"internal"}`(사무실이라 정상 제외, 행 안 들어감).
+   ℹ️ 그래서 **사무실에서는 아무리 눌러도 분석 수치가 안 오른다** — 고장이 아니다.
 
 **이미지 89개** — DB 의 `thumb_pc`·`thumb_mobile`·`thumb_main`·`client_ci` 가 전부 옛
 프로젝트 URL 이었다. **옛 프로젝트가 아직 살아 있어 화면은 멀쩡해 보였다** — 그래서
@@ -1049,6 +1057,47 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 ⚠️ **Deno 함수를 저장소에 두면 `npm run typecheck` 가 깨진다** — `tsconfig.json` 의
 `include` 가 `**/*.ts` 라 `supabase/functions` 까지 잡아 `Cannot find name 'Deno'` 가
 난다. `exclude` 에 넣었다. 새 Edge Function 을 추가해도 같은 곳이 이미 막아 준다.
+
+**견적문의 개인정보 통제 — 마스킹 · 열람기록 · 다운로드 사유 (2026-09-01, `020`)**
+
+- 사용자 결정 4가지: ① 다운로드는 **목록 CSV 내보내기**를 새로 만든다(견적문의에는 원래
+  다운로드도 첨부파일 컬럼도 없었다) ② 조회 화면에서는 **원본을 다 보여주되 로그를 남긴다**
+  ③ 로그는 **조회할 때와 다운로드할 때** 남긴다 ④ 로그를 볼 **화면은 만들지 않는다**
+  (대시보드에서 확인 — 나중에 붙이려면 select 정책 하나만 열면 된다).
+- **마스킹은 목록에만** 있다(`lib/mask.ts`). 연락처 `010-****-5678` / 이메일 `ab****@x.co.kr`
+  (02 지역번호만 두 자리로 자른다 — 안 그러면 `021-***-5678` 로 보인다). 지금 목록 표에
+  이메일 칸이 없어 실제로 가려지는 것은 연락처뿐이다 — 칸을 추가하면 `maskEmail` 도 같이 쓸 것.
+  ⚠️ **마스킹은 보호가 아니라 표시 제한이다.** 원본은 RLS 를 통과해 브라우저까지 내려오므로
+  REST 를 직접 부르면 그대로 보인다. 실제 통제는 메뉴권한 RLS + 기록이다.
+- ⚠️ **원본 노출을 로그 성공에 묶었다.** 조회 화면은 마스킹된 값으로 그려 놓고
+  `quote_access_logs` insert 가 성공해야 원본으로 바꾼다. 실패하면(020 미실행·권한 없음)
+  가린 채로 두고 띠 배너만 띄운다 — 화면을 통째로 막으면 마이그레이션 하나 때문에 업무가
+  멈추고, 그냥 보여주면 "기록 없는 열람" 이 생긴다. CSV 도 같은 순서다:
+  **사유 → 기록 성공 → 파일 생성.** 순서를 뒤집지 말 것.
+- ⚠️ **로그 테이블은 append-only 다.** `insert` 정책만 만들고 select/update/delete 정책은
+  **일부러 없다**(RLS on + 정책 0개 = 전면 차단). 기록을 남긴 사람이 그 기록을 지울 수
+  있으면 감사 기록이 아니다. service_role(대시보드)만 읽는다.
+  ⚠️ 그래서 `.insert()` 뒤에 **`.select()` 를 붙이면 안 된다** — supabase-js 의 insert 는
+  기본이 `return=minimal` 이라 지금은 통과하지만, 붙이는 순간 권한 오류로 기록이 실패한다.
+- ⚠️ **행위자는 클라이언트가 보내지 않는다** — `stamp_quote_access_actor` 트리거가
+  `auth.uid()` 로 덮어쓰고 `admin_users` 에서 이름·이메일을 **복사해 둔다**(조인이 아니다).
+  계정이 지워져도 "누가 봤는지" 가 남아야 하기 때문이다. `quote_id` 에 FK 를 안 건 것도
+  같은 이유(문의가 지워져도 기록은 남는다).
+- ⚠️ 조회 로그는 **ref 로 한 번만** 쏜다. StrictMode 가 effect 를 두 번 돌리므로 state 가
+  아니라 ref 여야 한다(재마운트에도 값이 유지된다).
+- ⚠️ **사유 모달(`ReasonDialog`)을 body 로 포탈하지 않는다.** 어드민 토큰(`--surface`
+  `--line` …)이 `theme.module.css` 의 `.theme` 루트에 있어 DOM 상속으로 내려오므로, 포탈로
+  그 밖에 그리면 색이 통째로 사라진다(마케팅에서 `.mr-popup` 이 겪은 것과 같은 함정).
+  어드민 본문에는 transform 걸린 조상이 없어 그 자리에서도 `position:fixed` 가 정상이다.
+- CSV — 엑셀이 한글을 읽으려면 **BOM 이 필요하다**(빼면 깨진다). `=`·`+`·`-`·`@` 로 시작하는
+  셀은 앞에 `'` 를 붙여 수식 실행(CSV 인젝션)을 막는다.
+- **확인함**: 타입체크 통과, `maskPhone`/`maskEmail` 11케이스 + CSV 이스케이프(따옴표·쉼표·
+  개행)·인젝션 방어·파일명 단위 테스트 통과(`node --experimental-strip-types`), `ReasonDialog`
+  실렌더(어드민 토큰 적용됨, 사유가 비면 확인 버튼 잠기고 입력하면 풀림), `/admin/quotes` 200,
+  anon REST 로 `quote_access_logs` 가 **PGRST205**(020 미실행).
+  **확인 못 함**: 로그인한 어드민 화면에서의 실제 왕복 — 세션이 없어 게이트를 못 넘는다.
+  **019 → 020 순서로 돌린 뒤 사람이 ① 목록 연락처 마스킹 ② 조회 진입 시 원본 노출 + 로그
+  1행 ③ CSV 사유 입력 → 파일 + 로그 1행 을 확인할 것.**
 
 ## 현재 상태
 
@@ -1088,6 +1137,7 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 | `017_drop_legacy_site_tables.sql`        | ⚠️ **부분** — `contacts` 는 없고 `brochure_history` 는 남음  |
 | `018_recruits.sql`                       | ⚠️ **테이블·정책은 반영**(anon insert 201 확인), **버킷만 누락** → 코드가 생성 |
 | `019_restore_after_region_move.sql`      | ❌ **미실행 — 이것부터 돌릴 것**                             |
+| `020_quote_access_logs.sql`              | ❌ **미실행** — anon REST 로 확인함(PGRST205). 019 뒤에 돌릴 것 |
 
 **실행 여부는 anon/service_role 키로 REST 를 찔러서 확인한다.** 컬럼은
 `curl "$URL/rest/v1/<table>?select=<컬럼>&limit=1"`(없으면 42703), 테이블은 PGRST205,
@@ -1147,14 +1197,15 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
   분석 화면·첨부 다운로드·회사소개서 업로드도 이 파일이 살린다.
   ⚠️ 마지막의 FK 추가는 **고아 프로필이 하나라도 있으면 23503 으로 실패한다** —
   파일 안 주석의 조회로 찾아 정리한 뒤 다시 돌릴 것.
+- **`020_quote_access_logs.sql` 실행** — 견적문의 열람·다운로드 기록.
+  **돌리기 전까지는 조회 화면의 연락처·이메일이 마스킹된 채로 남고 CSV 내보내기가
+  실패한다**(의도된 동작 — 위 섹션 참고). 019 뒤에 돌릴 것.
 - **Vercel 환경변수 교체 확인** — 로컬 `.env.local` 만 새 프로젝트로 바뀐 것을 확인했다.
   배포본이 아직 옛 프로젝트를 보고 있으면 **어드민 로그인이 안 되고**(옛 프로젝트에만
   계정이 있다) 이미지도 옛 쪽에서 나간다. `NEXT_PUBLIC_SUPABASE_URL` ·
   `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 셋 다.
-- **Edge Function `track` 배포** — `supabase login` 후
-  `supabase functions deploy track --project-ref sbukxdevjuplwjnbmvpy --no-verify-jwt`.
-  ⚠️ **먼저 옛 프로젝트 배포본을 `functions download` 로 받아 봇 필터를 비교할 것**
-  (`supabase/functions/track/README.md` 참고). 배포 전까지 방문자 분석은 0 으로 쌓인다.
+- ✅ **Edge Function `track` 배포 완료** (2026-09-01) — 봇 필터가 있는 배포본을
+  정본으로 채택했다. 위 4번 항목 참고.
 - **019 실행 뒤 사람이 확인할 것** — ① Contact 문의 접수 왕복 ② Careers 입사지원 +
   어드민 첨부 서명 URL 다운로드 ③ `/admin/analytics` 렌더 ④ `/admin/brief` PDF 교체.
 - **옛 프로젝트(`gepphbqhnuufnincxmor`) 정리** — 위가 전부 확인된 뒤에 지울 것.
