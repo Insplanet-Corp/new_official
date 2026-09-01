@@ -45,3 +45,6 @@ Thumbs.db
 
 # claude code (로컬 설정만 제외, 공유 설정은 커밋)
 .claude/settings.local.json
+
+# Supabase CLI 가 만드는 작업용 폴더 (project-ref 캐시 등)
+supabase/.temp/
