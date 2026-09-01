@@ -1052,9 +1052,13 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 `admin_users`/`recruits` anon 읽기 차단 · `reorder_portfolios`·`has_admin_permission` 존재 ·
 012 INSERT 트리거 동작(`sort_order=0`) · dev 5599 에서 `/` `/projects` `/contact` 200 이고
 옛 ref 0건 · `/brief.pdf` 206 · 타입체크 통과.
-**확인 못 함**: **019 를 아직 안 돌렸다** — 문의 접수·분석 화면·첨부 다운로드는 그 뒤에
-사람이 봐야 한다. **Vercel 환경변수가 새 프로젝트로 바뀌었는지도 못 봤다**(로컬
-`.env.local` 만 확인). Edge Function 배포도 못 했다(CLI 미로그인).
+**019·021 실행 뒤 최종 확인**(2026-09-01, anon 키로 실측): 견적문의 접수 201 ·
+입사지원 접수 201 · 이력서 첨부 업로드 200 · 포트폴리오 공개 조회 45건(미공개 15건 제외) ·
+`quotes`/`recruits`/`admin_users`/`pageviews`/`downloads`/`internal_ips` 전부 `[]` 차단 ·
+이력서 첨부 공개읽기 400 차단 · 행 수 무변동(60/2/3/2).
+**확인 못 함**: 로그인한 어드민 화면의 실동작(포트폴리오 CRUD · 목록 드래그 순서 ·
+견적문의 조회 · 첨부 다운로드 · 분석 화면 렌더) — 세션이 없어 게이트를 못 넘는다.
+**Vercel 환경변수도 아직 안 바꿨다**(사용자가 마지막에 교체 예정).
 
 ℹ️ **캐시는 회귀가 아니다** — 새 프로젝트 Storage 가 `cache-control: no-cache` 를 주는데
 **옛 프로젝트도 똑같았다**(ETag 동일, 재요청 304 / 0바이트라 전송량 영향은 없다).
@@ -1148,7 +1152,7 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 | `017_drop_legacy_site_tables.sql`        | ⚠️ **부분** — `contacts` 는 없고 `brochure_history` 는 남음  |
 | `018_recruits.sql`                       | ⚠️ **테이블·정책은 반영**(anon insert 201 확인), **버킷만 누락** → 코드가 생성 |
 | `019_restore_after_region_move.sql`      | ✅ 사용자 실행 확인 (2026-09-01) — FK·Storage·분석 정책 반영 확인 |
-| `021_drop_legacy_quote_analytics_policies.sql` | ❌ **미실행** — 돌려야 019 의 메뉴권한 게이팅이 실제로 먹는다 |
+| `021_drop_legacy_quote_analytics_policies.sql` | ✅ 사용자 실행 확인 (2026-09-01) — 남은 정책 5개 확인 |
 | `020_quote_access_logs.sql`              | ❌ **미실행** — anon REST 로 확인함(PGRST205). 019 뒤에 돌릴 것 |
 
 **실행 여부는 anon/service_role 키로 REST 를 찔러서 확인한다.** 컬럼은
@@ -1206,10 +1210,14 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 
 - ✅ **`019` 실행 완료** (2026-09-01) — FK 복원(23503 확인) · Storage 정책
   (`recruit` anon 업로드 200, 비공개 읽기 차단) · 분석 정책 반영 확인.
-- **`021` 실행** — 레거시 느슨한 정책 제거. **돌리기 전에** 쓰는 계정에
-  `/admin/quotes` · `/admin/analytics` 권한이 체크돼 있는지 먼저 확인할 것
-  (없으면 화면이 **빈 채로** 떠서 고장으로 오해한다).
-  ⚠️ 지금은 로그인만 하면 메뉴권한 없이도 견적문의 전체가 REST 로 읽힌다.
+- ✅ **`021` 실행 완료** (2026-09-01) — 레거시 정책 제거 후 남은 정책이 정확히 5개
+  (`quotes_public_insert`/`quotes_admin_read`/`quotes_admin_update`/
+  `pageviews_admin_read`/`downloads_admin_read`), `internal_ips` 는 0개.
+  이제 메뉴권한 게이팅이 **실제로 먹는다.**
+  ⚠️ 그래서 **권한이 없는 계정은 에러 없이 빈 화면**을 본다 — "목록이 안 나온다" 는
+  문의가 오면 사용자관리에서 권한부터 확인할 것.
+  ⚠️ `internal_ips` 는 정책이 0개다 — 나중에 사무실 IP 관리 화면을 만들면
+  `has_admin_permission('/admin/analytics')` 정책을 그때 추가해야 한다.
 - **`020_quote_access_logs.sql` 실행** — 견적문의 열람·다운로드 기록.
   **돌리기 전까지는 조회 화면의 연락처·이메일이 마스킹된 채로 남고 CSV 내보내기가
   실패한다**(의도된 동작 — 위 섹션 참고). 019 뒤에 돌릴 것.
