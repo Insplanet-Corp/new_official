@@ -1004,13 +1004,24 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
    `413 EntityTooLarge` 가 난다. 50MB 로 낮췄다(실제 파일 18.7MB 라 여유가 있다).
 
 3. **마이그레이션 파일이 없는 테이블의 RLS 정책** — `quotes` `pageviews` `downloads`
-   `internal_ips`. 옛 사이트가 대시보드에서 직접 만든 테이블이라 이 저장소에 정의가
-   없었고, 데이터 임포트는 테이블만 만들고 정책은 재현하지 않는다. 결과는
-   **RLS 는 켜져 있는데 정책이 0개** = 전면 차단.
-   ⚠️ 그래서 **Contact 문의하기가 통째로 실패하고 있었다**(`42501`). anon select 는
-   에러가 아니라 **빈 배열**이 와서 더 헷갈린다.
-   → `019_restore_after_region_move.sql` 이 이제 이 넷의 **정본 정의**다.
-   다음에 또 옮길 때 반드시 같이 돌릴 것.
+   `internal_ips`. 이 저장소에 정의가 없어서 "정책이 통째로 유실됐다" 고 판단했으나
+   **그 부분은 오진이었다.** 옛 프로젝트에서 대시보드로 만들어 둔 정책이 그대로
+   살아 있었다(`Anyone can submit a quote`, `authenticated can select downloads` 등).
+
+   ⚠️⚠️ **오진의 원인 — `Prefer: return=representation` 으로 RLS 를 검증하지 말 것.**
+   그걸 붙여 INSERT 하면 RETURNING 이 **SELECT 정책까지** 통과해야 하는데 anon 에게는
+   SELECT 정책이 없어 `42501 new row violates row-level security policy` 가 난다.
+   **쓰기는 성공하는데 읽기 권한이 없어서 나는 에러**인데 메시지는 쓰기가 막힌 것처럼
+   보인다. 앱은 `supabase.from('quotes').insert(...)` 로 `.select()` 없이 부르므로
+   `return=minimal` 이라 이 경로를 아예 안 탄다 — **Contact 문의하기는 처음부터 정상이었다.**
+   실측: representation 붙이면 42501 → 떼면 `23502`(phone NOT NULL) → 채우면 **201**.
+
+   → 019 는 그래도 의미가 있다. 이 넷의 **정본 정의**가 저장소에 생겼으니 다음에 또
+   옮길 때 같이 돌리면 된다.
+   ⚠️ **다만 019 의 정책은 레거시 정책과 나란히 붙는다.** permissive 는 **OR** 로
+   합쳐지므로(8번 함정, 007 에서 이미 밟았다) `using true` 인 레거시가 하나라도
+   남아 있으면 019 가 건 `has_admin_permission(...)` 게이팅은 **아무 효과가 없다.**
+   `021` 이 레거시를 지워야 비로소 먹는다.
 
 4. **Edge Function `track`** — 404. 방문자 분석이 기록되지 않았다.
    → 새 프로젝트에 배포 완료(2026-09-01).
@@ -1136,7 +1147,8 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 | `016_brief_storage.sql`                  | ⚠️ **버킷은 코드가 API 로 생성(50MB)**, 정책은 019 가 재적용 |
 | `017_drop_legacy_site_tables.sql`        | ⚠️ **부분** — `contacts` 는 없고 `brochure_history` 는 남음  |
 | `018_recruits.sql`                       | ⚠️ **테이블·정책은 반영**(anon insert 201 확인), **버킷만 누락** → 코드가 생성 |
-| `019_restore_after_region_move.sql`      | ❌ **미실행 — 이것부터 돌릴 것**                             |
+| `019_restore_after_region_move.sql`      | ✅ 사용자 실행 확인 (2026-09-01) — FK·Storage·분석 정책 반영 확인 |
+| `021_drop_legacy_quote_analytics_policies.sql` | ❌ **미실행** — 돌려야 019 의 메뉴권한 게이팅이 실제로 먹는다 |
 | `020_quote_access_logs.sql`              | ❌ **미실행** — anon REST 로 확인함(PGRST205). 019 뒤에 돌릴 것 |
 
 **실행 여부는 anon/service_role 키로 REST 를 찔러서 확인한다.** 컬럼은
@@ -1192,11 +1204,12 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 
 **지역 이전 마무리 (2026-09-01, 우선순위 순)**
 
-- **`019_restore_after_region_move.sql` 실행** — SQL Editor 에 통째로 붙여넣고 Run.
-  **이걸 돌리기 전까지 Contact 문의하기가 계속 실패한다**(`quotes` 정책 0개).
-  분석 화면·첨부 다운로드·회사소개서 업로드도 이 파일이 살린다.
-  ⚠️ 마지막의 FK 추가는 **고아 프로필이 하나라도 있으면 23503 으로 실패한다** —
-  파일 안 주석의 조회로 찾아 정리한 뒤 다시 돌릴 것.
+- ✅ **`019` 실행 완료** (2026-09-01) — FK 복원(23503 확인) · Storage 정책
+  (`recruit` anon 업로드 200, 비공개 읽기 차단) · 분석 정책 반영 확인.
+- **`021` 실행** — 레거시 느슨한 정책 제거. **돌리기 전에** 쓰는 계정에
+  `/admin/quotes` · `/admin/analytics` 권한이 체크돼 있는지 먼저 확인할 것
+  (없으면 화면이 **빈 채로** 떠서 고장으로 오해한다).
+  ⚠️ 지금은 로그인만 하면 메뉴권한 없이도 견적문의 전체가 REST 로 읽힌다.
 - **`020_quote_access_logs.sql` 실행** — 견적문의 열람·다운로드 기록.
   **돌리기 전까지는 조회 화면의 연락처·이메일이 마스킹된 채로 남고 CSV 내보내기가
   실패한다**(의도된 동작 — 위 섹션 참고). 019 뒤에 돌릴 것.
