@@ -23,7 +23,6 @@ import { hasField, fieldText, type Quote } from "@/lib/quotes";
 import { maskCompany, maskName, maskPhone } from "@/lib/mask";
 import { supabase } from "@/lib/supabase";
 import Badge from "@/components/badge/Badge";
-import { type ColorType } from "@/styles/theme";
 import Text from "@/components/text/Text";
 
 /* 견적문의관리 - 목록 (기획서 31p)
@@ -38,11 +37,9 @@ import Text from "@/components/text/Text";
    개인정보 통제에도 맞다. 되살릴 일이 생기면 lib/quotesCsv.ts 의 buildQuotesCsv 는
    여러 행을 그대로 받으므로 목록 쪽에 버튼과 사유 모달만 다시 붙이면 된다. */
 
-const STATUS_COLOR: Record<string, ColorType> = {
-  pending: "BLUE",
-  in_progress: "ORANGE",
-  completed: "GREEN",
-};
+/* 진행 상태 배지 색은 ui.tsx 의 QUOTE_STATUS_COLOR 한 곳에 있다 —
+   조회 화면이 같은 색을 쓴다. 여기 목록은 그 자리에서 상태를 바꿔야 해서
+   배지가 아니라 <select> 다(아래 주석 처리된 배지가 그때의 흔적). */
 const statusMeta = (v: string | null) =>
   QUOTE_STATUS.find((s) => s.value === v) ?? {
     value: v ?? "",
@@ -239,7 +236,7 @@ export default function QuotesListPage() {
                     <td>
                       {/* <Badge
                         label={statusMeta(r.status).label}
-                        color={STATUS_COLOR[r.status ?? ""] ?? "GRAY"}
+                        color={QUOTE_STATUS_COLOR[r.status ?? ""] ?? "GRAY"}
                         variant="surface"
                         size="1"
                         radius="medium"

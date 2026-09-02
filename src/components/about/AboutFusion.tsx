@@ -1,5 +1,5 @@
-import AboutGallery from '@/components/about/AboutGallery';
-import Lines from '@/components/Lines';
+import AboutGallery from "@/components/about/AboutGallery";
+import Lines from "@/components/Lines";
 
 /* 04 Experience — Cormorant headline, bold statement, 4 capability cards, then the auto-marquee
    photo band as the section's LAST child (no separate section / top padding for the band).
@@ -8,34 +8,35 @@ import Lines from '@/components/Lines';
    .about-fusion, so AboutGallery is rendered from here and NOT from the page. */
 const CORE_VALUES = [
   {
-    icon: 'icon-mega-finance',
-    title: 'Mega Finance DNA',
+    icon: "icon-mega-finance",
+    title: "Mega Finance DNA",
     desc: [
-      '신한 ‘슈퍼SOL’ 6년 전담 운영을 비롯해 KB·IBK·우리카드 등',
-      '핵심 플랫폼의 혁신을 주도해온 검증된 전문성을 갖췄습니다.',
+      "신한 ‘슈퍼SOL’ 6년 전담 운영을 비롯해 KB·IBK·우리카드 등",
+      "핵심 플랫폼의 혁신을 주도해온 검증된 전문성을 갖췄습니다.",
     ],
   },
   {
-    icon: 'icon-cross-industry',
-    title: 'Cross-Industry Insight',
+    icon: "icon-cross-industry",
+    title: "Cross-Industry Insight",
     desc: [
-      '금융, 공공, 항공, 유통, 엔터프라이즈까지 산업의 경계를 넘어 축적한 경험으로 어떤 비즈니스에도 최적의 답을 제시합니다.',
+      "금융, 공공, 항공, 유통, 엔터프라이즈까지 산업의 경계를 넘어",
+      "축적한 경험으로 어떤 비즈니스에도 최적의 답을 제시합니다.",
     ],
   },
   {
-    icon: 'icon-si-synergy',
-    title: 'SI Synergy & Partnership',
+    icon: "icon-si-synergy",
+    title: "SI Synergy & Partnership",
     desc: [
-      'LG CNS, 신한DS의 공식 협력사로서 대형 SI 주사업자와의',
-      '완벽한 시너지로 프로젝트의 성공을 이끕니다.',
+      "LG CNS, 신한DS의 공식 협력사로서 대형 SI 주사업자와의",
+      "완벽한 시너지로 프로젝트의 성공을 이끕니다.",
     ],
   },
   {
-    icon: 'icon-ax-tech',
-    title: 'AX Tech & Design System',
+    icon: "icon-ax-tech",
+    title: "AX Tech & Design System",
     desc: [
-      '고유 디자인 시스템과 자체 AX 솔루션 R&D를 통해',
-      '프로젝트 생산성과 기술 경쟁력을 극대화합니다.',
+      "고유 디자인 시스템과 자체 AX 솔루션 R&D를 통해",
+      "프로젝트 생산성과 기술 경쟁력을 극대화합니다.",
     ],
   },
 ];
@@ -57,7 +58,11 @@ export default function AboutFusion() {
           {CORE_VALUES.map((value) => (
             <li className="core-value" key={value.title}>
               <span className="core-value-icon">
-                <img src={`/assets/about/${value.icon}.svg`} alt="" aria-hidden="true" />
+                <img
+                  src={`/assets/about/${value.icon}.svg`}
+                  alt=""
+                  aria-hidden="true"
+                />
               </span>
               <h3 className="core-value-title">{value.title}</h3>
               <p className="core-value-desc">

@@ -18,6 +18,7 @@ export interface BadgeProps {
   endIcon?: IconName;
   color: ColorType;
   radius?: keyof typeof Radius;
+  style?: React.CSSProperties;
 }
 
 /* Button 과 같은 이유 — Text 가 자기 size 클래스를 항상 달고 나오므로
@@ -36,6 +37,7 @@ const Badge = ({
   endIcon,
   color,
   radius = "medium",
+  style,
 }: BadgeProps) => {
   return (
     <div
@@ -45,6 +47,7 @@ const Badge = ({
       style={
         {
           "--badge-radius": Radius[radius],
+          ...style,
         } as React.CSSProperties
       }
     >

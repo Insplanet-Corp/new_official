@@ -2527,7 +2527,11 @@ html.ps-busy .mp-card a {
     gap: 19.2px;
   }
   .m-partner-row span {
-    flex: 1 1 0;
+    /* ⚠️ `flex: 1 1 0` 이면 안 된다 — 마지막 줄에 로고가 하나만 남았을 때(파트너
+       25개 = 3×8 + 1) 그 하나가 줄 전체를 차지해 **가운데**로 가 버린다.
+       칸 폭을 1/3 로 못 박으면 남는 하나가 첫 칸(왼쪽)에 그대로 선다.
+       꽉 찬 줄은 계산이 같아서(3칸 + gap 2개 = 100%) 지금과 똑같이 보인다. */
+    flex: 0 0 calc((100% - 19.2px * 2) / 3);
     height: 44.8px;
     display: flex;
     align-items: center;
@@ -5230,7 +5234,7 @@ html.ps-busy .mp-card a {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 90px 20px calc(184px + env(safe-area-inset-bottom));
+    padding: 90px 20px calc(224px + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     gap: 64px;
@@ -5274,7 +5278,8 @@ html.ps-busy .mp-card a {
   .mr-popup .mc-file {
     margin-top: 0;
   }
-  /* footer: fixed at the sheet bottom, white fade so scrolled content slides under it; the button spans the gutter width */
+  /* footer: fixed at the sheet bottom, white fade so scrolled content slides under it; 동의 줄이
+     입사지원 버튼 **위**에 서고, 버튼은 거터 폭을 채운다 */
   .mr-footer {
     position: absolute;
     left: 0;
@@ -5282,6 +5287,9 @@ html.ps-busy .mp-card a {
     bottom: 0;
     z-index: 2;
     padding: 24px 20px calc(32px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #fff 24px);
     pointer-events: none;
   }
@@ -5289,13 +5297,22 @@ html.ps-busy .mp-card a {
     width: 100%;
     pointer-events: auto;
   }
-  /* the page-level .ct-rv scroll-reveal hides every .mc-submit until observed in; the popup's isn't part of
-     that pass, so keep it visible + restore its own background transition (PC .rc-footer .ct-submit parity) */
+  .mr-footer .mc-consent {
+    pointer-events: auto;
+  }
+  /* the page-level .ct-rv scroll-reveal hides every .mc-submit / .mc-consent until observed in; the
+     popup's aren't part of that pass, so keep them visible (PC .rc-footer parity) */
   .ct-rv .mr-popup .mc-submit {
     opacity: 1;
     transform: none;
     pointer-events: auto;
     transition: background-color 0.25s ease;
+  }
+  .ct-rv .mr-popup .mc-consent {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .mr-popup {

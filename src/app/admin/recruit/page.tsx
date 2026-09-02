@@ -11,12 +11,12 @@ import {
   Skeleton,
   Stats,
   fmtDate,
+  ValueBadge,
 } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import { RECRUIT_FIELD_FILTER } from "@/data/adminOptions";
 import { type Recruit } from "@/lib/recruits";
 import { supabase } from "@/lib/supabase";
-import Badge from "@/components/badge/Badge";
 import Text from "@/components/text/Text";
 
 /* 리크루트관리 - 목록 (기획서 35p)
@@ -148,17 +148,7 @@ export default function RecruitListPage() {
                     <td className={kit.nowrap}>{r.phone || "-"}</td>
                     <td className={kit.nowrap}>{r.email || "-"}</td>
                     <td>
-                      {r.field ? (
-                        <Badge
-                          label={r.field}
-                          color="GRAY"
-                          variant="surface"
-                          size="1"
-                          radius="medium"
-                        />
-                      ) : (
-                        "-"
-                      )}
+                      <ValueBadge label={r.field} color="GRAY" />
                     </td>
                     <td>{r.file_name ? "있음" : "-"}</td>
                   </tr>

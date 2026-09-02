@@ -3,7 +3,15 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Actions, FileLink, ReadOnly, Row, Section } from "@/components/admin/form";
-import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
+import {
+  Empty,
+  Note,
+  QUOTE_STATUS_COLOR,
+  Skeleton,
+  SubHead,
+  ValueBadge,
+  fmtDate,
+} from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import { fieldText, quoteFileUrl, type Quote } from "@/lib/quotes";
 import { maskCompany, maskEmail, maskName, maskPhone } from "@/lib/mask";
@@ -281,7 +289,15 @@ export default function QuoteDetailPage({
               <ReadOnly>{fmtDate(row.created_at)}</ReadOnly>
             </Row>
             <Row label="진행 상태">
-              <ReadOnly>{statusLabel}</ReadOnly>
+              {/* 목록의 배지와 같은 색을 쓴다(ui.tsx 한 곳에 있다).
+                  ⚠️ 목록은 그 자리에서 상태를 바꿔야 해서 <select> 다 —
+                     여기만 읽기 전용 배지다. */}
+              <ReadOnly>
+                <ValueBadge
+                  label={statusLabel}
+                  color={QUOTE_STATUS_COLOR[row.status ?? ""] ?? "GRAY"}
+                />
+              </ReadOnly>
             </Row>
           </Section>
 

@@ -251,6 +251,24 @@ export default function PortfolioForm({
           </Row>
         ) : null}
 
+        {/* 메인 슬라이드에 걸 제목. 비우면 위의 프로젝트명을 그대로 쓴다.
+
+            ⚠️ 줄바꿈 규칙을 프로젝트명과 **똑같이** 뒀다(역슬래시+n 두 글자). 한 줄
+            <input> 은 진짜 개행을 담을 수 없어서 생긴 규칙인데, 여기만 '|' 같은 다른
+            구분자를 쓰면 규칙이 둘이 된다. */}
+        {v.is_main ? (
+          <Row
+            label="메인 - title"
+            hint="메인 슬라이드에 걸 제목입니다. 비우면 위의 프로젝트명을 씁니다. 줄을 나누려면 \n 을 넣으세요."
+          >
+            <Input
+              value={v.mainTitle}
+              onChange={(x) => set("mainTitle", x)}
+              placeholder="신한 SoL증권\n모바일 웹 리뉴얼"
+            />
+          </Row>
+        ) : null}
+
         {/* 메인 슬라이드의 Client / Launch 칸.
 
             고객사는 client_ci 이미지가 아니라 **텍스트**다 — 진행중 표의 CI 칸과

@@ -3,7 +3,13 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Actions, ReadOnly, Row, ThumbView } from "@/components/admin/form";
-import { Note, SubHead } from "@/components/admin/ui";
+import {
+  CategoryCell,
+  Note,
+  PORTFOLIO_STATUS_COLOR,
+  SubHead,
+  ValueBadge,
+} from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import { labelOf } from "@/data/adminOptions";
 import { PORTFOLIO_STATUS_FILTER } from "@/data/adminOptions";
@@ -12,12 +18,14 @@ import { refreshProjectCount } from "@/lib/projectCountActions";
 import {
   type Portfolio,
   categoriesOf,
-  categoryLabel,
   formatPeriod,
+  mainTitleOf,
+  titleLines,
   titleOneLine,
 } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
 import Button from "@/components/button/Button";
+import Text from "@/components/text/Text";
 
 /* 포트폴리오관리 - 조회 (기획서 27p) */
 export default function PortfolioDetailPage({
@@ -117,26 +125,57 @@ export default function PortfolioDetailPage({
         <Row label="사용여부">
           <ReadOnly>{row?.use_yn ?? null}</ReadOnly>
         </Row>
+        {/* 목록과 같은 배지로 그린다 — 색·모양은 ui.tsx 한 곳에 있다.
+            ReadOnly 는 여전히 값 슬롯 역할(입력칸과 같은 40px 높이)로 남는다. */}
         <Row label="분류">
-          <ReadOnly>{row ? categoryLabel(categoriesOf(row)) || null : null}</ReadOnly>
+          <ReadOnly>{row ? row.categories : null}</ReadOnly>
         </Row>
         <Row label="진행 상태">
           <ReadOnly>
-            {row?.status ? labelOf(PORTFOLIO_STATUS_FILTER, row.status) : null}
+            {row ? labelOf(PORTFOLIO_STATUS_FILTER, row.status ?? "") : null}
           </ReadOnly>
         </Row>
         <Row label="수상">
-          <ReadOnly>{row ? (row.award ? "수상작" : "해당 없음") : null}</ReadOnly>
-        </Row>
-        <Row label="메인">
           <ReadOnly>
-            {row ? (row.is_main ? "메인 노출" : "해당 없음") : null}
+            {row ? (
+              <ValueBadge label={row.award ? "수상작" : null} color="ORANGE" />
+            ) : null}
           </ReadOnly>
         </Row>
+        <Row label="메인">
+          <ReadOnly>{row ? (row.is_main ? "메인" : "-") : null}</ReadOnly>
+        </Row>
+        {/* 메인으로 걸린 행은 메인 관련 값을 여기서 다 보여 준다 — 예전에는 썸네일만
+            나오고 title·Client·Launch 는 [수정] 을 눌러야 볼 수 있었다. 조회만 해서는
+            무엇이 홈 슬라이드에 나가는지 알 수 없었다(사용자 지적, 2026-09-02).
+            등록/수정 폼과 **같은 순서·같은 라벨**로 둔다. */}
         {row?.is_main ? (
-          <Row label="썸네일 – 메인">
-            <ThumbView src={row.thumb_main ?? undefined} />
-          </Row>
+          <>
+            <Row label="썸네일 – 메인">
+              <ThumbView src={row.thumb_main ?? undefined} />
+            </Row>
+            <Row
+              label="메인 - title"
+              hint={
+                mainTitleOf(row) === row.title
+                  ? "따로 입력하지 않아 프로젝트명이 그대로 나갑니다."
+                  : undefined
+              }
+            >
+              {/* 줄바꿈이 실제로 어디서 걸리는지 보여야 하므로 줄 단위로 그린다 */}
+              <ReadOnly>
+                {titleLines(mainTitleOf(row)).map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
+              </ReadOnly>
+            </Row>
+            <Row label="메인 - Client">
+              <ReadOnly>{row.client || null}</ReadOnly>
+            </Row>
+            <Row label="메인 - Launch">
+              <ReadOnly>{row.launch || null}</ReadOnly>
+            </Row>
+          </>
         ) : null}
         <Row label="썸네일 – PC">
           <ThumbView src={row?.thumb_pc ?? undefined} />

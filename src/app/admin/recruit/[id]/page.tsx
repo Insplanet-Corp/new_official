@@ -9,7 +9,14 @@ import {
   Row,
   Section,
 } from "@/components/admin/form";
-import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
+import {
+  Empty,
+  Note,
+  Skeleton,
+  SubHead,
+  ValueBadge,
+  fmtDate,
+} from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import { recruitFileUrl, type Recruit } from "@/lib/recruits";
 import { RETENTION, purgeTargets } from "@/lib/retention";
@@ -172,7 +179,11 @@ export default function RecruitDetailPage({
               <ReadOnly>{row.name}</ReadOnly>
             </Row>
             <Row label="지원분야">
-              <ReadOnly>{row.field}</ReadOnly>
+              {/* 목록과 같은 GRAY 배지 — 값이 칩의 한글 문자열 그대로라
+                  색으로 가를 수 있는 고정 집합이 아니다(018 주석 참고). */}
+              <ReadOnly>
+                <ValueBadge label={row.field} color="GRAY" />
+              </ReadOnly>
             </Row>
             <Row label="연락처">
               <ReadOnly>{row.phone}</ReadOnly>

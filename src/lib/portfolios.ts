@@ -81,6 +81,11 @@ export type Portfolio = {
   is_main: boolean;
   /** 메인 화면용 썸네일. 카드용 thumb_pc 와 비율이 달라 따로 둔다 */
   thumb_main: string | null;
+  /** 메인 슬라이드에 걸 제목(026). 비면 title 을 쓴다.
+      줄바꿈 규칙은 title 과 같다 — DB 에는 진짜 개행이 들어간다.
+      ⚠️ 026 을 안 돌린 DB 에서는 이 키가 아예 없다(select('*') 라 undefined) —
+      읽는 쪽은 `mainTitleOf(row)` 를 쓸 것. */
+  main_title?: string | null;
   /** 고객사명 텍스트 — 메인 슬라이드의 Client 칸 (011). client_ci 이미지와 다른 자리다 */
   client: string | null;
   /** 메인 슬라이드의 Launch 표기 (예: 'Jan, 2024') */
@@ -104,6 +109,8 @@ export type PortfolioDraft = {
   thumb_mobile: string;
   is_main: boolean;
   thumb_main: string;
+  /** 메인 슬라이드 제목. 한 줄 <input> 이라 줄바꿈은 역슬래시+n 두 글자로 친다 */
+  mainTitle: string;
   client: string;
   launch: string;
   client_ci: string;
@@ -123,6 +130,7 @@ export const EMPTY_DRAFT: PortfolioDraft = {
   thumb_mobile: "",
   is_main: false,
   thumb_main: "",
+  mainTitle: "",
   client: "",
   launch: "",
   client_ci: "",
@@ -238,6 +246,15 @@ export const titleLines = (title: string): string[] =>
 export const titleOneLine = (title: string): string =>
   titleLines(title).join(" ");
 
+/** 메인 슬라이드에 걸 제목. 비어 있거나 026 미실행이면 프로젝트명으로 되돌아간다.
+
+    ⚠️ `row.main_title` 을 직접 읽지 말 것 — 026 을 안 돌린 DB 에서는 `select('*')`
+    결과에 그 키가 아예 없어 `undefined` 다. 여기 한 곳에서 흡수한다. */
+export const mainTitleOf = (row: {
+  title: string;
+  main_title?: string | null;
+}): string => (row.main_title ?? "").trim() || row.title;
+
 /* ---- 폼 <-> DB ------------------------------------------------------------ */
 
 export const toDraft = (p: Portfolio): PortfolioDraft => ({
@@ -251,6 +268,7 @@ export const toDraft = (p: Portfolio): PortfolioDraft => ({
   thumb_mobile: p.thumb_mobile ?? "",
   is_main: p.is_main ?? false,
   thumb_main: p.thumb_main ?? "",
+  mainTitle: (p.main_title ?? "").replaceAll("\n", "\\n"),
   client: p.client ?? "",
   launch: p.launch ?? "",
   client_ci: p.client_ci ?? "",
@@ -288,6 +306,10 @@ export const toRow = (d: PortfolioDraft) => {
     thumb_mobile: nz(d.thumb_mobile),
     is_main: d.is_main,
     thumb_main: nz(d.thumb_main),
+    // title 과 같은 규칙 — 역슬래시+n 을 진짜 개행으로 눕혀 저장한다
+    main_title: d.mainTitle.trim()
+      ? d.mainTitle.trim().replace(LITERAL_NL, "\n")
+      : null,
     client: nz(d.client),
     launch: nz(d.launch),
     // 폴더명만 저장한다. index.html 은 읽을 때 붙인다

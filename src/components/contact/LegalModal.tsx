@@ -4,8 +4,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLegal } from '@/components/contact/LegalContext';
 import { LEGAL_DOCS, type LegalBlock, type LegalDoc, type LegalDocId } from '@/data/legal';
-
-type LenisLike = { stop?: () => void; start?: () => void };
+import { lockScroll } from '@/lib/scrollLock';
 
 /* 이용약관 · 개인정보처리방침 팝업 (.tm-*) — 동의 문구의 링크로 연다.
 
@@ -40,14 +39,13 @@ export default function LegalModal() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastFocus = useRef<Element | null>(null);
 
-  // 열림/닫힘: 페이지 스크롤 잠금(Lenis + html.rc-lock) + 팝업 자기 스크롤 초기화 + 포커스 이동
+  /* 열림/닫힘: 페이지 스크롤 잠금 + 팝업 자기 스크롤 초기화 + 포커스 이동.
+     ⚠️ 잠금은 lockScroll() 로 **세어서** 건다 — 이 팝업은 Careers 팝업 위에서도 열리므로
+     닫을 때 그냥 풀면 아직 떠 있는 Careers 뒤 페이지가 스크롤된다(scrollLock.ts 참고). */
   useEffect(() => {
     if (!doc) return;
-    const html = document.documentElement;
-    const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
     lastFocus.current = document.activeElement;
-    html.classList.add('rc-lock');
-    lenis?.stop?.();
+    const unlock = lockScroll();
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
     const t = setTimeout(() => {
       try {
@@ -58,8 +56,7 @@ export default function LegalModal() {
     }, 80);
     return () => {
       clearTimeout(t);
-      html.classList.remove('rc-lock');
-      lenis?.start?.();
+      unlock();
       const prev = lastFocus.current;
       if (prev instanceof HTMLElement) {
         try {

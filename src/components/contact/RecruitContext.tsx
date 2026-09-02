@@ -36,6 +36,8 @@ type Draft = {
   email: string;
   url: string;
   file: File | null;
+  /** 개인정보 수집·이용 동의 체크 — 체크박스도 uncontrolled 라 여기 실어 옮긴다 */
+  consent: boolean;
 };
 
 /** 두 모달이 각자 들고 있는 입력 ref 들 — 이름은 같고 클래스 프리픽스만 다르다. */
@@ -45,9 +47,10 @@ export type DraftRefs = {
   email: RefObject<HTMLInputElement | null>;
   url: RefObject<HTMLInputElement | null>;
   fileInput: RefObject<HTMLInputElement | null>;
+  consent: RefObject<HTMLInputElement | null>;
 };
 
-const EMPTY: Draft = { name: '', phone: '', email: '', url: '', file: null };
+const EMPTY: Draft = { name: '', phone: '', email: '', url: '', file: null, consent: false };
 
 type RecruitState = {
   open: boolean;
@@ -76,6 +79,9 @@ function restore(d: Draft, refs: DraftRefs) {
   setValue(refs.phone, d.phone);
   setValue(refs.email, d.email);
   setValue(refs.url, d.url);
+
+  const cb = refs.consent.current;
+  if (cb && cb.checked !== d.consent) cb.checked = d.consent;
 
   const fi = refs.fileInput.current;
   if (!fi) return;
@@ -106,6 +112,7 @@ function capture(refs: DraftRefs, prev: Draft): Draft {
     email: refs.email.current?.value ?? prev.email,
     url: refs.url.current?.value ?? prev.url,
     file: fi ? (fi.files?.[0] ?? null) : prev.file,
+    consent: refs.consent.current?.checked ?? prev.consent,
   };
 }
 

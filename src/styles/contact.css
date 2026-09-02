@@ -805,6 +805,21 @@
   z-index: 110;
   --v: clamp(0px, calc((100vw - 1024px) / 896), 1px);
   --g: clamp(0px, calc((100vw - 1920px) / 640), 1px);
+  /* 세로 압축 — 창이 낮으면 여백·제목·줄간격을 줄여 카드가 **한 화면에 들어가게** 한다.
+     원래 이 팝업은 내용이 974px(1440 기준)이라 창 높이가 1006px 이상이어야 스크롤이 안
+     생겼다(동의 줄이 붙으며 1070px). 노트북에서는 사실상 항상 스크롤이 났다.
+     `--v`/`--g` 와 같은 방식이라 `N * var(--sq)` 로 **빼면** 된다 —
+       0px = 원래 디자인 그대로 · 1px = 최대 압축.
+     ⚠️ **필요한 압축량은 폭에 비례한다** — 폭이 넓으면 --v/--g 로 글자·여백이 같이 커지기
+     때문이다. 그래서 압축이 시작되는 높이에 `120 * var(--v) + 140 * var(--g)` 를 더한다
+     (1024 폭이면 1130px 부터, 2560 폭이면 1390px 부터 압축을 시작해 400px 아래에서 최대).
+     ⚠️ 값을 손볼 때는 반드시 **브라우저에서 `.rc-scroll` 의 scrollHeight - clientHeight 를
+     0 으로 실측**할 것. 폭 1439 이하에서는 지원분야 칩이 2-up 으로 접혀 한 줄이 더 생기므로,
+     넓은 화면만 보고 맞추면 좁은 쪽에서 다시 스크롤이 난다.
+     ⚠️ 이 변수는 `.rc-modal` 에만 있다 — 약관 팝업(`.tm-*`)은 전문이 길어 **스크롤이 정상**
+     이므로 일부러 적용하지 않았다. `.tm-*` 규칙에 `var(--sq)` 를 넣으면 변수가 없어
+     선언이 통째로 무효(IACVT)가 되어 gap/top 이 초기값으로 튄다(1번 함정과 같은 계열). */
+  --sq: clamp(0px, calc((1130px + 120 * var(--v) + 140 * var(--g) - 100vh) / 400), 1px);
   --ct-text: #3e3f44;
   --ct-line: #e5e5e5;
   --ct-ph: #b5b5b5;
@@ -812,7 +827,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: calc(48px - 36 * var(--sq));
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -856,9 +871,10 @@ html.rc-lock {
   border-radius: calc(32px + 32 * var(--v));
   padding: calc(48px + 24 * var(--v) + 24 * var(--g));
   padding-right: calc(24px + 24 * var(--v) + 24 * var(--g));
+  padding-block: calc(48px + 24 * var(--v) + 24 * var(--g) - 38 * var(--sq));
   display: flex;
   flex-direction: column;
-  gap: calc(64px + 32 * var(--g));
+  gap: calc(64px + 32 * var(--g) - 32 * var(--sq));
   transform: translateY(24px) scale(0.985);
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -874,7 +890,7 @@ html.rc-lock {
   padding-right: 24px;
   display: flex;
   flex-direction: column;
-  gap: calc(64px + 32 * var(--g));
+  gap: calc(64px + 32 * var(--g) - 32 * var(--sq));
   scrollbar-width: thin;
   scrollbar-color: #c5c8dc transparent;
 } /* 24px = scrollbar gutter (the card's right padding is reduced by 24 to keep the form symmetric) */
@@ -890,14 +906,14 @@ html.rc-lock {
 .rc-head-text {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: calc(20px - 10 * var(--sq));
 }
 .rc-eyebrow {
   margin: 0;
   color: #3e3f44;
   font-family: "Cormorant Garamond", serif;
   font-weight: 600;
-  font-size: calc(64px + 32 * var(--v) + 24 * var(--g));
+  font-size: calc(64px + 32 * var(--v) + 24 * var(--g) - 32 * var(--sq));
   line-height: 1;
   letter-spacing: -0.01em;
 }
@@ -907,15 +923,15 @@ html.rc-lock {
   font-family: "Pretendard", sans-serif;
   font-weight: 400;
   font-size: calc(14px + 4 * var(--v) + 2 * var(--g));
-  line-height: 1.5;
+  line-height: calc(1.5 - 0.12 * var(--sq) / 1px);
 }
 .rc-close {
   position: absolute;
   z-index: 2;
-  top: calc(48px + 24 * var(--v) + 24 * var(--g));
+  top: calc(48px + 24 * var(--v) + 24 * var(--g) - 38 * var(--sq));
   right: calc(48px + 24 * var(--v) + 24 * var(--g));
-  width: calc(64px + 32 * var(--v));
-  height: calc(64px + 32 * var(--v));
+  width: calc(64px + 32 * var(--v) - 16 * var(--sq));
+  height: calc(64px + 32 * var(--v) - 16 * var(--sq));
   display: grid;
   place-items: center;
   background: none;
@@ -937,7 +953,7 @@ html.rc-lock {
 .rc-body {
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  gap: calc(64px - 32 * var(--sq));
 }
 .rc-row {
   display: flex;
@@ -965,23 +981,35 @@ html.rc-lock {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: calc(20px + 12 * var(--v));
+  gap: calc(20px + 12 * var(--v) - 12 * var(--sq));
 }
 
-/* footer: fixed at the card bottom; reserved slot (empty for now) then the 입사지원 button — left-packed per Figma */
+/* footer: fixed at the card bottom; empty slot (aligns the block with the .rc-fields column) then
+   the 동의 줄 + 입사지원 button stacked — left-packed per Figma */
 .rc-footer {
   flex: none;
   display: flex;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
 }
 .rc-footer-slot {
   flex: none;
   width: calc(192px + 202 * var(--v) - 28 * var(--g));
   height: 62px;
 }
+/* 동의 줄이 입사지원 버튼 **위**에 선다 (문의 폼의 .ct-consent 를 그대로 쓴다) */
+.rc-footer-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(20px + 8 * var(--v) - 10 * var(--sq));
+}
 
 /* control overrides — the popup's 1920 step sits at the 2560 value, unlike contact's .ct-* mid-step */
+.rc-modal .ct-chips {
+  gap: calc(16px - 4 * var(--sq));
+} /* 2-up 으로 접히는 폭에서는 이 한 줄이 그대로 카드 높이가 된다 */
 .rc-modal .ct-chip {
   font-size: calc(14px + 4 * var(--v));
 } /* 14 -> 18 -> 18 */
@@ -992,13 +1020,19 @@ html.rc-lock {
   width: calc(208px + 44 * var(--v) + 20 * var(--g));
 } /* 입사지원 width 208->252->272 (height 64->64->80 + font 16->20->24 now match the .ct-submit base) */
 /* 입사지원 arrow keeps the reused .ct-arrow size so it matches the 채용확인 button's arrow (11.31->16->16). */
-/* the page-level .ct-rv scroll-reveal hides every .ct-submit until observed in; the popup's submit
-   isn't part of that pass, so keep it visible + restore its own background transition */
+/* the page-level .ct-rv scroll-reveal hides every .ct-submit / .ct-consent until observed in; the
+   popup's aren't part of that pass, so keep them visible + restore their own transitions */
 .rc-modal .rc-footer .ct-submit {
   opacity: 1;
   transform: none;
   pointer-events: auto;
   transition: background-color 0.25s ease;
+}
+.rc-modal .rc-footer .ct-consent {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: none;
 }
 /* 지원분야 chips: 4-up at 1920+, 2-up across the 1024 range (the long labels can't fit 4-up in the 640 column) */
 @media (max-width: 1439px) {

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import ConsentLinks from '@/components/contact/ConsentLinks';
+import { useLegal } from '@/components/contact/LegalContext';
 import { useRecruit, useRecruitDraftSync } from '@/components/contact/RecruitContext';
 import MobileChipGroup from '@/components/mobile/MobileChipGroup';
 import MobileFileRow from '@/components/mobile/MobileFileRow';
@@ -9,8 +11,7 @@ import MobileFilteredInput from '@/components/mobile/MobileFilteredInput';
 import { RECRUIT_ROLES } from '@/data/contact';
 import { allFilled, firstMissing, jumpToField, type RequiredField } from '@/lib/formGating';
 import { submitRecruit } from '@/lib/recruits';
-
-type LenisLike = { stop?: () => void; start?: () => void };
+import { lockScroll } from '@/lib/scrollLock';
 
 /* Careers recruit popup — mobile-contact.html 의 #recruit-popup (.mr-*) 포트. PC RecruitModal.tsx 와
    달리 풀스크린 시트다(딤 배경 없음, X/ESC 로만 닫힌다). 잠금은 PC 와 같은 방식(html.rc-lock +
@@ -48,17 +49,21 @@ export default function MobileRecruitModal({
   const fileInput = useRef<HTMLInputElement>(null);
   const fileName = useRef<HTMLInputElement>(null);
   const fileButton = useRef<HTMLButtonElement>(null);
+  const consent = useRef<HTMLInputElement>(null);
+  const consentBox = useRef<HTMLSpanElement>(null);
+  const consentLabel = useRef<HTMLLabelElement>(null);
   const lastFocus = useRef<Element | null>(null);
+
+  /* 약관·방침 팝업이 이 시트 **위에** 뜬다(동의 문구의 링크) — 그동안은 ESC 를 넘기지 않는다.
+     안 그러면 한 번에 둘 다 닫힌다. PC RecruitModal 과 같다. */
+  const { doc: legalDoc } = useLegal();
 
   // open / close: lock the page scroll (Lenis + html.rc-lock), reset the sheet's own scroll, move
   // focus into the dialog
   useEffect(() => {
-    const html = document.documentElement;
-    const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
     if (!active) return;
     lastFocus.current = document.activeElement;
-    html.classList.add('rc-lock');
-    lenis?.stop?.();
+    const unlock = lockScroll(); // 겹쳐 뜨는 약관 팝업과 몫을 나눠 센다(scrollLock.ts)
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
     const t = setTimeout(() => {
       try {
@@ -69,8 +74,7 @@ export default function MobileRecruitModal({
     }, 80);
     return () => {
       clearTimeout(t);
-      html.classList.remove('rc-lock');
-      lenis?.start?.();
+      unlock();
       const prev = lastFocus.current;
       if (prev instanceof HTMLElement) {
         try {
@@ -83,14 +87,15 @@ export default function MobileRecruitModal({
   }, [active]);
 
   // close on ESC — full-screen, no backdrop, so no outside-click close
+  // 약관 팝업이 위에 떠 있으면 ESC 는 그쪽에 양보한다
   useEffect(() => {
-    if (!active) return;
+    if (!active || legalDoc) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
-  }, [active, onClose]);
+  }, [active, legalDoc, onClose]);
 
   /* 지원분야·이름·연락처·이메일·파일이 모두 채워질 때까지 비활성 (포트폴리오 URL은 선택). */
   const requiredFields = useCallback((): RequiredField[] => {
@@ -116,6 +121,13 @@ export default function MobileRecruitModal({
       focus: fileButton.current,
       flash: fileName.current,
     });
+    // 개인정보 수집·이용 동의 — 문의 폼과 같은 규칙으로 제출을 막는다
+    fields.push({
+      ok: () => !!consent.current?.checked,
+      scroll: consentLabel.current,
+      focus: consent.current,
+      flash: consentBox.current,
+    });
     return fields;
   }, [role]);
 
@@ -123,7 +135,7 @@ export default function MobileRecruitModal({
   useEffect(refresh, [refresh]);
 
   /* 폭 경계를 넘을 때 입력값·첨부파일을 PC 모달과 주고받는다 (RecruitContext 참고) */
-  useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
+  useRecruitDraftSync(active, { name, phone, email, url, fileInput, consent }, refresh);
 
   /* 접수 — PC 모달(RecruitModal)과 **같은** submitRecruit 을 쓴다. 두 트리는 폭으로만
      갈릴 뿐 접수 규칙이 다를 이유가 없다. 성공 뒤 비우는 순서(DOM reset → resetRecruit →
@@ -260,6 +272,25 @@ export default function MobileRecruitModal({
           </div>
         </div>
         <div className="mr-footer">
+          {/* consent: 문의 폼과 같은 .mc-consent (24px 원형 체크 + 약관/방침 링크) */}
+          <label className="mc-consent" ref={consentLabel}>
+            <input ref={consent} type="checkbox" className="mc-consent-input" />
+            <span className="mc-consent-box" aria-hidden="true" ref={consentBox}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6.6 12 10.2 15.6 17.4 8.4"
+                  stroke="currentColor"
+                  strokeWidth="0.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            {/* 두 링크는 약관/방침 팝업(LegalModal)을 연다 — 문의 폼과 같은 컴포넌트 */}
+            <span className="mc-consent-text">
+              <ConsentLinks />
+            </span>
+          </label>
           <button
             type="submit"
             className={ready ? 'mc-submit mr-submit is-ready' : 'mc-submit mr-submit'}

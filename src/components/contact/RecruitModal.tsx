@@ -3,14 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ChipGroup from '@/components/contact/ChipGroup';
+import ConsentLinks from '@/components/contact/ConsentLinks';
+import { useLegal } from '@/components/contact/LegalContext';
 import { useRecruit, useRecruitDraftSync } from '@/components/contact/RecruitContext';
 import FileRow from '@/components/contact/FileRow';
 import FilteredInput from '@/components/contact/FilteredInput';
 import { RECRUIT_ROLES } from '@/data/contact';
 import { allFilled, firstMissing, jumpToField, type RequiredField } from '@/lib/formGating';
 import { submitRecruit } from '@/lib/recruits';
-
-type LenisLike = { stop?: () => void; start?: () => void };
+import { lockScroll } from '@/lib/scrollLock';
 
 /* Careers recruit popup — opened by the Join Us 채용확인 button. Its leaf controls reuse the contact
    .ct-* classes (locked to their 2560 sizing via --v/--g:1 on .rc-modal). Rendered outside
@@ -52,16 +53,22 @@ export default function RecruitModal({
   const fileInput = useRef<HTMLInputElement>(null);
   const fileName = useRef<HTMLInputElement>(null);
   const fileButton = useRef<HTMLButtonElement>(null);
+  const consent = useRef<HTMLInputElement>(null);
+  const consentBox = useRef<HTMLSpanElement>(null);
+  const consentLabel = useRef<HTMLLabelElement>(null);
   const lastFocus = useRef<Element | null>(null);
 
-  // open / close: lock the page scroll (Lenis + html.rc-lock) and move focus into the dialog
+  /* 약관·방침 팝업이 이 팝업 **위에** 뜬다(동의 문구의 링크). 그동안은 ESC·바깥클릭을
+     넘기지 않는다 — 안 그러면 ESC 한 번에 둘 다 닫히고, 약관 카드 안을 누른 것이
+     `.rc-card` 바깥이라 이 팝업이 닫혀 버린다. */
+  const { doc: legalDoc } = useLegal();
+
+  /* open / close: lock the page scroll and move focus into the dialog.
+     잠금은 lockScroll() 로 세어서 건다 — 약관 팝업이 이 위에 겹쳐 열린다(scrollLock.ts). */
   useEffect(() => {
-    const html = document.documentElement;
-    const lenis = (window as Window & { __lenis?: LenisLike }).__lenis;
     if (!active) return;
     lastFocus.current = document.activeElement;
-    html.classList.add('rc-lock');
-    lenis?.stop?.();
+    const unlock = lockScroll();
     const t = setTimeout(() => {
       try {
         closeRef.current?.focus({ preventScroll: true });
@@ -71,8 +78,7 @@ export default function RecruitModal({
     }, 80);
     return () => {
       clearTimeout(t);
-      html.classList.remove('rc-lock');
-      lenis?.start?.();
+      unlock();
       const prev = lastFocus.current;
       if (prev instanceof HTMLElement) {
         try {
@@ -84,9 +90,9 @@ export default function RecruitModal({
     };
   }, [active]);
 
-  // close on ESC / on a click outside the card
+  // close on ESC / on a click outside the card — 약관 팝업이 위에 떠 있으면 그쪽에 양보한다
   useEffect(() => {
-    if (!active) return;
+    if (!active || legalDoc) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -99,7 +105,7 @@ export default function RecruitModal({
       removeEventListener('keydown', onKey);
       removeEventListener('mousedown', onDown);
     };
-  }, [active, onClose]);
+  }, [active, legalDoc, onClose]);
 
   /* 지원분야·이름·연락처·이메일·파일이 모두 채워질 때까지 비활성 (포트폴리오 URL은 선택). */
   const requiredFields = useCallback((): RequiredField[] => {
@@ -125,6 +131,13 @@ export default function RecruitModal({
       focus: fileButton.current,
       flash: fileName.current,
     });
+    // 개인정보 수집·이용 동의 — 문의 폼과 같은 규칙으로 제출을 막는다
+    fields.push({
+      ok: () => !!consent.current?.checked,
+      scroll: consentLabel.current,
+      focus: consent.current,
+      flash: consentBox.current,
+    });
     return fields;
   }, [role]);
 
@@ -135,7 +148,7 @@ export default function RecruitModal({
      라(캐럿이 튀지 않게 필터가 값을 제자리에서 고쳐 쓴다) 값의 진실은 DOM 이고, 그래서
      상태를 끌어올리는 대신 **경계에서 DOM 값을 옮긴다.** 지원분야 칩은 원래 state 라
      프로바이더가 그대로 공유한다. */
-  useRecruitDraftSync(active, { name, phone, email, url, fileInput }, refresh);
+  useRecruitDraftSync(active, { name, phone, email, url, fileInput, consent }, refresh);
 
   /* 접수 — Supabase recruits 테이블 + 비공개 recruit 버킷(018). 모바일 시트와 **같은**
      submitRecruit 을 쓴다. 성공하면 폼을 비우고 팝업을 닫는다.
@@ -281,18 +294,40 @@ export default function RecruitModal({
             </div>
           </div>
         </div>
+        {/* 빈 슬롯은 본문을 .rc-fields 열에 맞춰 들여쓴다 — 그 안에서 동의 줄이 버튼 위에 선다 */}
         <div className="rc-footer">
           <div className="rc-footer-slot" aria-hidden="true" />
-          <button
-            type="submit"
-            className={ready ? 'ct-submit is-ready' : 'ct-submit'}
-            disabled={sending}
-          >
-            <span>{sending ? '접수 중…' : '입사지원'}</span>
-            <span className="ct-arrow" aria-hidden="true">
-              <img src="/assets/icon_arrow.svg" alt="" />
-            </span>
-          </button>
+          <div className="rc-footer-main">
+            {/* consent: 문의 폼과 같은 .ct-consent (40px 원형 체크 + 약관/방침 링크) */}
+            <label className="ct-consent" ref={consentLabel}>
+              <input ref={consent} type="checkbox" className="ct-consent-input" />
+              <span className="ct-consent-box" aria-hidden="true" ref={consentBox}>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <path
+                    d="M11 20 17 26 29 14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              {/* 두 링크는 약관/방침 팝업(LegalModal)을 연다 — 문의 폼과 같은 컴포넌트 */}
+              <span className="ct-consent-text">
+                <ConsentLinks />
+              </span>
+            </label>
+            <button
+              type="submit"
+              className={ready ? 'ct-submit is-ready' : 'ct-submit'}
+              disabled={sending}
+            >
+              <span>{sending ? '접수 중…' : '입사지원'}</span>
+              <span className="ct-arrow" aria-hidden="true">
+                <img src="/assets/icon_arrow.svg" alt="" />
+              </span>
+            </button>
+          </div>
         </div>
       </form>
     </div>,

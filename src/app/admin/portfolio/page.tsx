@@ -4,7 +4,16 @@ import type { DragEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Empty, Note, PageHead, Search, Select } from "@/components/admin/ui";
+import {
+  CategoryCell,
+  Empty,
+  Note,
+  PageHead,
+  PORTFOLIO_STATUS_COLOR,
+  Search,
+  Select,
+  ValueBadge,
+} from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import {
   PORTFOLIO_CATEGORY_FILTER,
@@ -18,13 +27,11 @@ import {
   type Portfolio,
   type PortfolioCategory,
   categoriesOf,
-  categoryLabel,
   formatDay,
   titleOneLine,
   toDetailFolder,
 } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
-import Badge from "@/components/badge/Badge";
 import Button from "@/components/button/Button";
 import Text from "@/components/text/Text";
 import Flex from "@/components/layouts/Flex";
@@ -171,7 +178,10 @@ export default function PortfolioListPage() {
     const needle = q.trim().toLowerCase();
     return rows.filter((r) => {
       // 다중 분류(022) — 하나라도 걸리면 통과한다
-      if (category !== "all" && !categoriesOf(r).includes(category as PortfolioCategory))
+      if (
+        category !== "all" &&
+        !categoriesOf(r).includes(category as PortfolioCategory)
+      )
         return false;
       if (status !== "all" && r.status !== status) return false;
       if (use !== "all" && r.use_yn !== use) return false;
@@ -402,7 +412,10 @@ export default function PortfolioListPage() {
                     등록/수정일
                   </th>
                   <th>포트폴리오명</th>
-                  <th style={{ width: 120, textAlign: "center" }}>분류</th>
+                  {/* 폭은 힌트일 뿐이다 — 이 표는 table-layout:auto 라 브라우저가 내용에
+                      맞춰 다시 나눈다. 한 줄 보장은 CategoryCell 의 nowrap 이 한다.
+                      (배지 실측: Web 37 · Mobile 50 · Consulting 73 + gap 4 → 200px) */}
+                  <th style={{ width: 200, textAlign: "center" }}>분류</th>
                   <th style={{ width: 110, textAlign: "center" }}>진행 상태</th>
                   <th style={{ width: 220, textAlign: "center" }}>
                     상세화면 폴더명
@@ -455,21 +468,13 @@ export default function PortfolioListPage() {
                       </Link>
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      <Badge
-                        label={categoryLabel(categoriesOf(r)) || "-"}
-                        color="GRAY"
-                        variant="surface"
-                        size="1"
-                        radius="medium"
-                      />
+                      <CategoryCell row={r} />
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      <Badge
+                      <ValueBadge
+                        style={{ width: "100%" }}
                         label={labelOf(PORTFOLIO_STATUS_FILTER, r.status ?? "")}
-                        color={r.status === "ongoing" ? "BLUE" : "GREEN"}
-                        variant="surface"
-                        size="1"
-                        radius="medium"
+                        color={PORTFOLIO_STATUS_COLOR[r.status ?? ""] ?? "GRAY"}
                       />
                     </td>
                     <td className={kit.clamp} style={{ textAlign: "center" }}>
@@ -478,19 +483,11 @@ export default function PortfolioListPage() {
                       {toDetailFolder(r.html_file) || "-"}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {r.is_main ? (
-                        <Badge
-                          label="메인"
-                          color="BLUE"
-                          variant="surface"
-                          size="1"
-                          radius="medium"
-                        />
-                      ) : (
-                        <Text size="2" color="var(--muted)">
-                          -
-                        </Text>
-                      )}
+                      <ValueBadge
+                        label={r.is_main ? "메인" : null}
+                        color="BLUE"
+                        style={{ width: "100%" }}
+                      />
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <Text
