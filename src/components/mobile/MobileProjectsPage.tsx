@@ -10,6 +10,7 @@ import {
 } from '@/data/projectsPage';
 import { afterFonts, prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import { LOGO_RENDER, cardSrc, cardSrcSet, storageRender } from '@/lib/images';
+import { flushLeftLogo } from '@/lib/logoTrim';
 
 /* Projects 의 모바일 화면 (Figma official_05_projects_01_375 · node 2489:51127,
    진행중 패널은 official_05_projects_02_375 · node 2588:45051).
@@ -42,6 +43,7 @@ export default function MobileProjectsPage({
   const [filter, setFilter] = useState<Category>('all');
   const [heroIn, setHeroIn] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  const ongoingRef = useRef<HTMLDivElement>(null);
 
   /* 히어로 로드 리빌 — 세리프 웹폰트를 기다렸다가 켠다(최종 글리프로 blur 가 풀리도록).
      ⚠️ 카드와 달리 클래스를 손으로 붙이지 않고 state 로 둔다. .mp-hero 안의 필터바가
@@ -84,6 +86,26 @@ export default function MobileProjectsPage({
   };
 
   const ongoing = status === 'ongoing';
+
+  /* 진행중 카드의 고객사 CI 를 상자 왼쪽 끝에 붙인다 — CI 파일마다 다른 투명 여백을 재서
+     그만큼 밀어낸다. 왜 CSS 만으로는 안 되는지는 lib/logoTrim.ts 주석에 있다.
+     ⚠️ 상자가 실제로 그려진 뒤여야 잰다. 이 패널은 ① ≥1024 에서 display:none 이고
+        ② 완료 탭에서는 hidden 이라 clientWidth 가 0 인 때가 있다. 그래서 마운트 한 번으로
+        끝내지 않고 패널이 열릴 때·폭이 바뀔 때·이미지가 늦게 도착할 때 다시 부른다
+        (loading="lazy" 라 패널을 처음 열어야 비로소 받는 이미지가 있다). */
+  useEffect(() => {
+    const root = ongoingRef.current;
+    if (!root) return;
+    const logos = [...root.querySelectorAll<HTMLImageElement>('.mp-ocard-logo')];
+    const run = () => logos.forEach(flushLeftLogo);
+    run();
+    logos.forEach((img) => img.addEventListener('load', run));
+    window.addEventListener('resize', run);
+    return () => {
+      logos.forEach((img) => img.removeEventListener('load', run));
+      window.removeEventListener('resize', run);
+    };
+  }, [ongoing, ongoingRows]);
 
   return (
     <div className="m-projects ct-rv">
@@ -217,7 +239,12 @@ export default function MobileProjectsPage({
         </div>
 
         {/* 진행중 — PC 표의 한 행이 카드 하나가 된다 (고객사 CI + 분류 / 프로젝트명 / 수행기간) */}
-        <div className="mp-panel mp-list" data-status-panel="ongoing" hidden={!ongoing}>
+        <div
+          className="mp-panel mp-list"
+          data-status-panel="ongoing"
+          hidden={!ongoing}
+          ref={ongoingRef}
+        >
           {ongoingRows.map((row) => (
             <article className="mp-ocard" key={row.id}>
               <div className="mp-ocard-top">
@@ -227,6 +254,10 @@ export default function MobileProjectsPage({
                     className="mp-ocard-logo"
                     src={storageRender(row.logo, LOGO_RENDER)}
                     alt={row.project}
+                    /* ⚠️ 투명 여백을 캔버스로 재려면 필요하다 — 없으면 다른 출처라 캔버스가
+                       오염돼 SecurityError 가 난다(15번 함정과 같은 뿌리). Storage 는
+                       Access-Control-Allow-Origin: * 를 준다. */
+                    crossOrigin="anonymous"
                     loading="lazy"
                     decoding="async"
                   />
