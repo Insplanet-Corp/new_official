@@ -1,12 +1,19 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Actions, FileLink, ReadOnly, Row, Section } from "@/components/admin/form";
 import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
 import { fieldText, quoteFileUrl, type Quote } from "@/lib/quotes";
 import { maskCompany, maskEmail, maskName, maskPhone } from "@/lib/mask";
-import { logQuoteDownload, logQuoteFile, logQuoteView } from "@/lib/quoteAccessLog";
+import {
+  logQuoteDownload,
+  logQuoteFile,
+  logQuotePurge,
+  logQuoteView,
+} from "@/lib/quoteAccessLog";
+import { RETENTION, purgeTargets } from "@/lib/retention";
 import { buildQuotesCsv, csvFileName, downloadCsv } from "@/lib/quotesCsv";
 import ReasonDialog from "@/components/admin/ReasonDialog";
 import { QUOTE_STATUS } from "@/data/adminOptions";
@@ -31,6 +38,7 @@ export default function QuoteDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const [row, setRow] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +51,10 @@ export default function QuoteDetailPage({
   const [saveError, setSaveError] = useState<string | null>(null);
   /* 첨부파일 다운로드 */
   const [filing, setFiling] = useState(false);
+  /* 파기 — 사유 입력 모달 */
+  const [askDelete, setAskDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -125,6 +137,35 @@ export default function QuoteDetailPage({
     window.location.href = url;
   };
 
+  /* 파기 — 되돌릴 수 없다. 순서는 **기록 → 파일 → 행** 이다(lib/retention.ts 주석 참고).
+     기록을 먼저 남기는 것은 CSV 다운로드와 같은 규칙이고, 파일을 행보다 먼저 지우는 것은
+     행을 먼저 지우면 파일 경로를 되짚을 수단이 사라져 개인정보 파일만 영영 남기 때문이다.
+
+     ℹ️ 보유기간(접수 후 1년)이 지난 문의는 /api/retention 이 매일 자동으로 지운다.
+        이 버튼은 그 전에 사람이 즉시 지워야 할 때(삭제 요청·오접수)를 위한 것이다. */
+  const remove = async (reason: string) => {
+    if (!row) return;
+    setDeleting(true);
+    setDeleteError(null);
+
+    const logged = await logQuotePurge({ ids: [row.id], reason });
+    if (logged.error) {
+      setDeleting(false);
+      setDeleteError(`파기 기록을 남기지 못해 중단했습니다. ${logged.error}`);
+      return;
+    }
+
+    const { error: purgeError } = await purgeTargets(supabase, "quotes", [
+      { id: row.id, file_path: row.file_path },
+    ]);
+    setDeleting(false);
+    if (purgeError) {
+      setDeleteError(purgeError);
+      return;
+    }
+    router.push("/admin/quotes");
+  };
+
   const statusLabel =
     QUOTE_STATUS.find((x) => x.value === row?.status)?.label ??
     row?.status ??
@@ -151,6 +192,19 @@ export default function QuoteDetailPage({
                 setAskReason(true);
               }}
             />
+            {/* 되돌릴 수 없다 — 어드민 색 규칙상 삭제는 RED outline */}
+            <Button
+              label="삭제"
+              variant="outline"
+              color="RED"
+              size="2"
+              radius="medium"
+              disabled={!row}
+              onClick={() => {
+                setDeleteError(null);
+                setAskDelete(true);
+              }}
+            />
             <Button
               href="/admin/quotes"
               label="목록"
@@ -172,6 +226,19 @@ export default function QuoteDetailPage({
         error={saveError}
         onConfirm={download}
         onCancel={() => setAskReason(false)}
+      />
+
+      <ReasonDialog
+        open={askDelete}
+        title="문의 파기"
+        desc={`이 문의와 첨부파일을 즉시 지웁니다. 되돌릴 수 없습니다. 사유는 파기 기록에 남습니다. (보유기간이 지난 문의는 ${RETENTION.quotes.label} 규칙으로 자동 파기됩니다.)`}
+        confirmLabel="파기"
+        confirmColor="RED"
+        placeholder="예) 정보주체 삭제 요청 (2026-09-02 이메일 접수)"
+        busy={deleting}
+        error={deleteError}
+        onConfirm={remove}
+        onCancel={() => setAskDelete(false)}
       />
 
       {error ? <Note warn>{error}</Note> : null}
