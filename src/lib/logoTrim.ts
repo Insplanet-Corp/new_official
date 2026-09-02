@@ -99,6 +99,9 @@ function apply(img: HTMLImageElement, ratio: number): void {
   const boxW = img.clientWidth;
   const boxH = img.clientHeight;
   if (!boxW || !boxH || !ratio) return;
+  /* ⚠️ 아래 계산은 `object-fit: contain` 전제다. 나중에 CSS 를 cover 등으로 바꾸면 값이
+     틀리므로 그때는 아예 손대지 않는다(= 지금 CSS 가 그리는 모습 그대로 둔다). */
+  if (getComputedStyle(img).objectFit !== 'contain') return;
   /* contain 이 실제로 그리는 폭. 캔버스가 상자보다 가로로 길면 폭에 맞춰 담기고,
      세로로 길면 높이에 맞춰 담겨 상자보다 좁아진다. */
   const rendered = Math.min(boxW, boxH * (img.naturalWidth / img.naturalHeight));
