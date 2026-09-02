@@ -10,6 +10,8 @@
 
 import {
   type Portfolio,
+  categoriesOf,
+  categoryLabel,
   detailSrc,
   formatPeriod,
   titleLines,
@@ -30,10 +32,11 @@ export type ProjectCard = {
   image: string;
   /** 프로젝트명을 줄 단위로 끊은 것 (\n 기준) */
   lines: string[];
-  /** 카드에 표기하는 분류 라벨 — 'Web' 'Mobile' 'Consulting' */
+  /** 카드에 표기하는 분류 라벨 — 'Web' · 'Web, Mobile' (022: 다중) */
   cat: string;
-  /** 필터 비교용 소문자 — CATEGORIES 의 filter 값과 같아야 한다 */
-  category: string;
+  /** 필터 비교용 소문자 목록 — CATEGORIES 의 filter 값과 같아야 한다.
+      하나라도 맞으면 그 칩에서 보인다 (Web·Mobile 이면 두 칩 모두에 나온다) */
+  categories: string[];
   award: boolean;
   /** 상세 HTML 이 등록된 카드만 링크가 된다. 없으면 클릭해도 아무 일 없음 */
   href: string | null;
@@ -55,16 +58,19 @@ export type OngoingRow = {
 export const toCards = (rows: Portfolio[]): ProjectCard[] =>
   rows
     .filter((r) => r.status === 'done')
-    .map((r) => ({
-      id: r.id,
-      image: r.thumb_pc ?? r.thumb_mobile ?? '',
-      lines: titleLines(r.title),
-      cat: r.category ?? '',
-      category: (r.category ?? '').toLowerCase(),
-      award: r.award,
-      href: detailSrc(r.html_file) ? `/projects/${r.id}` : null,
-      detail: detailSrc(r.html_file),
-    }));
+    .map((r) => {
+      const cats = categoriesOf(r);
+      return {
+        id: r.id,
+        image: r.thumb_pc ?? r.thumb_mobile ?? '',
+        lines: titleLines(r.title),
+        cat: categoryLabel(cats),
+        categories: cats.map((c) => c.toLowerCase()),
+        award: r.award,
+        href: detailSrc(r.html_file) ? `/projects/${r.id}` : null,
+        detail: detailSrc(r.html_file),
+      };
+    });
 
 /** 진행 프로젝트 -> 표 */
 export const toOngoingRows = (rows: Portfolio[]): OngoingRow[] =>
@@ -74,6 +80,6 @@ export const toOngoingRows = (rows: Portfolio[]): OngoingRow[] =>
       id: r.id,
       logo: r.client_ci ?? '',
       project: titleOneLine(r.title),
-      category: r.category ?? '',
+      category: categoryLabel(categoriesOf(r)),
       period: formatPeriod(r.started_on, r.ended_on),
     }));

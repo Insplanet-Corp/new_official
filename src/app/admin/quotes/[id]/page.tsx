@@ -1,12 +1,12 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { Actions, ReadOnly, Row, Section } from "@/components/admin/form";
+import { Actions, FileLink, ReadOnly, Row, Section } from "@/components/admin/form";
 import { Empty, Note, Skeleton, SubHead, fmtDate } from "@/components/admin/ui";
 import kit from "@/components/admin/kit.module.css";
-import { fieldText, type Quote } from "@/lib/quotes";
+import { fieldText, quoteFileUrl, type Quote } from "@/lib/quotes";
 import { maskCompany, maskEmail, maskName, maskPhone } from "@/lib/mask";
-import { logQuoteDownload, logQuoteView } from "@/lib/quoteAccessLog";
+import { logQuoteDownload, logQuoteFile, logQuoteView } from "@/lib/quoteAccessLog";
 import { buildQuotesCsv, csvFileName, downloadCsv } from "@/lib/quotesCsv";
 import ReasonDialog from "@/components/admin/ReasonDialog";
 import { QUOTE_STATUS } from "@/data/adminOptions";
@@ -41,6 +41,8 @@ export default function QuoteDetailPage({
   const [askReason, setAskReason] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /* 첨부파일 다운로드 */
+  const [filing, setFiling] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -93,6 +95,34 @@ export default function QuoteDetailPage({
     }
     downloadCsv(buildQuotesCsv([row]), csvFileName(row.company));
     setAskReason(false);
+  };
+
+  /* 첨부파일 — CSV 와 같은 순서다: **기록 성공 → 파일**. 기록이 실패하면 내려받지
+     않는다(기록 없는 개인정보 반출을 막는 것이 이 화면의 목적이다). 023 을 아직
+     안 돌렸으면 action 검사(23514)에 걸려 여기서 멈추고 안내가 뜬다.
+
+     ⚠️ 서명 URL 은 누를 때마다 새로 만든다 — 화면을 열 때 미리 만들어 두면 오래
+     열어 둔 탭에서 만료된 주소를 누르게 된다. */
+  const downloadFile = async () => {
+    if (!row?.file_path || filing) return;
+    setFiling(true);
+    const logged = await logQuoteFile(row.id);
+    if (logged.error) {
+      setFiling(false);
+      setError(`열람 기록을 남기지 못해 첨부파일을 내려받지 않았습니다. ${logged.error}`);
+      return;
+    }
+    const { url, error: urlError } = await quoteFileUrl(row.file_path, row.file_name);
+    setFiling(false);
+    if (urlError || !url) {
+      setError(
+        `첨부파일을 불러오지 못했습니다: ${urlError ?? "알 수 없는 오류"}. ` +
+          "이 계정에 '견적문의관리' 권한이 있는지 확인해 주세요.",
+      );
+      return;
+    }
+    setError(null);
+    window.location.href = url;
   };
 
   const statusLabel =
@@ -212,9 +242,19 @@ export default function QuoteDetailPage({
             </Row>
             <Row
               label="첨부파일"
-              hint="Contact 폼이 파일을 업로드하지 않아 quotes 테이블에 첨부 컬럼이 없습니다. Storage 연동 후 연결 예정입니다."
+              hint={
+                row.file_name
+                  ? `파일명을 클릭하면 다운로드됩니다.${
+                      row.file_size ? ` (${mb(row.file_size)})` : ""
+                    } 내려받은 기록이 남습니다.`
+                  : "첨부된 파일이 없습니다."
+              }
             >
-              <ReadOnly muted>{null}</ReadOnly>
+              <FileLink
+                name={row.file_name}
+                onClick={downloadFile}
+                busy={filing}
+              />
             </Row>
           </Section>
         </>
@@ -232,4 +272,11 @@ export default function QuoteDetailPage({
       </Actions>
     </>
   );
+}
+
+/* 리크루트 조회 화면과 같은 표기 */
+function mb(bytes: number) {
+  return bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }

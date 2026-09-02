@@ -16,6 +16,9 @@ import {
 import { describeError, isMissingTable } from "@/lib/pgError";
 import {
   type Portfolio,
+  type PortfolioCategory,
+  categoriesOf,
+  categoryLabel,
   formatDay,
   titleOneLine,
   toDetailFolder,
@@ -167,7 +170,9 @@ export default function PortfolioListPage() {
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows.filter((r) => {
-      if (category !== "all" && r.category !== category) return false;
+      // 다중 분류(022) — 하나라도 걸리면 통과한다
+      if (category !== "all" && !categoriesOf(r).includes(category as PortfolioCategory))
+        return false;
       if (status !== "all" && r.status !== status) return false;
       if (use !== "all" && r.use_yn !== use) return false;
       // is_main 은 boolean, 필터 값은 'Y'/'N' 문자열이다
@@ -451,7 +456,7 @@ export default function PortfolioListPage() {
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <Badge
-                        label={r.category ?? "-"}
+                        label={categoryLabel(categoriesOf(r)) || "-"}
                         color="GRAY"
                         variant="surface"
                         size="1"

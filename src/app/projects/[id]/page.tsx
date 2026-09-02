@@ -6,6 +6,8 @@ import { storageRender } from "@/lib/images";
 import { type DetailMeta, readDetailMeta } from "@/lib/portfolioDetail";
 import {
   type Portfolio,
+  categoriesOf,
+  categoryLabel,
   detailSrc,
   formatPeriod,
   titleOneLine,
@@ -53,7 +55,9 @@ function describe(row: Portfolio, meta: DetailMeta | null): string {
     );
   }
   const name = titleOneLine(row.title);
-  const kind = row.category ? `${row.category} 프로젝트` : "프로젝트";
+  const cats = categoriesOf(row);
+  // 'Web, Mobile 프로젝트' — 분류가 여럿이면 그대로 이어 붙인다(022)
+  const kind = cats.length ? `${categoryLabel(cats)} 프로젝트` : "프로젝트";
   const period = formatPeriod(row.started_on, row.ended_on);
   return [
     `${name} — 인스플래닛이 수행한 ${kind}입니다.`,
@@ -135,6 +139,7 @@ function ProjectJsonLd({
   meta: DetailMeta | null;
 }) {
   const name = titleOneLine(row.title);
+  const genres = categoriesOf(row);
   const thumb = row.thumb_main ?? row.thumb_pc ?? row.thumb_mobile;
   /* 고객사는 상세 HTML 쪽이 더 잘 채워져 있다(37/37). DB 의 client 는 메인
      슬라이드용이라 비어 있는 행이 있다. */
@@ -161,7 +166,11 @@ function ProjectJsonLd({
     ...(client
       ? { sourceOrganization: { "@type": "Organization", name: client } }
       : {}),
-    ...(row.category ? { genre: row.category } : {}),
+    /* genre 는 schema.org 에서 반복 가능한 속성이라 배열을 그대로 넣는다.
+       하나뿐이면 문자열로 — 값이 하나인데 배열로 감싸면 소비자가 갈린다. */
+    ...(genres.length
+      ? { genre: genres.length === 1 ? genres[0] : genres }
+      : {}),
     ...(row.ended_on ? { datePublished: row.ended_on } : {}),
     ...(row.award ? { award: "Web Award Korea" } : {}),
     isPartOf: { "@id": `${SITE_URL}/#website` },
@@ -204,6 +213,7 @@ export default async function ProjectDetailPage({
   const meta = await readDetailMeta(row.html_file);
   const client = meta?.client || row.client || "";
   const launch = meta?.launch || row.launch || "";
+  const categoryText = categoryLabel(categoriesOf(row));
 
   /* ⚠️ 사이트 헤더·푸터(PageShell)를 두르지 않는다. 상세 문서가 자기 CI 로고와
      닫기 버튼을 화면 모서리에 fixed 로 직접 그리므로 우리 헤더와 겹친다.
@@ -233,10 +243,10 @@ export default async function ProjectDetailPage({
               <dd>{client}</dd>
             </>
           ) : null}
-          {row.category ? (
+          {categoryText ? (
             <>
               <dt>분류</dt>
-              <dd>{row.category}</dd>
+              <dd>{categoryText}</dd>
             </>
           ) : null}
           {launch ? (

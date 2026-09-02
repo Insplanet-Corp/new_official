@@ -60,3 +60,13 @@ export const logQuoteDownload = (args: {
     filters: args.filters ?? null,
     reason: args.reason.trim(),
   });
+
+/** 조회 화면에서 첨부파일을 내려받았다 (023 이 action 에 'file' 을 추가한다).
+
+    ⚠️ 사유를 받지 않는다 — CSV 는 여러 건의 연락처·이메일이 원본 그대로 파일에 담기지만,
+    첨부는 의뢰인이 스스로 올린 그 문의 한 건의 자료라 업무 중 여는 빈도가 다르다.
+    대신 누가 언제 받아 갔는지는 CSV 와 **같은 표**에 남는다(quote_id 로 되짚힌다).
+    023 을 안 돌린 DB 에서는 action 검사(23514)에 걸려 실패한다 — 그때는 화면이
+    다운로드를 막고 안내한다. */
+export const logQuoteFile = (quoteId: string): Promise<LogResult> =>
+  write({ action: 'file', quote_id: quoteId });

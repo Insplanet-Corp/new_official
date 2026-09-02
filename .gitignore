@@ -48,3 +48,6 @@ Thumbs.db
 
 # Supabase CLI 가 만드는 작업용 폴더 (project-ref 캐시 등)
 supabase/.temp/
+
+# scripts/storage.mjs backup 산출물 — 개인정보(이력서·견적 첨부)라 절대 커밋 금지
+storage-backup-*/

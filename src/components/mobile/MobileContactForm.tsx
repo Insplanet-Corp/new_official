@@ -8,7 +8,7 @@ import MobileFilteredInput from '@/components/mobile/MobileFilteredInput';
 import { PROJECT_FIELDS } from '@/data/contact';
 import { bindScroll, clamp01, prefersReducedMotion, revealOnScroll } from '@/lib/dom';
 import { allFilled, firstMissing, jumpToField, type RequiredField } from '@/lib/formGating';
-import { supabase } from '@/lib/supabase';
+import { submitQuote } from '@/lib/quotes';
 
 /* mobile-contact.html 의 form step1(칩)+step2(정보/내용/동의/제출) 을 그대로 옮긴다. PC
    ContactForm.tsx 와 같은 게이팅/제출 로직이지만 마크업이 <section class="mc-form"> 둘로 갈라져
@@ -95,24 +95,34 @@ export default function MobileContactForm() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('quotes').insert([
-        {
-          company: company.current?.value.trim() || '',
-          person: person.current?.value.trim() || '',
-          phone: phone.current?.value.trim() || '',
-          email: email.current?.value.trim() || '',
-          url: url.current?.value.trim() || null,
-          content: content.current?.value.trim() || null,
-          project_fields: selected,
-          status: 'pending',
-        },
-      ]);
+      /* 접수 규칙(첨부 업로드 → 행 insert)은 PC 폼과 **같은** submitQuote 를 쓴다 */
+      const { error, fileDropped } = await submitQuote({
+        company: company.current?.value ?? '',
+        person: person.current?.value ?? '',
+        phone: phone.current?.value ?? '',
+        email: email.current?.value ?? '',
+        url: url.current?.value ?? '',
+        content: content.current?.value ?? '',
+        projectFields: selected,
+        file: fileInput.current?.files?.[0] ?? null,
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Submit Error:', error);
+        alert(`접수 중 오류가 발생했습니다.\n${error}`);
+        return;
+      }
 
-      alert('문의가 성공적으로 접수되었습니다. 빠르게 연락드리겠습니다!');
+      alert(
+        fileDropped
+          ? '문의가 접수되었습니다. 다만 첨부파일은 저장되지 않았습니다 — 담당자에게 메일로 보내 주세요.'
+          : '문의가 성공적으로 접수되었습니다. 빠르게 연락드리겠습니다!',
+      );
       setSelected(Object.fromEntries(PROJECT_FIELDS.map((f) => [f.key, [] as string[]])));
       formRef.current?.reset();
+      /* ⚠️ reset() 은 파일 입력만 비운다 — 파일명 칸과 MobileFileRow 의 잠금값은
+         change 를 직접 쏴야 따라온다(PC 폼과 같은 이유). */
+      fileInput.current?.dispatchEvent(new Event('change', { bubbles: true }));
       setReady(false);
     } catch (err) {
       console.error('Submit Error:', err);

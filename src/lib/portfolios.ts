@@ -27,6 +27,28 @@ export const CATEGORY_VALUES: PortfolioCategory[] = [
 ];
 export const STATUS_VALUES: PortfolioStatus[] = ["ongoing", "done"];
 
+/** 행에서 분류 목록을 꺼낸다. 읽는 쪽은 반드시 이걸 쓴다.
+
+    세 가지를 한 곳에서 흡수한다:
+      ① 022 미실행 DB — categories 키가 없으면 옛 category 한 칸으로 물러난다
+      ② 화이트리스트 — DB check 는 not valid 라 옛 행에 엉뚱한 값이 남아 있을 수 있다
+      ③ 순서 고정 — 체크한 순서대로 저장하면 라벨이 'Mobile, Web' 이 됐다
+         'Web, Mobile' 이 됐다 하며 흔들린다. 늘 CATEGORY_VALUES 순으로 세운다. */
+export const categoriesOf = (row: {
+  categories?: string[] | null;
+  category?: string | null;
+}): PortfolioCategory[] => {
+  const raw = row.categories?.length
+    ? row.categories
+    : row.category
+      ? [row.category]
+      : [];
+  return CATEGORY_VALUES.filter((c) => raw.includes(c));
+};
+
+/** 카드·표·배지의 한 줄 라벨: 'Web' · 'Web, Mobile'. 없으면 '' (사용자 결정: 쉼표) */
+export const categoryLabel = (cats: readonly string[]): string => cats.join(", ");
+
 export type Portfolio = {
   id: string;
   /** 등록 순번. `generated always as identity` 라 사람이 못 바꾼다 — 표시
@@ -41,6 +63,14 @@ export type Portfolio = {
   updated_at: string;
   /** 프로젝트명. \n 이 있으면 그 자리에서 줄바꿈한다 */
   title: string;
+  /** 분류(다중, 022). Web · Mobile · Consulting 중 0개 이상.
+
+      ⚠️ 이 필드를 직접 읽지 말고 `categoriesOf(row)` 를 쓸 것 — 022 를 아직
+      돌리지 않은 DB 에서는 select('*') 결과에 이 키가 아예 없다(undefined).
+      접근자가 그때 옛 category 로 물러난다. */
+  categories: PortfolioCategory[] | null;
+  /** ⚠️ 레거시 미러. categories[0] 이 그대로 들어간다(toRow 가 같이 쓴다).
+      화면은 읽지 않는다 — 022 주석과 짝이다. */
   category: PortfolioCategory | null;
   status: PortfolioStatus | null;
   use_yn: "Y" | "N";
@@ -66,7 +96,8 @@ export type Portfolio = {
 export type PortfolioDraft = {
   title: string;
   use_yn: "Y" | "N" | "";
-  category: string;
+  /** 체크한 분류. 저장·표시 순서는 CATEGORY_VALUES 를 따른다(toRow 가 세운다) */
+  categories: string[];
   status: string;
   award: boolean;
   thumb_pc: string;
@@ -85,7 +116,7 @@ export type PortfolioDraft = {
 export const EMPTY_DRAFT: PortfolioDraft = {
   title: "",
   use_yn: "",
-  category: "",
+  categories: [],
   status: "",
   award: false,
   thumb_pc: "",
@@ -213,7 +244,7 @@ export const toDraft = (p: Portfolio): PortfolioDraft => ({
   // 한 줄 <input> 으로 편집하므로 개행을 다시 역슬래시+n 으로 되돌린다
   title: (p.title ?? "").replaceAll("\n", "\\n"),
   use_yn: p.use_yn,
-  category: p.category ?? "",
+  categories: categoriesOf(p),
   status: p.status ?? "",
   award: p.award,
   thumb_pc: p.thumb_pc ?? "",
@@ -233,10 +264,16 @@ export const toDraft = (p: Portfolio): PortfolioDraft => ({
 /** 폼 값 -> insert/update 페이로드. 빈 문자열은 NULL 로 눕힌다 */
 export const toRow = (d: PortfolioDraft) => {
   const nz = (s: string) => (s.trim() ? s.trim() : null);
+  /* 체크 순서가 아니라 CATEGORY_VALUES 순으로 눕힌다 — 읽을 때 다시 세우긴
+     하지만, DB 에 들어가는 값 자체가 흔들리면 diff 를 볼 때 헷갈린다 */
+  const cats = CATEGORY_VALUES.filter((c) => d.categories.includes(c));
   return {
     // 사용자가 친 역슬래시+n 을 진짜 개행으로 눕혀서 저장한다
     title: d.title.trim().replace(LITERAL_NL, "\n"),
-    category: nz(d.category),
+    categories: cats,
+    /* ⚠️ 레거시 미러(022). 여기서 안 써 주면 옛 컬럼이 옛 값으로 굳는다 —
+       022 를 되돌려야 할 때 분류가 통째로 어긋난다. 읽는 곳은 없다. */
+    category: cats[0] ?? null,
     status: nz(d.status),
     use_yn: d.use_yn === "N" ? "N" : "Y",
     award: d.award,
@@ -265,8 +302,8 @@ export const toRow = (d: PortfolioDraft) => {
 export const validate = (d: PortfolioDraft): string | null => {
   if (!d.title.trim()) return "프로젝트명을 입력해 주세요.";
   if (!d.use_yn) return "사용여부를 선택해 주세요.";
-  if (!CATEGORY_VALUES.includes(d.category as PortfolioCategory))
-    return "분류를 선택해 주세요.";
+  if (!d.categories.some((c) => CATEGORY_VALUES.includes(c as PortfolioCategory)))
+    return "분류를 하나 이상 선택해 주세요.";
   if (!STATUS_VALUES.includes(d.status as PortfolioStatus))
     return "진행 상태를 선택해 주세요.";
 

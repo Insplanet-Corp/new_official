@@ -11,6 +11,8 @@ import { describeError, isMissingTable } from "@/lib/pgError";
 import { refreshProjectCount } from "@/lib/projectCountActions";
 import {
   type Portfolio,
+  categoriesOf,
+  categoryLabel,
   formatPeriod,
   titleOneLine,
 } from "@/lib/portfolios";
@@ -116,7 +118,7 @@ export default function PortfolioDetailPage({
           <ReadOnly>{row?.use_yn ?? null}</ReadOnly>
         </Row>
         <Row label="분류">
-          <ReadOnly>{row?.category ?? null}</ReadOnly>
+          <ReadOnly>{row ? categoryLabel(categoriesOf(row)) || null : null}</ReadOnly>
         </Row>
         <Row label="진행 상태">
           <ReadOnly>

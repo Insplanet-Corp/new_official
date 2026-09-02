@@ -91,7 +91,9 @@ export default function ProjectsExplorer({
     setFilter(next);
     // a card filtered into view shouldn't sit at its pre-reveal opacity
     gridRef.current?.querySelectorAll<HTMLElement>('.pj-card').forEach((card) => {
-      if (next === 'all' || card.dataset.category === next) card.classList.add('in');
+      /* 다중 분류(022) — data-category 는 공백으로 이어 붙인 목록이다 */
+      const cats = (card.dataset.category ?? '').split(' ');
+      if (next === 'all' || cats.includes(next)) card.classList.add('in');
     });
   };
 
@@ -138,9 +140,9 @@ export default function ProjectsExplorer({
           {cards.map((card) => (
             <article
               className="pj-card"
-              data-category={card.category}
+              data-category={card.categories.join(' ')}
               key={card.id}
-              hidden={filter !== 'all' && card.category !== filter}
+              hidden={filter !== 'all' && !card.categories.includes(filter)}
             >
               {/* 썸네일이 비어 있으면 <img src=""> 가 현재 페이지를 다시 받아온다 */}
               {card.image ? (

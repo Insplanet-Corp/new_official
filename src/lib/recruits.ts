@@ -11,6 +11,7 @@
    ⚠️ field 는 칩에 적힌 **한글 문자열 그대로** 다 (quotes.project_fields 와 같은 규칙).
       원본은 data/contact.ts 의 RECRUIT_ROLES 이고 어드민 필터도 거기서 파생시킨다. */
 
+import { safeStorageName, signedDownloadUrl, toNfc } from '@/lib/attachments';
 import { supabase } from '@/lib/supabase';
 
 /** 이력서 첨부 버킷. **비공개** 다 — 공개 URL 이 없고 어드민이 서명 URL 로만 받는다. */
@@ -41,10 +42,6 @@ export type RecruitInput = {
   url: string;
   file: File | null;
 };
-
-/* Storage 키로 쓸 수 없는 문자(한글·공백·괄호…)를 눕힌다. 원래 파일명은 file_name 에
-   따로 저장하므로 어드민 화면과 다운로드 파일명은 그대로 보인다. */
-const safeName = (name: string) => name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'resume';
 
 /** Supabase 에러 메시지를 지원자에게 보여줄 한 줄로 바꾼다 */
 function humanize(message: string): string {
@@ -82,7 +79,7 @@ export async function submitRecruit(input: RecruitInput): Promise<{ error: strin
   let filePath: string | null = null;
 
   if (file) {
-    const path = `${id}/${safeName(file.name)}`;
+    const path = `${id}/${safeStorageName(file.name)}`;
     const { error } = await supabase.storage.from(RECRUIT_BUCKET).upload(path, file, {
       cacheControl: '3600',
       upsert: false,
@@ -101,7 +98,7 @@ export async function submitRecruit(input: RecruitInput): Promise<{ error: strin
       email: input.email.trim(),
       url: input.url.trim() || null,
       file_path: filePath,
-      file_name: file?.name ?? null,
+      file_name: file ? toNfc(file.name) : null,
       file_size: file?.size ?? null,
     },
   ]);
@@ -109,19 +106,12 @@ export async function submitRecruit(input: RecruitInput): Promise<{ error: strin
   return { error: error ? humanize(error.message) : null };
 }
 
-/* 어드민 조회 화면의 첨부파일 다운로드 주소. 비공개 버킷이라 공개 URL 이 없다 —
-   요청할 때마다 짧게 유효한 서명 URL 을 만든다. 이 호출도 Storage 의 select 정책을
-   타므로 '/admin/recruit' 권한이 없는 계정에서는 실패한다(정상 동작).
+/* 어드민 조회 화면의 첨부파일 다운로드 주소.
 
-   `download` 옵션이 Content-Disposition: attachment 를 붙여 원래 파일명으로 받게 한다 —
-   Storage 키는 안전한 문자로 눕혀 두었기 때문에 이게 없으면 `_` 투성이 이름으로 받는다. */
-export async function recruitFileUrl(
+   실제 동작은 공용 signedDownloadUrl 에 있다 — 견적문의 첨부와 규칙이 같다.
+   그쪽 주석에 supabase-js 의 `download` 이중 인코딩 함정이 적혀 있다. */
+export const recruitFileUrl = (
   path: string,
   fileName?: string | null,
   expiresIn = 60,
-): Promise<{ url: string | null; error: string | null }> {
-  const { data, error } = await supabase.storage
-    .from(RECRUIT_BUCKET)
-    .createSignedUrl(path, expiresIn, fileName ? { download: fileName } : undefined);
-  return { url: data?.signedUrl ?? null, error: error?.message ?? null };
-}
+) => signedDownloadUrl(RECRUIT_BUCKET, path, fileName, expiresIn);

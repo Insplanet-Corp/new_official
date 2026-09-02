@@ -18,7 +18,7 @@ import {
   jumpToField,
   type RequiredField,
 } from "@/lib/formGating";
-import { supabase } from "@/lib/supabase";
+import { submitQuote } from "@/lib/quotes";
 
 /* 02 inquiry form.
    Chip groups: [multi] = 다중선택 (업무 범위); the others are single-select (성격/예산/기간, one per
@@ -76,34 +76,43 @@ export default function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("quotes").insert([
-        {
-          company: company.current?.value.trim() || "",
-          person: person.current?.value.trim() || "",
-          phone: phone.current?.value.trim() || "",
-          email: email.current?.value.trim() || "",
-          url: url.current?.value.trim() || null,
-          content: content.current?.value.trim() || null,
-          // 칩 선택 내역(selected)을 json 형태 그대로 DB에 저장!
-          project_fields: selected,
-          status: "pending",
-        },
-      ]);
+      /* 접수 규칙(첨부 업로드 → 행 insert)은 모바일 폼과 **같은** submitQuote 를 쓴다 */
+      const { error, fileDropped } = await submitQuote({
+        company: company.current?.value ?? "",
+        person: person.current?.value ?? "",
+        phone: phone.current?.value ?? "",
+        email: email.current?.value ?? "",
+        url: url.current?.value ?? "",
+        content: content.current?.value ?? "",
+        // 칩 선택 내역(selected)을 json 형태 그대로 DB에 저장!
+        projectFields: selected,
+        file: fileInput.current?.files?.[0] ?? null,
+      });
 
       if (error) {
-        throw error;
+        console.error("Submit Error:", error);
+        alert(`접수 중 오류가 발생했습니다.\n${error}`);
+        return;
       }
 
-      alert("문의가 성공적으로 접수되었습니다. 빠르게 연락드리겠습니다!");
+      alert(
+        fileDropped
+          ? "문의가 접수되었습니다. 다만 첨부파일은 저장되지 않았습니다 — 담당자에게 메일로 보내 주세요."
+          : "문의가 성공적으로 접수되었습니다. 빠르게 연락드리겠습니다!",
+      );
 
       setSelected(
         Object.fromEntries(PROJECT_FIELDS.map((f) => [f.key, [] as string[]])),
       );
 
       formRef.current?.reset();
+      /* ⚠️ reset() 은 파일 입력을 비우지만 **파일명 칸은 따라오지 않는다** —
+         FileRow 가 그 값을 자기 ref(officialRef)로 잠그고 있어서, change 를 직접
+         쏴야 이름과 잠금값이 같이 비워진다(RecruitContext 의 복원 로직과 같은 이유). */
+      fileInput.current?.dispatchEvent(new Event("change", { bubbles: true }));
 
       setReady(false);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Submit Error:", err);
       alert("접수 중 오류가 발생했습니다. 다시 시도해 주세요.");
     } finally {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Actions,
   Check,
+  CheckGrid,
   FilePick,
   Inline,
   Input,
@@ -30,10 +31,6 @@ import {
 } from "@/lib/portfolios";
 import { supabase } from "@/lib/supabase";
 import Button from "../button/Button";
-import Dropdown from "../dropdown/Dropdown";
-import DropdownTrigger from "../dropdown/DropdownTrigger";
-import DropdownContent from "../dropdown/DropdownContent";
-import DropdownMenuItem from "../dropdown/DropdownMenuItem";
 
 export default function PortfolioForm({
   mode,
@@ -172,40 +169,30 @@ export default function PortfolioForm({
           />
         </Row>
 
-        <Row label="분류" required>
-          <Dropdown
-            trigger={
-              <DropdownTrigger
-                width="320px"
-                value={v.category || "선택"}
-                readOnly
-              />
+        {/* 여러 개 고를 수 있다(022). 하나만 고르던 드롭다운을 체크박스로 바꿨다 —
+            "웹이면서 앱" 인 프로젝트가 /projects 의 Web 칩에서도 Mobile 칩에서도
+            나와야 하기 때문이다(사용자 결정, 2026-09-02). */}
+        <Row
+          label="분류"
+          required
+          hint="여러 개 선택할 수 있습니다. 선택한 분류의 필터에 모두 노출됩니다."
+        >
+          <CheckGrid
+            options={PORTFOLIO_CATEGORY}
+            selected={v.categories}
+            allLabel="전체"
+            onToggle={(val) =>
+              set(
+                "categories",
+                v.categories.includes(val)
+                  ? v.categories.filter((c) => c !== val)
+                  : [...v.categories, val],
+              )
             }
-          >
-            {(close) => {
-              const options = [
-                { value: "", label: "선택" },
-                ...PORTFOLIO_CATEGORY,
-              ];
-              return (
-                <DropdownContent width="320px">
-                  {options.map((o) => (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        set("category", o.value);
-                        close();
-                      }}
-                      key={o.value || "__placeholder"}
-                      value={o.value}
-                      selected={v.category === o.value}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownContent>
-              );
-            }}
-          </Dropdown>
+            onToggleAll={(next) =>
+              set("categories", next ? PORTFOLIO_CATEGORY.map((o) => o.value) : [])
+            }
+          />
         </Row>
 
         <Row
