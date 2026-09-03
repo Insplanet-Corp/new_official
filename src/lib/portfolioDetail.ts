@@ -1,6 +1,5 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { DETAIL_INDEX, toDetailFolder } from "@/lib/portfolios";
+import DETAIL_HTML from "@/data/portfolioDetailHtml.json";
+import { toDetailFolder } from "@/lib/portfolios";
 
 /* 상세 HTML(public/portfolio/<폴더>/index.html) 안의 <project-detail> 속성을 읽는다.
 
@@ -15,14 +14,24 @@ import { DETAIL_INDEX, toDetailFolder } from "@/lib/portfolios";
       문자열이 또 있어서, 그냥 찾으면 속성이 하나도 없는 그 가짜가 먼저 잡힌다
       (실제로 이걸로 "0/37" 이 나왔다).
 
-   ⚠️ 이 모듈은 **서버 전용**이다(node:fs). 클라이언트 컴포넌트에서 import 하면 빌드가
-      깨진다. metadata·JSON-LD 처럼 서버에서만 쓸 것.
+   ⚠️ 이 모듈은 **서버 전용**이다. 예전에는 node:fs 를 써서 클라이언트에서 import 하면
+      빌드가 깨졌지만, 지금은 조용히 통과하면서 **상세 HTML 124KB 를 브라우저 번들에
+      실어 버린다.** metadata·JSON-LD 처럼 서버에서만 쓸 것.
 
-   ⚠️ Vercel 은 서버 번들에 필요한 파일만 추적해 넣는다 — public/ 이 통째로 람다에
-      들어가지 않는다. next.config.ts 의 `outputFileTracingIncludes` 가 이 파일들을
-      포함시키는 짝이다. **그 설정을 지우면 읽기가 조용히 실패한다** — 화면은 멀쩡하고
-      description 만 일반 문구로 되돌아가므로 알아채기 어렵다. 그래서 실패 시
-      console.warn 을 남긴다. */
+   ⚠️ **파일을 런타임에 읽지 않는다.** scripts/gen-portfolio-detail-html.mjs 가
+      빌드 전에 37개 index.html 을 src/data/portfolioDetailHtml.json 으로 굽고,
+      여기서는 그걸 가져다 쓴다(124KB).
+
+      예전에는 fs 로 읽고 next.config.ts 의 `outputFileTracingIncludes` 로 그 파일들을
+      람다에 넣었는데, **그 방식이 배포를 막았다** — Next 의 추적기가 넣어 준 index.html
+      을 열어 그 안이 참조하는 이미지까지 따라 들어가서 public/portfolio 의 PNG·JPG 가
+      통째로 실렸다(실측 430.8MB). Vercel 함수 상한 250MB 를 넘겨
+      `The Vercel Function "projects/[id]" is 432.92mb uncompressed` 로 거부됐다
+      (2026-09-03 도메인 이관 중 실제로 겪음). outputFileTracingExcludes 로도 못 막는다.
+
+   ⚠️ 상세를 새로 추가하면 dev/build 를 한 번 돌려야 JSON 에 들어온다
+      (predev/prebuild 가 자동으로 부른다). 안 들어오면 description 이 일반 문구로
+      되돌아가므로 console.warn 을 남긴다. */
 
 export type DetailMeta = {
   /** 국문 부제 (없는 문서가 있다) */
@@ -36,8 +45,6 @@ export type DetailMeta = {
   /** overview-text 를 '|' 로 끊은 문단들 */
   overview: string[];
 };
-
-const BASE = path.join(process.cwd(), "public", "portfolio");
 
 /* 파일은 배포 중에 바뀌지 않으므로 프로세스마다 한 번만 읽는다.
    '없음'(null)도 캐시해서 없는 파일을 매 요청 뒤지지 않게 한다. */
@@ -92,24 +99,20 @@ export async function readDetailMeta(
   const cached = cache.get(folder);
   if (cached !== undefined) return cached;
 
-  const file = path.join(BASE, folder, DETAIL_INDEX);
-  /* toDetailFolder 가 한 조각짜리 폴더명만 통과시키지만, 경로 조립은 한 번 더 확인한다 —
-     이 함수의 입력은 DB 값이고 그 검증이 앞으로도 그대로일 거라고 가정하지 않는다. */
-  if (!file.startsWith(BASE + path.sep)) {
+  const html = (DETAIL_HTML as Record<string, string>)[folder];
+  if (html === undefined) {
+    /* 등록만 하고 폴더를 안 올렸거나, 상세를 추가한 뒤 생성 스크립트를 안 돌린 경우.
+       화면은 iframe 이 알아서 404 를 보여 주므로 조용히 넘어가되, 검색용 description 이
+       일반 문구로 되돌아간 것을 알아챌 수 있게 서버 로그에는 남긴다. */
+    console.warn(
+      `[portfolioDetail] 상세 HTML 이 번들에 없습니다: ${folder} ` +
+        `(node scripts/gen-portfolio-detail-html.mjs 를 돌렸는지 확인)`,
+    );
     cache.set(folder, null);
     return null;
   }
 
-  try {
-    const meta = parse(await fs.readFile(file, "utf8"));
-    cache.set(folder, meta);
-    return meta;
-  } catch {
-    /* 파일이 없거나(등록만 하고 폴더를 안 올린 경우) 배포 번들에 안 실린 경우.
-       화면은 iframe 이 알아서 404 를 보여 주므로 여기서는 조용히 넘어가되,
-       추적 설정이 빠진 것을 알아챌 수 있게 서버 로그에는 남긴다. */
-    console.warn(`[portfolioDetail] 상세 HTML 을 읽지 못했습니다: ${file}`);
-    cache.set(folder, null);
-    return null;
-  }
+  const meta = parse(html);
+  cache.set(folder, meta);
+  return meta;
 }

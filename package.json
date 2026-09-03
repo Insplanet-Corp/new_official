@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/gen-portfolio-detail-html.mjs",
     "dev": "next dev -p 5599",
+    "prebuild": "node scripts/gen-portfolio-detail-html.mjs",
     "build": "next build",
     "start": "next start -p 5599",
     "lint": "next lint",

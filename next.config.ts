@@ -9,15 +9,15 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   devIndicators: false,
 
-  /* ⚠️ Vercel 은 서버 번들에 "필요하다고 추적된" 파일만 넣는다 — public/ 이 통째로
-     람다에 들어가지 않는다(정적 에셋은 CDN 에서만 서빙된다). /projects/[id] 가
-     상세 HTML 을 fs 로 읽어 <project-detail> 속성(고객사·개요)을 뽑으므로
-     (src/lib/portfolioDetail.ts) 그 파일들을 명시적으로 포함시킨다.
-     **지우면 조용히 실패한다** — 화면은 멀쩡하고 검색용 description 만 일반 문구로
-     되돌아간다. 배포 후 상세 한 곳의 description 을 확인해 볼 것. */
-  outputFileTracingIncludes: {
-    '/projects/[id]': ['./public/portfolio/*/index.html'],
-  },
+  /* ℹ️ 예전에 여기 `outputFileTracingIncludes` 로 public/portfolio/<폴더>/index.html 을
+     람다에 넣었는데 **그게 배포를 막았다.** Next 의 추적기가 그 HTML 을 열어 안에서
+     참조하는 이미지까지 따라 넣어서 함수가 432.92MB 가 됐고, Vercel 함수 상한
+     250MB 에 걸려 거부됐다(2026-09-03 도메인 이관 첫 배포).
+     ⚠️ `outputFileTracingExcludes` 로는 못 막는다 — include 로 들어온 파일에는
+        적용되지 않는다(실측: 제외 설정을 넣어도 414개 그대로).
+     지금은 scripts/gen-portfolio-detail-html.mjs 가 빌드 전에 그 HTML 들을
+     src/data/portfolioDetailHtml.json 으로 구워서 번들에 넣는다(124KB).
+     **여기에 그 설정을 다시 추가하지 말 것.** */
 
   /* ⚠️ 다른 컴퓨터에서 http://<이 맥의 LAN IP>:5599 로 접속할 때 필요하다.
      Next 16 의 dev 서버는 localhost 가 아닌 host 로 들어온 /_next/* 요청 중
