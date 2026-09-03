@@ -64,6 +64,20 @@ export const SITE_NAME_KO = '인스플래닛';
 export const SITE_DESCRIPTION =
   '비즈니스의 본질을 꿰뚫는 통찰과 정교한 기술력으로 아이디어를 현실로 만듭니다. 금융·모빌리티·공공 분야의 웹·앱 UI/UX 설계와 프론트엔드 구축을 수행하는 디지털 프로덕트 전문 기업입니다.';
 
+/* 공유 카드(카톡·슬랙·페이스북)에 뜨는 설명. **검색결과 설명과 일부러 다르다.**
+
+   SITE_DESCRIPTION 은 검색결과에 그대로 노출되므로 무슨 회사인지 길게 설명해야 클릭을
+   받는다. 반면 공유 카드는 카톡 채팅방에서 두 줄 안에 잘려 나가므로 긴 문장을 넣으면
+   "비즈니스의 본질을 꿰뚫는 통찰과 정교한 기술력으로 아이디어를 …" 처럼 문장 중간에서
+   끊긴다(2026-09-03 이관 직후 실제로 그렇게 나왔다). 그래서 카드에는 홈 히어로와 같은
+   브랜드 문구를 건다(components/home/BeyondSwap.tsx 의 두 줄).
+
+   ⚠️ 이건 og:description / twitter:description 에만 쓴다. `<meta name="description">`
+      (검색결과)에 이걸 넣으면 검색 스니펫이 브랜드 문구 한 줄로 줄어든다.
+   ⚠️ 하위 페이지(/about /contact /projects)는 각자 자기 og:description 을 갖고 있고
+      그대로 둔다 — 문의 페이지 링크에는 문의 설명이 나오는 편이 맞다. */
+export const SITE_DESCRIPTION_SHARE = 'Beyond UX The AX Creator';
+
 /* AEO — AI 검색이 "이 회사가 뭐 하는 곳인가"에 답할 때 근거로 삼는 문장들.
    페이지 본문에 흩어져 있는 정보를 한 줄로 요약해 JSON-LD 로 같이 내보낸다. */
 export const SERVICES = [

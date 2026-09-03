@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_NAME_SHARE, SITE_URL } from '@/data/seo';
+import {
+  OG_IMAGE,
+  SITE_DESCRIPTION,
+  SITE_DESCRIPTION_SHARE,
+  SITE_NAME,
+  SITE_NAME_SHARE,
+  SITE_URL,
+} from '@/data/seo';
 import type { ReactNode } from 'react';
 import Analytics from '@/components/chrome/Analytics';
 import Cursor from '@/components/chrome/Cursor';
@@ -25,13 +32,20 @@ export const metadata: Metadata = {
     /* ⚠️ 브라우저 탭·검색결과 제목과 **일부러 다르다** — 공유 카드는 브랜드만,
        검색결과는 무슨 회사인지 드러나는 문장. (SITE_NAME_SHARE 주석 참고) */
     title: SITE_NAME_SHARE,
-    description: SITE_DESCRIPTION,
+    /* ⚠️ 검색결과 설명(SITE_DESCRIPTION)과 다르다 — 카드에서 두 줄에 잘리지 않는
+       브랜드 문구를 쓴다. SITE_DESCRIPTION_SHARE 주석 참고. */
+    description: SITE_DESCRIPTION_SHARE,
     /* 카톡·슬랙·페이스북 공유 카드. 지정하지 않으면 플랫폼이 페이지에서 아무 이미지나
        골라 오는데, 이 사이트는 큰 이미지가 포트폴리오 썸네일뿐이라 엉뚱한 게 잡힌다.
        1200x630 은 대부분의 플랫폼이 잘라내지 않고 그대로 쓰는 비율이다. */
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
-  twitter: { card: 'summary_large_image', title: SITE_NAME_SHARE, images: [OG_IMAGE] },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME_SHARE,
+    description: SITE_DESCRIPTION_SHARE,
+    images: [OG_IMAGE],
+  },
   /* 파비콘 — 브라우저 테마에 따라 갈린다(로고가 단색이라 한 장으로는 한쪽에서 안 보인다).
      ⚠️ `.ico` 를 **맨 앞에** 둔다. `media` 를 안 보는 브라우저(사파리 등)는 목록에서
      마지막 것을 집는 경향이 있어, 순서를 뒤집으면 그런 브라우저가 항상 dark 판을 쓴다.
