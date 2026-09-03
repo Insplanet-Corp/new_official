@@ -45,6 +45,15 @@ const nextConfig: NextConfig = {
     return [
       { source: '/work', destination: '/projects', permanent: true },
       { source: '/work/:slug', destination: '/projects', permanent: true },
+
+      /* 옛 회사소개서 주소. 컷오버 전까지 실제로 200 으로 살아 있던 파일이라
+         (https://www.insplanet.co.kr/brochure/insplanet_brief.pdf) 메일·제안서에
+         뿌려졌을 수 있다. 새 사이트에는 그 경로가 없으므로 짧은 주소로 보낸다.
+         파일명이 여러 개였어서(insplanet_brief_20250709.pdf 등) :path* 로 받는다. */
+      { source: '/brochure/:path*', destination: '/brief.pdf', permanent: true },
+
+      /* 옛 어드민의 브로셔 관리 경로 (새 이름은 brief) */
+      { source: '/admin/brochure', destination: '/admin/brief', permanent: true },
     ];
   },
 

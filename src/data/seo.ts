@@ -32,6 +32,26 @@ export const SITE_URL = host
   ? (host.startsWith('http') ? host : `https://${host}`).replace(/\/+$/, '')
   : PRODUCTION_URL;
 
+/* 이 배포가 **실서비스 도메인에서 도는 프로덕션 배포인가.** robots.ts 가 색인을
+   열지 말지 판단하는 데만 쓴다.
+
+   ⚠️ 이게 없으면 미리보기 배포(*.vercel.app)가 `Allow: /` + sitemap 을 그대로
+      내보낸다 — 내용이 똑같은 사이트가 두 개 색인되면 검색 신호가 갈린다.
+      실제로 테스트 배포(new-official-sooty.vercel.app)가 그 상태였다(2026-09-03 실측).
+
+   판정이 둘인 이유 —
+     · `VERCEL_ENV === 'preview'` : 브랜치 미리보기는 무조건 막는다.
+     · 호스트가 insplanet.co.kr 이 아니면 막는다 : 별도 Vercel 프로젝트에
+       올라간 사본(테스트용 *.vercel.app)은 그쪽에서도 VERCEL_ENV 가
+       'production' 이라 위 검사만으로는 안 걸린다.
+
+   ⚠️ 안전한 쪽으로 실패한다 — NEXT_PUBLIC_SITE_URL 을 깜빡해도 커스텀 도메인이
+      붙은 프로덕션이면 VERCEL_PROJECT_PRODUCTION_URL 이 insplanet.co.kr 이라
+      색인이 유지된다. 반대로 실수로 막히는 경우는 없다. */
+export const IS_INDEXABLE_DEPLOY =
+  process.env.VERCEL_ENV !== 'preview' &&
+  new URL(SITE_URL).hostname.endsWith('insplanet.co.kr');
+
 export const SITE_NAME = 'Insplanet';
 
 /* 공유 카드(카톡·슬랙·페이스북)에 뜨는 제목. 브라우저 탭·검색결과 제목과 **일부러
