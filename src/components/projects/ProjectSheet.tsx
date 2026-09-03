@@ -29,9 +29,14 @@ type LenisLike = { stop?: () => void; start?: () => void; resize?: () => void; d
       hero grows every time the height is reported back (a runaway loop), and `position:fixed` pins
       to the top of the document. There is no sheet-local Lenis for the same reason — the scrolling
       happens inside the detail document now.
-   2. The detail's close (.pd-close) cannot navigate out of a sandbox, and it would otherwise open
-      the LIST PAGE INSIDE THE IFRAME. The bridge relays the click (pdClose) and tells us it owns a
-      close button (pdReady/ownClose) so we hide our generic .ps-close — otherwise two X's show.
+   2. The detail's close (.pd-close, a chevron) cannot navigate out of a sandbox, and it would
+      otherwise open the LIST PAGE INSIDE THE IFRAME. The bridge relays the click (pdClose) and
+      reports whether the document drew that button at all (pdReady/ownClose).
+      ⚠️ 우리 X(.ps-close)는 그 대답이 "없다" 일 때만 그리는 **비상구**다 — 상세 38개는 전부
+      <project-detail> 이 셰브론을 그리므로 정상 동작에서는 한 번도 안 나온다. 예전에는 반대로
+      "대답을 듣기 전" 부터 깔아 두고 나중에 감췄는데, 그러면 아무 상세도 안 연 상태에서도 X 가
+      화면 밖에 대기하게 된다 — 안드로이드 크롬에서 그게 페이지 맨 밑에 새어 나왔다
+      (style.css 의 .ps-sheet 주석 참고).
    3. The custom cursor freezes over the iframe (mousemove never reaches this document). The bridge
       relays coordinates; Cursor.tsx picks them up.
 
@@ -51,6 +56,10 @@ const LOAD_GUARD_MS = 8000; // never hang the open on one stuck document
 const SLIDE_MS = 1200;
 /** history.back() 이 우리 항목으로 돌아왔는지 확인하고 직접 닫기까지 기다리는 시간 */
 const CLOSE_FALLBACK_MS = 600;
+/** 시트가 올라온 뒤 이만큼 기다려도 상세가 pdReady 로 대답하지 않으면 비상구 X 를 내건다.
+    bridge.js 는 DOMContentLoaded 에 알리고 우리는 load(이미지까지) 뒤에 여니 평소엔 이미 와 있다 —
+    이 타이머가 실제로 걸리는 것은 문서가 떴는데 bridge/works 가 안 도는 경우다. */
+const ANSWER_MS = 1000;
 /** /projects/<id> — 목록 주소와 상세 주소를 가르는 유일한 기준 (popstate 판정·엔트리 판정이 같이 쓴다) */
 const DETAIL_PATH = /^\/projects\/([^/]+)\/?$/;
 
@@ -59,8 +68,18 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
   const [src, setSrc] = useState<string | null>(null); // iframe src of the detail being shown
   const [open, setOpen] = useState(false); // sheet is up (drives the slide)
   const [loaded, setLoaded] = useState(false); // .ps-body fade-in
-  const [ownClose, setOwnClose] = useState(false); // 상세가 자기 닫기 버튼을 갖고 있는가
+  /* 비상구 X 를 그릴까 — 상세가 "내 닫기 버튼 없다" 고 답했거나 아예 대답이 없을 때만 true.
+     ⚠️ 기본값은 false(안 그린다)여야 한다. 반대로 두면 아직 아무 상세도 안 연 시트에도 X 가
+     붙어 있다가 화면 밖 대기 영역에서 새어 나온다. */
+  const [fallbackClose, setFallbackClose] = useState(false);
   const [barOn, setBarOn] = useState(false); // 진행 바가 보이는가
+  /* 지금 그려져야 하는가 — 올라와 있는 동안 + 내려가는 슬라이드가 끝날 때까지.
+     ⚠️ open 과 따로 둔다. 닫힌 시트는 화면 밖(translateY(100%))에 있을 뿐 여전히
+     그려지는데, 안드로이드 크롬은 주소창이 접혀도 레이아웃 뷰포트를 다시 재지 않아
+     그만큼 시트 윗머리가 화면 안으로 들어온다 — 그 띠에 있는 X 가 페이지 맨 밑에
+     떠 보였다. style.css 의 .ps-sheet 주석에 재현 조건을 적어 뒀다.
+     ⚠️ 불러오는 동안에는 아직 false 다 — 그때도 시트는 화면 밖이라 같은 틈이 있다. */
+  const [shown, setShown] = useState(false);
 
   const barRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -83,6 +102,11 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
   const slideOut = useRef<ReturnType<typeof setTimeout> | null>(null);
   /* history.back() 이 시트를 못 닫았을 때 직접 닫는 안전망 (requestClose 참고) */
   const closeFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* pdReady 로 대답한 상세. 닫아도 iframe 을 버리지 않으므로 같은 상세를 다시 열면 대답이
+     새로 오지 않는다 — 그때 "무응답" 으로 오판하지 않도록 어느 상세가 답했는지 기억한다. */
+  const answered = useRef<string | null>(null);
+  /* 그 대답을 기다리는 타이머 (ANSWER_MS) */
+  const answerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -204,7 +228,15 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
     stopTrickle();
     setBarOn(false);
     setLoaded(true);
+    setShown(true); // 올라오기 직전에 그려지게 한다 (style.css 의 .ps-sheet.is-shown 참고)
     setOpen(true);
+    /* 상세가 대답할 시간을 준다. 그래도 조용하면(문서는 떴는데 bridge/works 가 안 도는 경우)
+       닫을 수단이 하나도 없으므로 비상구 X 를 내건다. */
+    if (answerTimer.current) clearTimeout(answerTimer.current);
+    answerTimer.current = setTimeout(() => {
+      answerTimer.current = null;
+      if (showing.current && answered.current !== showing.current) setFallbackClose(true);
+    }, ANSWER_MS);
   }, [stopTrickle]);
 
   const openSheet = useCallback(
@@ -246,6 +278,10 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
       /* 같은 상세를 다시 여는 경우: iframe 이 그대로 살아 있으므로 진행 바 없이 바로 올린다.
          닫을 때 iframe 을 버리면 다시 열 때마다 처음부터 받아 와 오히려 더 느려지고,
          받아 오는 동안 시트의 흰 바탕이 그대로 보인다. */
+      if (answerTimer.current) clearTimeout(answerTimer.current);
+      answerTimer.current = null;
+      /* 이미 받아 둔 상세를 다시 여는 길 — iframe 이 살아 있어 pdReady 가 다시 오지 않는다.
+         지난번 판정(answered)이 그대로 맞으므로 fallbackClose 를 건드리지 않는다. */
       if (ready.current === detail) {
         setSrc(detail);
         resetFrameScroll(); // 지난번 위치가 남아 있다 — 맨 위로 되돌린다
@@ -254,7 +290,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
       }
 
       setLoaded(false);
-      setOwnClose(false); // 새 상세가 알려 줄 때까지는 우리 X 를 쓴다
+      setFallbackClose(false); // 새 상세가 대답할 때까지는 비상구를 내걸지 않는다
       barReset();
       setBarOn(true);
       setSrc(detail);
@@ -273,6 +309,11 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
         bar.current.onFull = null;
         barDraw();
         ready.current = detail;
+        /* 8초가 지나도 load 가 안 왔다 — 문서가 아예 안 떴을 수 있다(경로 오타·404·네트워크).
+           그러면 상세의 셰브론도 없으니 비상구를 바로 내건다.
+           ⚠️ 이미 pdReady 로 대답한 상세는 건드리지 않는다 — 문서는 떴는데 이미지 하나가
+           안 끝나 load 만 늦는 경우가 있고, 그때 X 를 내걸면 셰브론과 둘이 된다. */
+        if (answered.current !== detail) setFallbackClose(true);
         reveal();
       }, LOAD_GUARD_MS);
     },
@@ -295,6 +336,10 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
     slideOut.current = setTimeout(() => {
       slideOut.current = null;
       document.documentElement.classList.remove('ps-busy');
+      /* 슬라이드가 끝났다 — 이제 페인트에서 뺀다. 여기서 끄는 것이지 CSS 트랜지션에
+         맡기지 않는다(프레임이 멈춘 탭에서는 트랜지션이 안 끝나 visible 로 굳는다).
+         ⚠️ 다시 열면 openSheet 가 이 타이머를 지우므로 이 setShown(false) 도 같이 취소된다. */
+      setShown(false);
     }, SLIDE_MS);
     pushed.current = false;
     setOpen(false);
@@ -347,9 +392,15 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
         pdEsc?: boolean;
       } | null;
       if (!d || typeof d !== 'object') return;
-      // 상세가 자기 닫기 버튼을 갖고 있으면 우리 X 를 숨긴다 (닫기가 두 개로 보이지 않게)
+      /* 상세가 자기 닫기 버튼을 그렸는지 알려 왔다. 그렸다면(정상) 우리 X 는 안 그린다 —
+         닫기가 두 개로 보이지 않게. 안 그렸다면 그때만 비상구를 내건다. */
       if (d.pdReady) {
-        setOwnClose(!!d.ownClose);
+        answered.current = showing.current;
+        if (answerTimer.current) {
+          clearTimeout(answerTimer.current);
+          answerTimer.current = null;
+        }
+        setFallbackClose(!d.ownClose);
         /* 상세의 Copy URL 이 쓸 공유 주소를 알려 준다. iframe 안에서는 location 이
            /portfolio/<슬러그>/… 라 그대로 복사하면 목록을 거치지 않는 내부 경로가 된다. */
         const w = (e.source as Window | null) ?? null;
@@ -422,6 +473,7 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
     if (guard.current) clearTimeout(guard.current);
     if (slideOut.current) clearTimeout(slideOut.current);
     if (closeFallback.current) clearTimeout(closeFallback.current);
+    if (answerTimer.current) clearTimeout(answerTimer.current);
     // 언마운트되는데 클래스가 남으면 목록이 영영 안 눌린다
     document.documentElement.classList.remove('ps-open', 'ps-busy');
   }, [stopTrickle]);
@@ -436,23 +488,27 @@ export default function ProjectSheet({ cards }: { cards: SheetCard[] }) {
       <div className="ps-bar" ref={barRef} aria-hidden="true" style={{ opacity: barOn ? 1 : 0 }} />
       <div
         id="project-sheet"
-        className={`ps-sheet${open ? ' is-open' : ''}${ownClose ? ' is-own-close' : ''}`}
+        className={`ps-sheet${shown ? ' is-shown' : ''}${open ? ' is-open' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-hidden={open ? 'false' : 'true'}
         inert={!open}
       >
-        <button type="button" className="ps-close" aria-label="닫기" onClick={requestClose}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M0 0L24 24M24 0L0 24"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        {/* 비상구 — 상세가 자기 닫기(.pd-close 셰브론)를 안 그렸거나 아예 대답이 없을 때만.
+            평소에는 아예 DOM 에 없다 (위 헤더 주석 2번 참고). */}
+        {fallbackClose ? (
+          <button type="button" className="ps-close" aria-label="닫기" onClick={requestClose}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M0 0L24 24M24 0L0 24"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : null}
         {/* ⚠️ .ps-scroll 은 더 이상 스크롤하지 않는다 — 스크롤은 iframe 안에서 일어난다.
             여기서는 iframe 이 height:100% 를 풀 수 있도록 확정 높이를 주는 역할만 한다. */}
         <div className="ps-scroll" style={{ overflow: 'hidden' }}>

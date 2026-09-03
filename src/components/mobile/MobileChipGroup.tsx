@@ -2,6 +2,8 @@
 
 import type { Ref } from 'react';
 
+import { mobileChipLabel } from '@/data/contact';
+
 type Props = {
   options: readonly string[];
   selected: readonly string[];
@@ -22,7 +24,7 @@ export default function MobileChipGroup({ options, selected, onToggle, multi, gr
           className={selected.includes(option) ? 'mc-chip is-selected' : 'mc-chip'}
           onClick={() => onToggle(option)}
         >
-          {option}
+          {mobileChipLabel(option)}
         </button>
       ))}
     </div>

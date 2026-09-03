@@ -7,6 +7,19 @@ html,
 body {
   width: 100%;
   background: #fff;
+  /* 안전망이다 — 지금 화면에 보이는 텍스트를 고치는 규칙이 **아니다**.
+     원본(../insplanet)도 body 폰트가 없어서 요소마다 손으로 때웠고(style.css:890 의
+     "body has no font, so without this the menu falls to Apple SD Gothic" 주석),
+     그 패치가 빠짐없이 들어와 있다 — 실측: 이 선언을 꺼도 `/` `/about` `/projects`
+     `/contact` × 390px + 모바일 전체메뉴에서 우리 4개 패밀리가 아닌 텍스트 요소 0개.
+     (끄면 body 자체는 "Apple SD Gothic Neo" 로 떨어지지만 거기 직접 붙는 텍스트가 없다.)
+     남겨 두는 이유는 앞으로 font-family 를 빠뜨린 요소가 기기 폰트로 새지 않게 하려는 것.
+     스택은 원본이 가장 많이 쓰는 형태를 그대로 가져왔다(21회). */
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 html {
   -webkit-text-size-adjust: 100%;
@@ -2003,8 +2016,24 @@ html.lenis body {
   will-change: transform;
   backface-visibility: hidden; /* own compositor layer: the content must not repaint per frame while the sheet moves */
   transform: translateY(100%);
+  /* ⚠️ 닫힌 시트를 translateY(100%) 로만 치워 두면 안드로이드 크롬에서 X 가 화면 맨 밑에
+     드러난다. 크롬 안드로이드는 스크롤로 주소창이 접힐 때 **레이아웃 뷰포트를 다시 재지
+     않는다** — 보이는 영역만 주소창 높이(Δ ≈ 56~115px)만큼 커진다. 이 요소는
+     position:fixed + inset:0 이라 높이가 옛 뷰포트(작은 쪽)에 묶여 있고 100% 이동량도
+     그 높이라, 시트 윗면이 딱 Δ 만큼 화면 안으로 올라온다. 그 띠에 들어 있는 것이
+     .ps-close(top:16px, 48px)다 — 흰 배경은 흰 페이지에 묻히고 어두운 X 만 보인다.
+     → 안 쓰는 동안에는 visibility 로 확실히 끈다. 켜고 끄는 시점은 ProjectSheet.tsx 가
+     is-shown 으로 준다(올라올 때 켜고, 내려가는 슬라이드가 끝나면 끈다).
+     ⚠️ visibility 를 CSS 트랜지션(`visibility 0s linear 1.2s`)으로 늦추지 말 것 —
+     그 방식은 프레임이 돌아야 끝나서, 프레임이 멈춘 탭(백그라운드 등)에서 닫으면
+     visible 인 채로 굳는다(실측). 시트는 이미 SLIDE_MS 타이머를 갖고 있다. */
+  visibility: hidden;
   transition: transform 1.2s cubic-bezier(0.2, 1.1, 0.3, 1);
 } /* soft spring (previous curve), 1.2s per user */
+/* 올라와 있거나, 내려가는 중(슬라이드 1.2s)이라 아직 그려져야 하는 동안 */
+.ps-sheet.is-shown {
+  visibility: visible;
+}
 .ps-sheet.is-open {
   transform: none;
 }
@@ -2102,10 +2131,9 @@ html.ps-busy .pj-grid a,
 html.ps-busy .mp-card a {
   pointer-events: none;
 }
-/* a detail file that ships its own designed close (.pd-close inside main.pd) → hide the generic X (js adds is-own-close) */
-.ps-sheet.is-own-close .ps-close {
-  display: none;
-}
+/* ⚠️ .ps-close(X)를 여기서 감추던 규칙(.ps-sheet.is-own-close)은 없앴다 — 이제 ProjectSheet.tsx 가
+   필요할 때만 버튼을 그린다. 상세는 자기 닫기(.pd-close, 셰브론)를 그리므로 정상 동작에서는
+   이 X 가 DOM 에 아예 없고, 상세가 대답이 없을 때(문서가 안 뜸 · bridge/works 가 안 돎)만 나온다. */
 .ps-body {
   min-height: 100%;
   opacity: 0;
