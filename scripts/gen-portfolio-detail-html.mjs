@@ -43,7 +43,19 @@ for (const name of readdirSync(SRC).sort()) {
   } catch {
     continue; // index.html 이 없는 폴더 (예: kb-platform)
   }
-  map[name] = readFileSync(file, "utf8");
+  /* ⚠️ 줄바꿈을 LF 로 눕힌다 — **이게 없으면 사람마다 산출물이 달라진다.**
+
+     Git for Windows 는 core.autocrlf 가 기본 true 라 체크아웃할 때 index.html 을
+     CRLF 로 풀어 준다. 그 내용을 그대로 담으면 JSON 문자열 안에 \r\n 이스케이프가
+     2,876개 생겨 커밋본(LF)과 달라지고, **npm run dev 를 할 때마다 이 파일이
+     수정된 채로 남는다**(git status 가 매번 더럽다). git 은 JSON 안의 \r 이스케이프를
+     줄바꿈으로 보지 않으므로 autocrlf 가 되돌려 주지도 못한다.
+
+     .gitattributes 로도 막고 있지만(eol=lf), 이미 CRLF 로 체크아웃해 둔 작업본이나
+     설정이 다른 환경에서도 산출물이 같아야 하므로 여기서 한 번 더 눕힌다.
+     ℹ️ 이 JSON 은 <project-detail> 속성을 파싱하는 데만 쓴다 — 상세 문서 자체는
+        iframe 이 public/ 의 원본 파일을 직접 읽으므로 줄바꿈을 바꿔도 화면과 무관하다. */
+  map[name] = readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
 }
 
 const next = JSON.stringify(map, null, 0) + "\n";

@@ -1,0 +1,26 @@
+# 줄바꿈을 저장소 전체에서 LF 로 고정한다.
+#
+# ⚠️ 왜 필요한가 — Git for Windows 는 core.autocrlf 가 기본 true 라 체크아웃 때
+#    텍스트 파일을 CRLF 로 풀어 준다. scripts/gen-portfolio-detail-html.mjs 가
+#    public/portfolio/*/index.html 을 **내용 그대로** JSON 에 담기 때문에, CRLF 로
+#    체크아웃된 환경에서는 npm run dev 를 할 때마다
+#    src/data/portfolioDetailHtml.json 이 수정된 채로 남는다(2026-09-03 실제로 겪음).
+#    JSON 안의 \r 은 이스케이프 문자열이라 git 이 되돌려 주지도 못한다.
+#
+# ℹ️ 스크립트 쪽에도 줄바꿈 정규화를 넣어 뒀다 — 둘 중 하나만 있어도 되지만,
+#    이미 CRLF 로 받아 둔 작업본에서는 이 파일만으로는 즉시 고쳐지지 않는다.
+* text=auto eol=lf
+
+# 바이너리 — 손대지 않는다
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
