@@ -325,8 +325,11 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
 
 - About 04 섹션(「금융×모빌리티」→Experience, 카드 4개 전면 교체, 갤러리가 8장 마퀴 밴드로),
   About 07 마무리 이미지가 핀 확대 스크럽으로, About 리빌을 `AboutReveals.tsx`로 컴포넌트화,
-  Contact 약관 링크, 커서 GROW_SEL 확장, 썸네일 20장 + `009` 마이그레이션(⚠️ **미실행** — 아래
-  마이그레이션 표 참고, 실행 전엔 `public/assets/projects/proj-*.png` 지우면 안 됨).
+  Contact 약관 링크, 커서 GROW_SEL 확장, 썸네일 20장 + `009` 마이그레이션.
+  ℹ️ **이 항목은 해소됐다 (2026-09-04)** — 009 는 끝내 실행하지 않았고(썸네일이 이미 전부
+  Storage URL 이라 불필요), 그 썸네일을 붙잡고 있던 005 시드 더미 15행을 `027` 로 지우면서
+  `public/images/projects/thumb-*.png` 20장과 `public/assets/projects/table-logo*.png` 도
+  같이 제거했다(23MB). "지우면 안 됨" 경고는 더 이상 유효하지 않다.
 - **의도적으로 안 가져온 것**: 어댑티브 경계 767→1023(당시 모바일 페이지가 없어서 — 이후 34번
   에서 아예 반응형으로 전환해 해소됨), 모바일 마크업/런타임 전체(CSS는 이미 다 들어와 있었음).
 
@@ -697,7 +700,8 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   **macOS 는 대소문자를 안 가려 로컬에서는 멀쩡히 열리고, Vercel(리눅스)에서만 404 가 난다.**
   37건을 `public/portfolio/` 와 대조해 찾았고 어긋난 건 이 하나뿐이었다. 새 상세를 등록할
   때마다 폴더명 대소문자를 확인할 것.
-- `public/portfolio/kb-platform` 은 **어느 행도 안 쓰고 있다** — 등록 누락인지 폐기물인지
+- `public/portfolio/kb-platform` 은 **빈 폴더이고 어느 행도 안 쓰고 있다**(index.html 자체가
+  없다). 2026-09-04 정리 때도 판단이 안 서서 남겨 뒀다 — 등록 누락인지 폐기물인지
   담당자 확인 필요.
 - **확인함**: 옛 표기가 든 행(`/onnuri/index.html`)이 `/portfolio/onnuri/index.html` 로
   그대로 열린다(dev 5599). **확인 못 함**: 어드민 폼에서 폴더명만 입력해 저장하는 왕복 —
@@ -714,9 +718,12 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
     **`/brief.pdf`** 다. `next.config.ts` 의 `rewrites()` 가 이 경로를 Storage 원본으로
     **프록시**한다(리다이렉트가 아니라 프록시라 새 탭 주소창에도 짧은 주소가 남는다).
     ⚠️ `next.config.ts` 의 rewrites·headers 와 `data/site.ts` 의 `BRIEF_PDF` 가 **짝**이다.
-    ⚠️ **확장자 `.pdf` 를 떼지 말 것** — `middleware.ts` 의 matcher 가 점이 든 경로를
-    제외하므로, `/brief` 로 두면 어드민 서브도메인에서 `/admin/brief`(회사소개서관리
-    화면)로 rewrite 돼 PDF 대신 어드민 페이지가 열린다.
+    ⚠️ **정정 (2026-09-03)** — 여기 원래 "`middleware.ts` 의 matcher 때문에 확장자를 떼면
+    어드민 서브도메인에서 `/admin/brief` 로 rewrite 된다" 고 적혀 있었는데, **이 저장소에
+    `middleware.ts` 는 존재한 적이 없다**(git 히스토리까지 확인). 어드민 서브도메인 자체가
+    구현돼 있지 않고, 어드민은 `www.insplanet.co.kr/admin` 경로로 연다.
+    확장자를 바꾸는 것 자체는 지금 구조에서 막을 이유가 없지만, `next.config.ts` 의
+    rewrite source·headers 와 `data/site.ts` 의 `BRIEF_PDF` 를 **반드시 같이** 바꿀 것.
     ⚠️ **짧은 주소가 되면서 이 링크가 "같은 출처" 가 됐다.** 예전에는 다른 출처라
     `main.js` 의 전역 링크 가로채기가 자동으로 걸러 줬는데 이제 아니다 — 지금 안 걸리는
     유일한 이유는 `target==='_blank'` 검사가 origin 검사보다 **앞**에 있기 때문이다.
@@ -844,10 +851,14 @@ bridge.js · works.js/css) 는 공용 한 벌, 프로젝트 폴더(`kb-app/` 등
   - ⚠️ **파싱 전에 HTML 주석을 지울 것.** 각 문서 첫머리 주석에 `<project-detail>` 이라는
     문자열이 또 있어서, 그냥 찾으면 속성이 없는 그 가짜가 먼저 잡힌다(실제로 이걸로
     "0/37" 이 나와 "속성이 비어 있다" 고 오판할 뻔했다).
-  - ⚠️ **Vercel 은 public/ 을 서버 번들에 안 넣는다.** 정적 에셋은 CDN 에서만 서빙되므로
-    람다에서 `fs` 로 못 읽는다. `next.config.ts` 의 `outputFileTracingIncludes` 가 짝이다 —
-    **지우면 조용히 실패한다**(화면은 멀쩡하고 description 만 일반 문구로 되돌아감).
-    실패 시 `console.warn` 을 남기게 해 뒀다. 배포 후 상세 한 곳의 description 을 확인할 것.
+  - ⚠️ **파일을 런타임에 읽지 않는다 (2026-09-03 변경).** `scripts/gen-portfolio-detail-html.mjs`
+    가 빌드 전에 상세 HTML 37개를 `src/data/portfolioDetailHtml.json`(124KB)으로 굽고,
+    `portfolioDetail.ts` 는 그걸 가져다 쓴다. `package.json` 의 `predev`/`prebuild` 가
+    자동으로 부르고 산출물은 **커밋한다**(훅이 안 돌아도 빌드가 성공해야 하므로).
+    ⚠️ 상세를 새로 추가하면 dev/build 를 한 번 돌려야 JSON 에 들어온다. 안 들어오면
+    description 이 일반 문구로 되돌아가므로 `console.warn` 을 남긴다.
+    ⚠️ **예전 방식(`outputFileTracingIncludes`)으로 되돌리지 말 것** — 아래 24번 지뢰 참고.
+    그게 도메인 이관 첫 배포를 막았다.
   - ⚠️ **`/portfolio/<폴더>/index.html` 은 그 자체로 크롤 가능한 주소다.** robots.txt 는
     `/admin`·`/api` 만 막고 구글은 iframe 의 src 를 따라간다. 그런데 37개 중 **32개의
     `<title>` 이 템플릿 그대로 `Work Container - 프로젝트명`** 이라, 색인되면 같은 제목의
@@ -1142,7 +1153,7 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 이력서 첨부 공개읽기 400 차단 · 행 수 무변동(60/2/3/2).
 **확인 못 함**: 로그인한 어드민 화면의 실동작(포트폴리오 CRUD · 목록 드래그 순서 ·
 견적문의 조회 · 첨부 다운로드 · 분석 화면 렌더) — 세션이 없어 게이트를 못 넘는다.
-**Vercel 환경변수도 아직 안 바꿨다**(사용자가 마지막에 교체 예정).
+ℹ️ **Vercel 환경변수는 2026-09-03 도메인 이관 때 교체 완료**(아래 도메인 이관 절 참고).
 
 ℹ️ **캐시는 회귀가 아니다** — 새 프로젝트 Storage 가 `cache-control: no-cache` 를 주는데
 **옛 프로젝트도 똑같았다**(ETag 동일, 재요청 304 / 0바이트라 전송량 영향은 없다).
@@ -1460,15 +1471,93 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
   **확인 못 함**: 사람이 실제로 창을 끌어 줄이는 조작과 스크롤 리빌 중의 모습 —
   브라우저 패널은 rAF 가 멈춰 있다.
 
+**도메인 이관 — insplanet.co.kr 을 새 사이트로 (2026-09-03 ~ 09-04)**
+
+옛 Vue SPA 가 서비스하던 도메인을 이 저장소로 넘겼다. **대표님 계정의 Pro Vercel
+프로젝트에서 Git 저장소만 `Insplanet-Corp/official` → `Insplanet-Corp/new_official` 로
+교체**하는 방식이라 DNS·도메인 설정은 손대지 않았다(apex → www 308 도 그대로 승계).
+
+- ⚠️ **저장소만 바꾸면 안 된다** — 그 프로젝트는 Vite 기준 설정이었다. 같이 바꾼 것:
+  Framework Preset(Vite → **Next.js**) · Output Directory override 해제 · Node 22.x 이상
+  (Next 16 은 ≥20.9) · `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` **삭제**(옛 Supabase 를
+  가리키고 있었다) · 새 환경변수 5개 추가.
+  ℹ️ 그 프로젝트에는 Output Directory override 가 애초에 없어서 `dist` 문제는 안 났다.
+- **환경변수 5개** — `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` ·
+  `SUPABASE_SERVICE_ROLE_KEY` · `NEXT_PUBLIC_SITE_URL` · `CRON_SECRET`.
+  ⚠️ **`NEXT_PUBLIC_SITE_URL` 을 빠뜨리면 조용히 틀린다** — `VERCEL_PROJECT_PRODUCTION_URL`
+  로 폴백하는데, 테스트 배포에서 실제로 canonical·og:image·robots 의 Host 가 전부
+  `new-official-sooty.vercel.app` 로 나갔다(실측). apex/www 중 어느 쪽이 올지도 보장이 없다.
+  ⚠️ `/about` `/contact` 는 빌드 시점 정적 생성이라 이 값을 바꾸면 **재배포해야** 반영된다.
+- ⚠️ **`CRON_SECRET` 은 옵션이 아니다** — `/api/retention` 은 개인정보를 실제로 지운다.
+  설정 전에는 주소를 아는 사람이 파기를 실행시킬 수 있다.
+- **옛 주소 리다이렉트** — `/work`·`/work/:slug` → `/projects` 는 원래 있었고,
+  `/brochure/:path*` → `/brief.pdf` 와 `/admin/brochure` → `/admin/brief` 를 추가했다.
+  ⚠️ `https://www.insplanet.co.kr/brochure/insplanet_brief.pdf` 는 **컷오버 직전까지 200 으로
+  살아 있던 실제 주소**다(메일·제안서에 뿌려졌을 수 있다). 지우지 말 것.
+- **미리보기 배포 색인 차단** — `seo.ts` 의 `IS_INDEXABLE_DEPLOY` 가 `VERCEL_ENV==='preview'`
+  이거나 호스트가 insplanet.co.kr 이 아니면 `robots.ts` 가 `Disallow: /` 를 내보낸다.
+  안 그러면 내용이 같은 사이트가 두 개 색인된다(테스트 배포가 실제로 `Allow: /` 였다).
+  ⚠️ **안전한 쪽으로 실패한다** — 환경변수를 깜빡해도 커스텀 도메인이 붙은 프로덕션이면
+  색인이 유지된다. 실수로 막히는 경우는 없다.
+- **공유 카드 설명을 검색용과 분리했다** (`SITE_DESCRIPTION_SHARE`, `SITE_NAME_SHARE` 와 같은
+  패턴). 카톡에 붙이니 검색용 긴 문장이 두 줄에서 `…` 로 잘려 나왔다 — og/twitter
+  description 만 홈 히어로와 같은 **`Beyond UX The AX Creator`** 로 바꿨다.
+  ⚠️ `<meta name="description">`(검색결과)에는 넣지 말 것 — 스니펫이 한 줄로 줄어든다.
+  ⚠️ 하위 페이지(`/about` `/contact` `/projects`)는 각자 자기 og:description 을 갖고 있고
+  **그대로 둔다** — 문의 페이지 링크에는 문의 설명이 나오는 편이 맞다.
+  ℹ️ 카카오는 OG 를 캐시한다 — 배포 후 developers.kakao.com/tool/debugger/sharing 에서
+  초기화해야 즉시 바뀐다.
+- ⚠️ **`/brief.pdf` 는 Vercel CDN 에 캐시되지 않는다 (실측, 미해결).** CLAUDE.md 에 "배포 후
+  확인할 것" 으로 남아 있던 항목인데, 전체 GET 을 두 번 보내도 `x-vercel-cache: MISS` 다
+  (HEAD·range·full GET 전부). **외부 주소로 rewrite 된 응답은 Vercel 이 프록시만 하고
+  캐시하지 않는다.** `next.config.ts` 의 `Vercel-CDN-Cache-Control` 은 효과가 없다.
+  → 소개서를 **열 때마다 18.7MB 가 Supabase 전송량에서 빠진다.** 무료 5GB/월 기준
+  **약 267회**가 한 달치 전부다. 선택지: 그대로 두고 전송량 감시 / PDF 를 `public/` 로
+  옮겨 CDN 영구 캐시(어드민 교체 불가) / 더 압축 / Supabase Pro.
+
+**이관 후 정리 (2026-09-04)**
+
+- **Vercel 테스트 프로젝트 `lim_insplanet/new-official` 삭제.** 같은 저장소를 보고 있어
+  푸시마다 두 곳에서 빌드됐고 공개 URL 이 중복 사이트로 남아 있었다.
+- **`027` — 005 시드 더미 15행 삭제.** 제목이 "마이데이터 서비스 구축" 같은 예시 문구이고
+  썸네일이 저장소 안 로컬 경로를 가리키던 행들이다. 전부 `use_yn='N'` 이었다.
+  ⚠️ **`created_at` 을 조건으로 쓰면 안 된다** — 시드와 같은 날(2026-08-04)에 만들어진
+  실데이터가 섞여 있다("신한은행 HeyYoung Campus", 공개·메인). 그래서 "썸네일이 로컬
+  경로인가" 하나로만 판정하고, 공개/메인 행이 걸리면 멈추는 안전장치를 넣었다.
+  → 이 행들이 사라져서 `public/images/projects/thumb-*.png` 20장 +
+  `public/assets/projects/table-logo*.png` 를 지울 수 있었다(23MB).
+  ⚠️ **순서는 SQL 먼저, 파일 나중.** 반대로 하면 어드민 목록에 깨진 썸네일이 남는다.
+- **`017` 나머지 실행** — `brochure_history` 삭제(`contacts` 는 이미 없었다).
+- **테스트 데이터 8건 정리** — `quotes` 5 + `recruits` 3 이 전부 테스트였다(기업명 `111`·
+  `test…`, 이름 `bonobono`, URL `www.test.com`). 어드민 [삭제] 로 지웠고 **첨부파일까지
+  같이 사라졌다**. 지역 이전 때 파일이 유실됐던 행도 에러 없이 지워졌다 —
+  `purgeTargets` 의 "이미 없는 파일은 실패가 아니다" 가 실제로 동작하는 것을 확인했다.
+  ℹ️ 그래서 지금 `quotes`·`recruits` 는 **0행이다. 실접수가 들어오기 전 상태다.**
+
+**확인함 (2026-09-04 실측)**: 라이브가 새 사이트(`/` `/projects` `/about` `/contact` 200) ·
+`portfolios` 46행 전부 공개 · 완료 카드 38 + 진행중 8 = 46 이고 메뉴 배지도 38 ·
+지운 파일을 참조하는 곳 0건 · Storage 고아 0 · 누락 0 · 프로덕션 빌드/타입체크 통과.
+**확인 못 함**: 옛 Supabase 프로젝트(`gepphbqhnuufnincxmor`) 내부 — 키가 없어 못 본다.
+아직 살아 있고, 지우기 전에 대시보드에서 Auth 계정·버킷·테이블 목록을 사람이 확인해야 한다.
+
 ---
 
 ## 현재 상태
 
 ```
 브랜치   main
+배포     insplanet.co.kr → www 308 → 이 저장소 (2026-09-03 이관 완료)
+         대표님 계정의 Pro Vercel 프로젝트. Claude 의 CLI 계정에서는 안 보인다.
+Supabase sbukxdevjuplwjnbmvpy (2026-09-01 지역 이전본)
 태그     backup/css-modules-full   ← 되돌린 전체 CSS 변환 (로컬만)
 정적 원본  ../insplanet  포팅 기준점 b997b24 (PC 분량만 흡수, 모바일은 Figma 기준 별도 진행)
+옛 저장소  ../official (Insplanet-Corp/official) — Vue SPA. 아카이브 대상.
 ```
+
+**데이터 현황 (2026-09-04 실측)** — `portfolios` 46(전부 공개, 메인 3) · `quotes` 0 ·
+`recruits` 0 · `admin_users` 3 · `quote_access_logs` 40 · `pageviews` 1,233 ·
+`downloads` 31 · `internal_ips` 2. Storage 150.86MB(무료 1GB 의 14.7%, 고아 파일 0개).
+⚠️ **견적문의·입사지원은 아직 실접수가 0건이다** — 테스트 데이터를 전부 지운 직후 상태다.
 
 빌드·타입체크 통과. 마케팅 라우트는 더 이상 "초기 커밋과 diff 0"이 아니다(필터바 reveal 수정,
 `/projects` DB 연동 등). 레거시 클래스명(`.pj-card` 등)은 전부 그대로 유지했다.
@@ -1497,16 +1586,17 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 | `014_portfolio_html_folder.sql`          | ✅ 41행 전부 폴더명 표기, `bassId` 대소문자도 교정된 채 넘어옴 |
 | `015_portfolio_main_limit.sql`           | ⚠️ **미확인** — 4건째를 넣어 봐야 알 수 있어 시도하지 않았다 |
 | `016_brief_storage.sql`                  | ⚠️ **버킷은 코드가 API 로 생성(50MB)**, 정책은 019 가 재적용 |
-| `017_drop_legacy_site_tables.sql`        | ⚠️ **부분** — `contacts` 는 없고 `brochure_history` 는 남음  |
+| `017_drop_legacy_site_tables.sql`        | ✅ 완료 (2026-09-04) — `contacts`·`brochure_history` 둘 다 없음 |
 | `018_recruits.sql`                       | ⚠️ **테이블·정책은 반영**(anon insert 201 확인), **버킷만 누락** → 코드가 생성 |
 | `019_restore_after_region_move.sql`      | ✅ 사용자 실행 확인 (2026-09-01) — FK·Storage·분석 정책 반영 확인 |
 | `021_drop_legacy_quote_analytics_policies.sql` | ✅ 사용자 실행 확인 (2026-09-01) — 남은 정책 5개 확인 |
 | `020_quote_access_logs.sql`              | ✅ 테이블·제약·트리거·RLS 동작 확인 (view 기록 3행)          |
-| `022_portfolio_categories.sql`           | ❌ **미실행** — 돌리기 전엔 어드민 분류 저장이 PGRST204 로 실패한다 |
+| `022_portfolio_categories.sql`           | ✅ 실행됨 (`categories` 값 확인) — 예전 "미실행" 표기는 오류였다 |
 | `023_quote_attachments.sql`              | ✅ 사용자 실행 확인 (2026-09-02) — 컬럼 3개·버킷·정책·`action='file'` 동작 확인 |
 | `024_retention_purge.sql`                | ✅ 사용자 실행 확인 (2026-09-02) — `view/download/file/purge` 4값 통과, 그 밖은 23514 |
 | `025_quotes_delete_policy.sql`           | ✅ 사용자 실행 확인 (2026-09-02) — 어드민 [삭제] 로 행·첨부 동시 삭제 확인 |
-| `026_portfolio_main_title.sql`           | ❌ **미실행** — 돌리기 전엔 포트폴리오 저장이 PGRST204 로 실패한다 |
+| `026_portfolio_main_title.sql`           | ✅ 실행됨 (`main_title` 값 확인) — 예전 "미실행" 표기는 오류였다 |
+| `027_drop_seed_portfolios.sql`           | ✅ 사용자 실행 확인 (2026-09-04) — 시드 15행 삭제, 46행 잔존 |
 
 **실행 여부는 anon/service_role 키로 REST 를 찔러서 확인한다.** 컬럼은
 `curl "$URL/rest/v1/<table>?select=<컬럼>&limit=1"`(없으면 42703), 테이블은 PGRST205,
@@ -1527,24 +1617,23 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 **Claude 는 아직 로그인한 어드민 화면을 직접 못 봤다** — 세션이 없어 게이트를 못 넘는다.
 사용자가 확인한 것은 로그인·프로필 차단 화면·계정 등록 성공까지다. 아무도 확인하지 않은 것:
 
+**해소된 것 (2026-09-04)** — 어드민 [삭제] 실동작은 사용자가 테스트 데이터 8건을 실제로
+지우면서 검증됐다: 견적문의·리크루트 양쪽 다 **행 + 첨부파일**이 같이 사라지고
+`quote_access_logs` 에 `purge` 기록이 `actor_email` 과 함께 남았다. 파일이 유실된 행도
+에러 없이 지워졌다. Storage 업로드 왕복도 이 과정에서 함께 확인됐다.
+
+아직 아무도 확인하지 않은 것:
+
 - 메뉴권한 차단 실동작 (로직만 유닛테스트 통과)
-- Storage 업로드 왕복 (버킷·정책 존재만 확인, 실제 업로드 미시도)
-- 어드민 포트폴리오 CRUD 화면 실동작
-- **어드민 목록 드래그 앤 드롭 순서 변경** — 끌어 놓기·`reorder_portfolios` 저장·되읽기.
-  DB 쪽 함수는 이미 존재하는 것을 확인했지만(anon 으로 호출 시 42501) **본문은 못 봤다** —
-  012 를 돌려 이 저장소 기준 본문으로 맞춘 뒤 확인할 것.
+- 어드민 포트폴리오 **등록/수정** 화면 실동작 (조회·삭제는 확인됨)
+- **어드민 목록 드래그 앤 드롭 순서 변경** — 끌어 놓기·`reorder_portfolios` 저장·되읽기
 - `/projects` 2행 이후 스크롤 reveal (브라우저 패널 IO/rAF 정지 한계로 첫 행만 확인)
-- 견적문의 실제 렌더 (`quotes` 데이터 0건)
-- **Careers 입사지원 실제 접수 왕복** — 018 미실행이라 아직 넣을 수 없다. 돌린 뒤
-  ① 지원 → 어드민 목록에 뜨는지 ② 첨부파일 서명 URL 다운로드 ③ 권한 없는 계정에서
-  빈 목록이 되는지 확인할 것
+- **견적문의·입사지원 실접수 왕복** — 지금 둘 다 0행이라 화면이 비어 있다. 실제 접수가
+  들어오면 ① 어드민 목록에 뜨는지 ② 첨부 서명 URL 다운로드(한글 파일명 포함)
+  ③ 권한 없는 계정에서 빈 목록이 되는지 확인할 것
 - 상세 iframe 안 폰트 렌더링, 진행 바 rAF 애니메이션, 모바일 홈 리빌 (전부 브라우저 패널
   백그라운드 한계 — 사람이 실제 브라우저에서 봐야 한다)
-- **견적문의 첨부 — 어드민 쪽 왕복**. 공개 폼 → Storage → 서명 URL 까지는 023 실행 후
-  실측으로 확인했지만(위 절 참고), 어드민 조회 화면에서 사람이 눌러 받는 것과 그때
-  `action='file'` 행이 실제로 쌓이는 것은 세션이 없어 못 봤다
-- **이력서 첨부 다운로드 파일명** — 코드 수정은 실제 Storage 응답 헤더로 확인했지만,
-  어드민 화면에서 실제로 눌러 받아 보는 것은 세션이 없어 못 했다(20번 지뢰 참고)
+- **`/brief.pdf` 캐시** — 캐시가 안 되는 것은 확인했다(위 도메인 이관 절). 대응 방침은 미정.
 
 ### 기능 붙이기
 
@@ -1552,8 +1641,8 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 | -------------- | ---------------- | --------------------------------------------------------- |
 | 포트폴리오관리 | `portfolios` ✅  | **연동 완료** — CRUD + Storage 업로드 + `/projects` 공개  |
 | 사용자관리     | `admin_users` ✅ | **연동 완료** — 목록·상세·수정·등록·메뉴권한              |
-| 견적문의관리   | `quotes` ✅      | **연동 완료** — 목록·필터·상태변경·상세·**첨부파일**(023 실행 필요) |
-| 리크루트관리   | `recruits` ✅    | **연동 완료** — Careers 입사지원 접수 + 목록·조회 (018 실행 필요) |
+| 견적문의관리   | `quotes` ✅      | **연동 완료** — 목록·필터·상태변경·상세·첨부파일·삭제      |
+| 리크루트관리   | `recruits` ✅    | **연동 완료** — Careers 입사지원 접수 + 목록·조회·삭제     |
 
 **⚠️ `pageviews` 는 이 저장소와 무관한 고아 테이블이다** — 코드·마이그레이션·git 히스토리
 어디에도 안 쓰인다. 삭제할지 방문 추적을 실제로 붙일지 결정 필요.
@@ -1562,18 +1651,21 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 자연스럽다. `src/lib/{quotes,portfolios}.ts` 처럼 타입·변환·검증을 한 파일에 모으고 화면은
 그걸 쓰는 구조를 따라가면 된다.
 
-### 첨부파일 저장소 — 용량과 대비 (2026-09-02 실측)
+### 첨부파일 저장소 — 용량과 대비 (2026-09-04 실측)
 
 첨부(견적문의·이력서)는 **Supabase Storage** 의 비공개 버킷에 들어간다. 무료 플랜 상한과
 지금 쓰는 양은 이렇다 — `node scripts/storage.mjs usage` 로 언제든 다시 잴 수 있다.
 
 | 버킷        | 공개 | 파일 | 용량      | 무엇         |
 | ----------- | ---- | ---- | --------- | ------------ |
-| `portfolio` | ✅   | 89   | 131.63 MB | 썸네일·CI    |
+| `portfolio` | ✅   | 91   | 133.02 MB | 썸네일·CI    |
 | `brief`     | ✅   | 1    | 17.84 MB  | 회사소개서   |
-| `recruit`   | ❌   | 1    | 0.03 MB   | 이력서       |
+| `recruit`   | ❌   | 0    | 0.00 MB   | 이력서       |
 | `quote`     | ❌   | 0    | 0.00 MB   | 견적문의 첨부 |
-| **합계**    |      | 91   | **149.50 MB** | 무료 1GB 의 14.6% |
+| **합계**    |      | 92   | **150.86 MB** | 무료 1GB 의 14.7% |
+
+⚠️ 이 수치에는 **회사소개서를 여는 전송량이 안 잡힌다** — `/brief.pdf` 는 Vercel CDN 에
+캐시되지 않아 열 때마다 18.7MB 가 나간다(월 5GB ÷ 18.7MB ≈ **267회**). 위 도메인 이관 절 참고.
 
 무료 플랜: **파일 저장소 1GB · 월 전송량 5GB · DB 500MB · 파일 1개당 50MB · 7일 무요청 시
 일시정지**. Pro($25/월)는 100GB · 250GB · 8GB 이고 초과분은 저장소 $0.021/GB ·
@@ -1688,42 +1780,26 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 
 ### 바로 이어서 할 만한 것
 
-**지역 이전 마무리 (2026-09-01, 우선순위 순)**
+**옛 Supabase 프로젝트 정리 — 마지막 남은 것 (2026-09-04)**
 
-- ✅ **`019` 실행 완료** (2026-09-01) — FK 복원(23503 확인) · Storage 정책
-  (`recruit` anon 업로드 200, 비공개 읽기 차단) · 분석 정책 반영 확인.
-- ✅ **`021` 실행 완료** (2026-09-01) — 레거시 정책 제거 후 남은 정책이 정확히 5개
-  (`quotes_public_insert`/`quotes_admin_read`/`quotes_admin_update`/
-  `pageviews_admin_read`/`downloads_admin_read`), `internal_ips` 는 0개.
-  이제 메뉴권한 게이팅이 **실제로 먹는다.**
-  ⚠️ 그래서 **권한이 없는 계정은 에러 없이 빈 화면**을 본다 — "목록이 안 나온다" 는
-  문의가 오면 사용자관리에서 권한부터 확인할 것.
-  ⚠️ `internal_ips` 는 정책이 0개다 — 나중에 사무실 IP 관리 화면을 만들면
-  `has_admin_permission('/admin/analytics')` 정책을 그때 추가해야 한다.
-- **Vercel 환경변수 교체 확인** — 로컬 `.env.local` 만 새 프로젝트로 바뀐 것을 확인했다.
-  배포본이 아직 옛 프로젝트를 보고 있으면 **어드민 로그인이 안 되고**(옛 프로젝트에만
-  계정이 있다) 이미지도 옛 쪽에서 나간다. `NEXT_PUBLIC_SUPABASE_URL` ·
-  `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` 셋 다.
-- ✅ **Edge Function `track` 배포 완료** (2026-09-01) — 봇 필터가 있는 배포본을
-  정본으로 채택했다. 위 4번 항목 참고.
-- **019 실행 뒤 사람이 확인할 것** — ① Contact 문의 접수 왕복 ② Careers 입사지원 +
-  어드민 첨부 서명 URL 다운로드 ③ `/admin/analytics` 렌더 ④ `/admin/brief` PDF 교체.
-- **옛 프로젝트(`gepphbqhnuufnincxmor`) 정리** — 위가 전부 확인된 뒤에 지울 것.
-  지금은 아직 살아 있고, 이미지·PDF 원본이 거기 있다. **먼저 지우면 되돌릴 수 없다.**
-  ⚠️ **2026-09-02 확인 — 라이브 도메인이 아직 옛 사이트다.** `insplanet.co.kr` → 308 →
-  `www.insplanet.co.kr` 이 여전히 옛 Vue SPA 를 서빙하고, 그 번들 안의 Supabase URL 이
-  **옛 프로젝트**다(번들에서 직접 확인). 그 사이트가 옛 프로젝트에서 쓰는 것은 둘 —
-  `brochure_history` 테이블과 Storage `assets` 버킷의 `brochure/insplanet_brief.pdf` 다.
-  지우면 **라이브 사이트의 회사소개서 링크가 깨진다**(코드가 `getPublicUrl()` 을 쓰는데
-  이 함수는 파일 존재를 확인하지 않아 로컬 폴백이 안 걸린다). 도메인을 새 사이트로
-  넘긴 뒤에 지울 것.
-  ℹ️ 옛 번들에 `contacts`·`pageviews`·`downloads` 는 **0회** 등장한다 — 예전 메모의
-  "라이브가 `contacts` 에 쓰고 있다" 는 이 번들 기준으로는 사실이 아니다.
-  ⚠️ **이력서 첨부 3건 중 2건이 새 프로젝트에 안 넘어와 있다.** `recruits` 행은 전부
-  넘어왔지만 Storage 는 포트폴리오 이미지 89개만 복사했다 — `295398ec…/logo_02.png` 와
-  `04a40dce…/…Profile…pdf` 는 서명 URL 발급이 **400** 이다(파일 없음). 그 두 파일은
-  **옛 프로젝트에만 있다** — 필요하면 지우기 전에 내려받을 것.
-  ⚠️ `internal_ips` 의 사무실 IP 는 새 프로젝트로 넘어와 있다(2건).
+지역 이전(`019`·`021`)과 도메인 이관은 전부 끝났다. **남은 것은 옛 프로젝트
+`gepphbqhnuufnincxmor` 삭제 하나뿐이다.** 아직 살아 있다(REST 401 = 생존).
+
+- ✅ 새 프로젝트가 옛 프로젝트를 참조하는 곳 **0건** (DB URL·코드 전수 확인)
+- ✅ 라이브 도메인은 이제 새 사이트다 — 옛 SPA 가 쓰던 `brochure_history` 도 삭제됨
+- ✅ 유일하게 옛 프로젝트에만 있던 이력서 첨부 1건은 **테스트 데이터로 확인돼 회수하지
+  않았고**, 그 행 자체를 지웠다. 옛 브로셔 PDF 도 사용자가 "옛날 것이라 상관없다" 고 확인.
+- ⚠️ **지우기 전에 사람이 옛 대시보드에서 확인할 것** — Claude 는 옛 프로젝트 키가 없어
+  안을 못 본다: ① **Auth → Users**(옛 쪽에만 있는 계정은 같이 사라진다. 새 프로젝트엔
+  3개 있다) ② **Storage 버킷 목록** ③ **Table Editor 테이블 목록**.
+  이 셋에 특별한 것이 없으면 삭제해도 된다. **삭제는 되돌릴 수 없다.**
+
+ℹ️ `internal_ips` 의 사무실 IP 2건은 새 프로젝트로 넘어와 있다 — 그래서 **사무실에서는
+방문 분석 수치가 안 오른다**(고장이 아니다).
+ℹ️ `internal_ips` 는 RLS 정책이 0개다 — 나중에 사무실 IP 관리 화면을 만들면
+`has_admin_permission('/admin/analytics')` 정책을 그때 추가해야 한다.
+ℹ️ `021` 이후 **권한이 없는 계정은 에러 없이 빈 화면**을 본다 — "목록이 안 나온다" 는
+문의가 오면 사용자관리에서 권한부터 확인할 것.
 
 **그 밖에**
 
@@ -2060,3 +2136,33 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
     **확인함**(dev 5599): ① 페이지 로드 직후 `.ps-close` 가 DOM 에 **없음**(`/` `/projects` 둘 다)
     ② `pdReady{ownClose:true}` 를 받으면 보호 타이머가 지나도 안 생김 ③ 끝내 무응답이면 생기고
     보임 ④ `ownClose:false` 대답이면 생김. 타입체크 통과.
+
+24. **⚠️ `outputFileTracingIncludes` 로 HTML 을 람다에 넣으면 그 안이 참조하는 이미지까지
+    따라 들어간다 — 함수가 432MB 가 되어 배포가 거부됐다** (2026-09-03 수정) —
+    `/projects/[id]` 가 상세 HTML 의 `<project-detail>` 속성을 fs 로 읽었고, Vercel 은
+    public/ 을 람다에 안 넣으므로 `outputFileTracingIncludes` 로 그 37개 `index.html` 을
+    포함시켰다. 그런데 **Next 의 파일 추적기는 넣어 준 HTML 을 열어 그 문서가 참조하는
+    파일까지 따라 넣는다.** 상세가 `<img src="img/hero-bg.jpg">` 로 자기 이미지를 걸고
+    있어서 `public/portfolio` 의 PNG·JPG 가 통째로 실렸다 — 실측 **430.8MB**
+    (png 284.2 + jpg 146.4, 추적 파일 414개). Vercel 함수 상한 250MB 를 넘겨
+    `The Vercel Function "projects/[id]" is 432.92mb uncompressed` 로 거부됐다.
+    ⚠️ **빌드는 성공하고 배포 단계에서만 터진다** — 로그 맨 끝까지 봐야 보인다.
+    ⚠️ **`outputFileTracingExcludes` 로는 못 막는다** — include 로 들어온 파일에는 적용되지
+    않는다(제외 설정을 넣고 빌드해도 414개 그대로인 것을 실측으로 확인).
+    → **빌드 시점에 번들로 굽는 방식으로 바꿨다.** `scripts/gen-portfolio-detail-html.mjs`
+    가 37개 HTML 을 `src/data/portfolioDetailHtml.json`(124KB)으로 모으고
+    `portfolioDetail.ts` 가 그걸 읽는다. `predev`/`prebuild` 훅이 자동으로 부르고 산출물은
+    커밋한다. 결과 **432.9MB → 2.2MB**(전체 최대 함수 2.5MB).
+    ⚠️ 그 생성 스크립트는 **파싱을 하지 않는다** — 파일 내용을 그대로 옮기기만 한다.
+    파서는 `portfolioDetail.ts` 한 곳에만 있어야 규칙이 갈리지 않는다.
+    ⚠️ **왜 테스트 프로젝트에서는 통과했나** — 거기서도 똑같이 426MB(447,153,303바이트)로
+    만들어졌는데 `● Ready` 였다. 배포 메타데이터를 보니 `vercel-rusty-runtime` 레이어에
+    timeout 300s — **Fluid Compute** 다. 새로 만든 Vercel 프로젝트는 기본으로 켜지고,
+    오래된 프로젝트는 **레거시 Serverless(Lambda) 250MB 제한**이 그대로 걸린다.
+    **코드가 아니라 프로젝트 나이 차이였다.** 같은 코드가 프로젝트에 따라 배포되기도,
+    거부되기도 한다 — "한쪽에서 됐으니 괜찮다" 로 판단하지 말 것.
+    ℹ️ 급하면 Fluid Compute 를 켜는 것으로도 넘어가지만, 426MB 함수를 그대로 안고 가게
+    되므로(콜드스타트·배포시간) 근본 수정이 맞다.
+    **확인함**: 수정 후 `projects/[id]` 2.2MB(public/portfolio 참조 0개), 프로덕션 빌드를
+    띄워 상세 description 이 **HTML 에만 있는 값**으로 나오는 것까지 확인
+    (tremento — DB `client` 는 비어 있는데 개요 문장이 그대로 렌더).
