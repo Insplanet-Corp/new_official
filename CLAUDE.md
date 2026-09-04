@@ -1548,7 +1548,7 @@ CORS `*`(15번 canvas 오염 방지 성립) · anon 으로 미공개 포트폴�
 브랜치   main
 배포     insplanet.co.kr → www 308 → 이 저장소 (2026-09-03 이관 완료)
          대표님 계정의 Pro Vercel 프로젝트. Claude 의 CLI 계정에서는 안 보인다.
-Supabase sbukxdevjuplwjnbmvpy (2026-09-01 지역 이전본)
+Supabase sbukxdevjuplwjnbmvpy (2026-09-01 지역 이전본, 옛 프로젝트는 09-04 삭제됨)
 태그     backup/css-modules-full   ← 되돌린 전체 CSS 변환 (로컬만)
 정적 원본  ../insplanet  포팅 기준점 b997b24 (PC 분량만 흡수, 모바일은 Figma 기준 별도 진행)
 옛 저장소  ../official (Insplanet-Corp/official) — Vue SPA. 아카이브 대상.
@@ -1780,22 +1780,20 @@ FK·트리거만 빠진** 상태가 된다(001 이 실제로 그랬다). 컬럼 
 
 ### 바로 이어서 할 만한 것
 
-**옛 Supabase 프로젝트 정리 — 마지막 남은 것 (2026-09-04)**
+**지역 이전 · 도메인 이관 마무리 — 전부 완료 (2026-09-04)**
 
-지역 이전(`019`·`021`)과 도메인 이관은 전부 끝났다. **남은 것은 옛 프로젝트
-`gepphbqhnuufnincxmor` 삭제 하나뿐이다.** 아직 살아 있다(REST 401 = 생존).
+- ✅ `019`·`021` 실행, Edge Function `track` 재배포, Vercel 환경변수 교체까지 끝났다.
+- ✅ **옛 Supabase 프로젝트 `gepphbqhnuufnincxmor` 삭제됨** (2026-09-04 확인 — REST·Storage
+  둘 다 응답 없음). 새 프로젝트가 옛 것을 참조하는 곳은 삭제 전에 0건인 것을 확인했다.
+  옛 프로젝트에만 있던 이력서 첨부 1건은 테스트 데이터로 확인돼 회수하지 않고 행째 지웠다.
+- ℹ️ **Supabase 프로젝트 이름은 바꿔도 아무 영향이 없다.** 모든 것이 매달린 것은
+  **ref(`sbukxdevjuplwjnbmvpy`)** 이고 그것은 바뀌지 않는다 — URL·API 키(JWT 에 ref 포함)·
+  DB 에 저장된 썸네일 URL 91개·Edge Function 주소·서명 URL 전부 ref 기반이다.
+  저장소에서 프로젝트 *이름*이 나오는 곳은 `supabase/.temp/linked-project.json` 뿐이고
+  그건 CLI 로컬 캐시(gitignore 대상)다.
 
-- ✅ 새 프로젝트가 옛 프로젝트를 참조하는 곳 **0건** (DB URL·코드 전수 확인)
-- ✅ 라이브 도메인은 이제 새 사이트다 — 옛 SPA 가 쓰던 `brochure_history` 도 삭제됨
-- ✅ 유일하게 옛 프로젝트에만 있던 이력서 첨부 1건은 **테스트 데이터로 확인돼 회수하지
-  않았고**, 그 행 자체를 지웠다. 옛 브로셔 PDF 도 사용자가 "옛날 것이라 상관없다" 고 확인.
-- ⚠️ **지우기 전에 사람이 옛 대시보드에서 확인할 것** — Claude 는 옛 프로젝트 키가 없어
-  안을 못 본다: ① **Auth → Users**(옛 쪽에만 있는 계정은 같이 사라진다. 새 프로젝트엔
-  3개 있다) ② **Storage 버킷 목록** ③ **Table Editor 테이블 목록**.
-  이 셋에 특별한 것이 없으면 삭제해도 된다. **삭제는 되돌릴 수 없다.**
-
-ℹ️ `internal_ips` 의 사무실 IP 2건은 새 프로젝트로 넘어와 있다 — 그래서 **사무실에서는
-방문 분석 수치가 안 오른다**(고장이 아니다).
+ℹ️ `internal_ips` 의 사무실 IP 2건은 그대로 있다 — 그래서 **사무실에서는 방문 분석 수치가
+안 오른다**(고장이 아니다).
 ℹ️ `internal_ips` 는 RLS 정책이 0개다 — 나중에 사무실 IP 관리 화면을 만들면
 `has_admin_permission('/admin/analytics')` 정책을 그때 추가해야 한다.
 ℹ️ `021` 이후 **권한이 없는 계정은 에러 없이 빈 화면**을 본다 — "목록이 안 나온다" 는
