@@ -437,11 +437,16 @@ html.lenis body {
   .projects .proj-name {
     font-size: clamp(48px, calc(1.25vw + 24px), 56px);
   }
-  .projects .proj-slide {
-    top: clamp(458px, calc(12.5vw + 218px), 538px);
-  }
-  .projects .proj-more {
-    bottom: clamp(80px, calc(6.25vw - 40px), 120px);
+  /* 이름 위 여백 458 -> 538, 바닥 여백 80 -> 120.
+     ⚠️ 기준 블록의 .proj-info grid-template-rows / padding-bottom 과 짝이다 —
+        행 구성을 바꾸면 여기도 같이 바꿀 것. */
+  .projects .proj-info {
+    grid-template-rows:
+      minmax(16px, clamp(458px, calc(12.5vw + 218px), 538px))
+      auto
+      minmax(40px, 1fr)
+      auto;
+    padding-bottom: clamp(80px, calc(6.25vw - 40px), 120px);
   }
   /* Footer — segment 1920->2560 (.footer prefix bumps specificity to win over the later base rules) */
   .footer .footer-logo {
@@ -1528,7 +1533,22 @@ html.lenis body {
   object-position: center;
   display: block;
 }
-/* left info — positioning context. slides stack at the name area; See More pinned to the bottom */
+/* left info — 세로를 grid 4행으로 나눈다. 슬라이드 3장은 2행에 **겹쳐** 쌓이고
+   See More 는 4행(맨 아래)에 붙는다.
+
+   ⚠️ 예전에는 셋 다 position:absolute 였다 — 슬라이드는 top(가로폭 기준 clamp),
+   버튼은 bottom 으로 각자 붙어 있어서 **서로의 존재를 몰랐다.** 그래서 창을 넓고
+   낮게 만들면(가로가 넓을수록 슬라이드 top 이 458px 까지 내려간다) 이름·Client·
+   Launch 블록이 버튼 자리까지 내려와 **버튼이 글자를 덮었다.**
+   실측: 1920x820 에서 74.4px 겹침. 겹치기 시작하는 높이는 폭에 따라 다르고
+   1440 폭에서도 ~810px 아래면 난다(노트북에서 흔하다).
+
+   지금은 1행(이름 위 여백)이 minmax 라 **공간이 모자라면 이 여백부터 줄어든다.**
+   3행이 minmax(40px, 1fr) 이라 남는 공간을 먹어 버튼을 바닥으로 밀되, 최소 40px
+   간격은 어떤 높이에서도 지킨다.
+   ⚠️ 1행의 최대값은 예전 .proj-slide 의 top, padding-bottom 은 예전 .proj-more 의
+   bottom 과 같은 값이다 — 디자인 높이(1080)에서는 예전과 픽셀이 같아야 한다.
+   >=1900 블록에도 같은 짝이 있으니 한쪽만 고치지 말 것. */
 .proj-info {
   position: absolute;
   left: clamp(48px, calc(18.75vw - 144px), 216px);
@@ -1537,11 +1557,19 @@ html.lenis body {
   z-index: 2;
   opacity: 0;
   will-change: opacity, transform;
+  box-sizing: border-box;
+  display: grid;
+  justify-items: start;
+  grid-template-rows:
+    minmax(16px, clamp(300px, calc(17.634vw + 119.4px), 458px))
+    auto
+    minmax(40px, 1fr)
+    auto;
+  padding-bottom: clamp(56px, calc(2.6786vw + 28.57px), 80px);
 }
 .proj-slide {
-  position: absolute;
-  left: 0;
-  top: clamp(300px, calc(17.634vw + 119.4px), 458px);
+  grid-row: 2;
+  grid-column: 1;
   width: max-content;
   opacity: 0;
   will-change: opacity, filter;
@@ -1574,13 +1602,12 @@ html.lenis body {
   font-weight: 400;
 }
 .proj-more {
-  position: absolute;
-  left: 0;
-  bottom: clamp(56px, calc(2.6786vw + 28.57px), 80px);
+  grid-row: 4;
+  grid-column: 1;
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  white-space: nowrap; /* 80@1920 (Figma); -> 120 in the >=1900 block */
+  white-space: nowrap; /* 바닥 여백은 .proj-info 의 padding-bottom 이 잡는다 */
   padding: clamp(10px, calc(0.2232vw + 7.71px), 12px)
     clamp(8px, calc(0.4464vw + 3.43px), 12px)
     clamp(10px, calc(0.2232vw + 7.71px), 12px)

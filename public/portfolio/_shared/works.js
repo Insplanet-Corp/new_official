@@ -1,56 +1,3 @@
-/* ===================================================================================================
-   <project-detail> — 프로젝트 상세의 공통 껍데기 (히어로 + Overview + 본문 밴드 + 푸터).
-
-   왜 커스텀 엘리먼트인가 —
-   상세는 React 가 아니라 public/ 에 그대로 올라가는 정적 HTML 이고, sandbox iframe 안에서
-   자기 문서로 돌아간다. 빌드 단계가 없으므로 컴포넌트화 수단은 브라우저 표준인 커스텀
-   엘리먼트가 유일하다. 태그 하나 + 속성만 적으면 kb-app 과 똑같은 상단이 나온다.
-
-   ⚠️ 본문을 이 태그 **안에** 넣는다. 컴포넌트가 본문을 kb-app 과 같은 .pd-secs 밴드
-   안으로 옮겨서, Overview 카드와 그 아래 섹션들이 **같은 좌우 패딩과 같은 세로 간격**을
-   쓰게 만든다. 밖에 두면 Overview 만 정렬되고 아래는 따로 놀았다 (실제로 그렇게 됐었다).
-
-   쓰는 법 — <head> 에 네 줄, <body> 안을 태그로 감싸고, </body> 앞에 스크립트 두 줄:
-
-     <link rel="stylesheet" href="../_shared/fonts.css" />
-     <link rel="stylesheet" href="../_shared/project-detail.css" />
-     <link rel="stylesheet" href="../_shared/footer.css" />
-     <link rel="stylesheet" href="./style.css" />
-     ...
-     <project-detail
-       ko="온누리 디지털상품권"
-       en="Onnuri digital|gift card"        ← | 는 모바일에서만 줄바꿈
-       client="신한은행"
-       launch="Oct, 2022"
-       hero="img/hero-bg.jpg"
-       hero-mobile="img/m-hero-bg.png"
-       overview-title="언제 어디서나 편리하게 혜택을 받으세요"
-       overview-text="첫 문단|둘째 줄"      ← | 는 <br>
-       platform="https://…"                 ← 없으면 버튼이 눌리지 않는다
-     >
-      <figure class="pd-sec pd-sec--pc">
-        <img src="img/sec-01.png" alt="" />
-      </figure>    ← pc 컨텐츠
-
-      <figure class="pd-sec pd-sec--m">
-        <img src="img/m-sec-01.png" alt="" />
-      </figure>   ← mobile 컨텐츠
-      
-     </project-detail>
-     ...
-     <script src="/portfolio/_shared/bridge.js"></script>
-     <script src="/portfolio/_shared/works.js"></script>
-
-   ⚠️ 모양은 전부 _shared/project-detail.css 의 .pd-* 가 낸다. 그 CSS 는 .pd 컨테이너에
-   정의된 변수(--q --dv --gx …)에 매달려 있어서, 이 컴포넌트가 .pd 래퍼까지 같이 그린다.
-   그래서 Shadow DOM 을 쓰지 않는다 — 그늘 안에 넣으면 그 CSS 가 닿지 않는다.
-
-   ⚠️ kb-app 도 이 컴포넌트를 쓴다(사용자 요청). 원래는 정적 사이트에서 그대로 받아온
-   문서라 손대지 않았는데, 이제 상단 마크업이 이쪽으로 옮겨졌다 —
-   **정적 사이트에서 상세를 다시 가져올 때 kb-app/index.html 을 통째로 덮으면 안 된다.**
-   `projects/kb-app/index.html` 에서 가져올 것은 `.pd-sec` 섹션 목록(과 img 치수)뿐이고,
-   히어로/Overview 는 여기 속성으로 옮겨 적는다. `project-detail.css` 는 계속 동기화한다.
-   =================================================================================================== */
 (function () {
   var CHEVRON =
     '<svg viewBox="0 0 44.3077 44.3077" fill="none" aria-hidden="true">' +
@@ -92,45 +39,45 @@
     return esc(v).split("|").join(br);
   }
 
-  function footerHtml() {
-    return (
-      '<footer class="footer">' +
-      '<div class="footer-logo" role="img" aria-label="Insplanet">' +
-      // 워드마크와 행성을 따로 겹쳐 둔다 — CSS 가 각각 다른 타이밍으로 리빌한다
-      '<img class="footer-wordmark" src="/portfolio/_shared/footer-wordmark.svg" alt="" aria-hidden="true">' +
-      '<img class="footer-planet" src="/portfolio/_shared/footer-planet.svg" alt="" aria-hidden="true">' +
-      "</div>" +
-      '<div class="footer-bottom">' +
-      '<div class="footer-left">' +
-      '<nav class="footer-links">' +
-      FOOTER.links
-        .map(function (l) {
-          return '<a href="#">' + esc(l) + "</a>";
-        })
-        .join("") +
-      "</nav>" +
-      '<p class="footer-copy">' +
-      esc(FOOTER.copyright) +
-      "</p>" +
-      "</div>" +
-      '<div class="footer-contact">' +
-      "<p>" +
-      esc(FOOTER.address) +
-      "</p>" +
-      "<p>E&nbsp;&nbsp;" +
-      esc(FOOTER.email) +
-      "</p>" +
-      '<p class="footer-tf"><span>T&nbsp;&nbsp;' +
-      esc(FOOTER.tel) +
-      "</span>" +
-      "<span>F&nbsp;&nbsp;" +
-      esc(FOOTER.fax) +
-      "</span></p>" +
-      "</div>" +
-      "</div>" +
-      "</footer>"
-    );
-  }
+  // function footerHtml() {
+  //   return (
+  //     '<footer class="footer">' +
+  //     '<div class="footer-logo" role="img" aria-label="Insplanet">' +
+  //     // 워드마크와 행성을 따로 겹쳐 둔다 — CSS 가 각각 다른 타이밍으로 리빌한다
+  //     '<img class="footer-wordmark" src="/portfolio/_shared/footer-wordmark.svg" alt="" aria-hidden="true">' +
+  //     '<img class="footer-planet" src="/portfolio/_shared/footer-planet.svg" alt="" aria-hidden="true">' +
+  //     "</div>" +
+  //     '<div class="footer-bottom">' +
+  //     '<div class="footer-left">' +
+  //     '<nav class="footer-links">' +
+  //     FOOTER.links
+  //       .map(function (l) {
+  //         return '<a href="#">' + esc(l) + "</a>";
+  //       })
+  //       .join("") +
+  //     "</nav>" +
+  //     '<p class="footer-copy">' +
+  //     esc(FOOTER.copyright) +
+  //     "</p>" +
+  //     "</div>" +
+  //     '<div class="footer-contact">' +
+  //     "<p>" +
+  //     esc(FOOTER.address) +
+  //     "</p>" +
+  //     "<p>E&nbsp;&nbsp;" +
+  //     esc(FOOTER.email) +
+  //     "</p>" +
+  //     '<p class="footer-tf"><span>T&nbsp;&nbsp;' +
+  //     esc(FOOTER.tel) +
+  //     "</span>" +
+  //     "<span>F&nbsp;&nbsp;" +
+  //     esc(FOOTER.fax) +
+  //     "</span></p>" +
+  //     "</div>" +
+  //     "</div>" +
+  //     "</footer>"
+  //   );
+  // }
 
   function render(el) {
     var a = function (n) {
@@ -200,8 +147,8 @@
       "</div>" +
       "</section>" +
       "</div>" +
-      "</main>" +
-      footerHtml();
+      "</main>";
+    // footerHtml();
 
     // 본문을 Overview 카드 뒤, 같은 밴드 안에 붙인다
     el.querySelector(".pd-secs").appendChild(content);
